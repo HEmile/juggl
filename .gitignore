@@ -123,5 +123,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/obsidian/
+/markdown/
 .idea/

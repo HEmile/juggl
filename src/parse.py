@@ -15,4 +15,5 @@ def parse_folder(format: Format, notes_path="", recursive=True, note_extension='
         with open(path, mode='r') as f:
             name = os.path.basename(path)[:-len(note_extension)]
             parsed_notes[name] = format.parse(f, name, parsed_notes)
+    return parsed_notes
 

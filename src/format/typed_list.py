@@ -2,12 +2,12 @@ from src.format import Format
 from src.note import Note, Relationship
 import io
 import os
-from src.format.util import parse_yaml_header, get_tags_from_line, get_wikilinks_from_line
+from src.format.util import parse_yaml_header, get_tags_from_line, get_wikilinks_from_line, PUNCTUATION
 
 
 class TypedList(Format):
 
-    def parse_word(self, line, index, breaks = [' ', os.linesep, ',']):
+    def parse_word(self, line, index, breaks=[' ', os.linesep, ',']):
         if index >= len(line):
             return index
         for j in range(index, len(line)):
@@ -45,53 +45,54 @@ class TypedList(Format):
         while line:
             if line.startswith("- ") and len(line) > 2:
                 is_rel = True
-                index = self.parse_word(line, 2, breaks=[' ', os.linesep])
+                index = self.parse_word(line, 2, breaks=PUNCTUATION)
                 type = line[2:index]
-                index = self.move_index(line, index + 1)
-                words = []
-                while index < len(line) - 2:
-                    new_index = self.parse_word(line, index)
-                    words.append(line[index:new_index])
-                    index = self.move_index(line, new_index + 1)
-                year = None
-                trgts = []
-                active_trgt = None
-                for i, word in enumerate(words):
-                    if word[:2] == "[[":
-                        if active_trgt:
+                if len(type) != 0:
+                    index = self.move_index(line, index + 1)
+                    words = []
+                    while index < len(line) - 2:
+                        new_index = self.parse_word(line, index)
+                        words.append(line[index:new_index])
+                        index = self.move_index(line, new_index + 1)
+                    year = None
+                    trgts = []
+                    active_trgt = None
+                    for i, word in enumerate(words):
+                        if word[:2] == "[[":
+                            if active_trgt:
+                                is_rel = False
+                                break
+                            if word[-2:] == "]]":
+                                trgts.append(word[2:-2].split("|")[0])
+                            else:
+                                active_trgt = word[2:]
+                            continue
+                        elif word[-2:] == "]]":
+                            if not active_trgt:
+                                is_rel = False
+                                break
+                            trgts.append((active_trgt + " " +  word[:-2]).split("|")[0])
+                            active_trgt = None
+                            continue
+                        if i == 0 and type == 'publishedIn':
+                            year = word
+                        elif active_trgt:
+                            active_trgt += " " + word
+                        else:
                             is_rel = False
                             break
-                        if word[-2:] == "]]":
-                            trgts.append(word[2:-2].split("|")[0])
-                        else:
-                            active_trgt = word[2:]
+                    if is_rel:
+                        for trgt in trgts:
+                            properties = {}
+                            if year:
+                                properties["year"] = year
+                            rel = Relationship(type, properties)
+                            if trgt in relations:
+                                relations[trgt].append(rel)
+                            else:
+                                relations[trgt] = [rel]
+                        line = file.readline()
                         continue
-                    elif word[-2:] == "]]":
-                        if not active_trgt:
-                            is_rel = False
-                            break
-                        trgts.append((active_trgt + " " +  word[:-2]).split("|")[0])
-                        active_trgt = None
-                        continue
-                    if i == 0 and type == 'publishedIn':
-                        year = word
-                    elif active_trgt:
-                        active_trgt += " " + word
-                    else:
-                        is_rel = False
-                        break
-                if is_rel:
-                    for trgt in trgts:
-                        properties = {}
-                        if year:
-                            properties["year"] = year
-                        rel = Relationship(type, properties)
-                        if trgt in relations:
-                            relations[trgt].append(rel)
-                        else:
-                            relations[trgt] = [rel]
-                    line = file.readline()
-                    continue
             content.append(line)
             tags.update(get_tags_from_line(line))
             for wikilink in get_wikilinks_from_line(line):
@@ -102,12 +103,7 @@ class TypedList(Format):
                     relations[wikilink] = [rel]
             line = file.readline()
 
-        note = Note(name, tags, "".join(content), out_rels=relations, properties=parsed_yaml)
-        print("-----------")
-        print(note)
-
-
-
+        return Note(name, tags, "".join(content), out_rels=relations, properties=parsed_yaml if parsed_yaml else {})
 
     def write(self, file, parsed_notes: [Note]):
         raise NotImplementedError

@@ -18,6 +18,7 @@ class Note:
         self.content = content
         self.out_rels = out_rels
         self.in_rels = in_rels
+        self.properties = properties
 
 
     def add_out_rel(self, to:str, rel:Relationship):
