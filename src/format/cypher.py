@@ -36,16 +36,16 @@ ON (n.name);
                 line += "});" + os.linesep
                 f.write(line)
 
-            # count = 3391
+            notes_in_cypher = set(parsed_notes.keys())
+
             for name, note in parsed_notes.items():
                 if not note.out_rels.keys():
                     continue
                 match_a = "MATCH (a)" + os.linesep + "WHERE a.name = '" + escape_cypher(name) + "'" + os.linesep
-                # if count == 6013:
-                #     print(name)
-                # matches = []
-                # creates = []
                 for trgt, rels in note.out_rels.items():
+                    if trgt not in notes_in_cypher:
+                        f.write("CREATE ({name:'" + escape_cypher(trgt) + "'});" + os.linesep)
+                        notes_in_cypher.add(trgt)
                     match_b = "MATCH (b)" + os.linesep + "WHERE b.name = '" + \
                                escape_cypher(trgt) + "'" + os.linesep
                     for rel in rels:
@@ -56,7 +56,4 @@ ON (n.name);
                         line += ", ".join(properties)
                         line += "}]->(b);" + os.linesep
                         f.writelines([match_a, match_b, line])
-                # f.writelines(matches)
-                # f.writelines(creates)
-                # f.write(";" + os.linesep)
 
