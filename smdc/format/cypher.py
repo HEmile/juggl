@@ -1,8 +1,8 @@
-from src.format import Format
-from src.note import Note, Relationship
+from smdc.format import Format
+from smdc.note import Note, Relationship
 import io
 import os
-from src.format.util import escape_quotes
+from smdc.format.util import escape_quotes
 
 
 def escape_cypher(string):

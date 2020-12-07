@@ -1,8 +1,8 @@
-from src.format import Format
-from src.note import Note, Relationship
+from smdc.format import Format
+from smdc.note import Note, Relationship
 import io
 import os
-from src.format.util import parse_yaml_header, get_tags_from_line, get_wikilinks_from_line, PUNCTUATION
+from smdc.format.util import parse_yaml_header, get_tags_from_line, get_wikilinks_from_line, PUNCTUATION
 
 
 class TypedList(Format):
@@ -74,7 +74,7 @@ class TypedList(Format):
                             trgts.append((active_trgt + " " +  word[:-2]).split("|")[0])
                             active_trgt = None
                             continue
-                        if i == 0 and type == 'publishedIn':
+                        if i == 0 and type in ['publishedIn', 'at']:
                             year = word
                         elif active_trgt:
                             active_trgt += " " + word

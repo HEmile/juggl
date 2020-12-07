@@ -1,5 +1,5 @@
 import abc
-from src.note import Note
+from smdc.note import Note
 import io
 
 class Format(abc.ABC):

@@ -1,5 +1,5 @@
 from pathlib import Path
-from format import Format
+from smdc.format import Format
 from tqdm import tqdm
 import os
 
