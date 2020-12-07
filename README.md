@@ -1,5 +1,5 @@
 # Semantic Markdown converter
- Converts different typed link formats in Markdown into each other and to external formats. Designed for visualizing Obsidian vaults using [Neo4j bloom](https://neo4j.com/product/bloom/).
+ Converts different typed link formats in Markdown into each other and to external formats. Designed for visualizing obsidian.md vaults using [Neo4j bloom](https://neo4j.com/product/bloom/).
 
 ## Requirements
 Python 3.5+. 
@@ -18,6 +18,7 @@ This collects all notes with extension .md in the input directory (default: `mar
 - Lines of the format `"- linkType [[note 1]], [[note 2|alias]]"` creates links with type `linkType` from the current note to `note 1` and `note 2`.
 - The name of the note is stored in the property `name`
 - The content of the note (everything except YAML frontmatter and typed links) is stored in the property `content`
+- Links to notes that do not exist yet are created without any types.
 
 
 ## Supported output formats
@@ -33,4 +34,13 @@ Converts the input into a single .cypher file (default: `out.cypher`) with state
 4. Open Neo4j browser
     1. Run `CALL apoc.cypher.runFile('out.cypher')`
     
-Importing with Cypher can take quite a while (multiple minutes). 
+Importing with Cypher can take quite a while (multiple minutes). I'll look into alternative methods if people are interested.
+
+## Neo4j Bloom
+A use case for this converter is to visualize your obsidian.md graph in [Neo4j bloom](https://neo4j.com/product/bloom/). Neo4j bloom is very powerful graph visualization software 
+Compared to the Obsidian graph view, it allows
+- Coloring and styling notes with different tags
+- Coloring and styling relationships with different types
+- Selective expansion
+- A hierarchical view
+- Very strong querying capabilities
