@@ -3,13 +3,15 @@ from setuptools import setup, find_packages
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+
 setup(name='semantic-markdown-converter',
-      version='0.1.5',
+      version='0.1.6',
       description='Converts different typed link formats in Markdown into each other and to external formats.',
       long_description=long_description,
       long_description_content_type="text/markdown",
       url='https://github.com/HEmile/semantic-markdown-converter',
       packages=find_packages(),
+      install_requires=['pyyaml', 'tqdm'],
       entry_points={
           'console_scripts': ['smdc=smdc.convert:main']
       },
