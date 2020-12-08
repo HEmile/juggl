@@ -24,8 +24,8 @@ This collects all notes with extension .md in the input directory (default: `mar
 Currently, only the propietary Neo4j CYPHER format is supported. This is rather slow. I'll try to do a CSV format soon. 
 ### Neo4j CYPHER
 Converts the input into a single .cypher file (default: `out.cypher`) with statements that create nodes and relationships in Neo4j. This can be loaded in Neo4j desktop as follows:
-1. Create a new Database
-2. Manage your database (three dots, Manage)
+1. Create a new database
+2. Manage your database (three dots, manage)
     1. Plugins -> Install APOC
     2. Settings: Add line `apoc.import.file.enabled=true`
     3. Open project folder, then copy `out.cypher` to the import folder within the project folder.
@@ -36,7 +36,7 @@ Converts the input into a single .cypher file (default: `out.cypher`) with state
 Importing with Cypher can take quite a while (multiple minutes). I'll look into alternative methods if people are interested.
 
 ## Neo4j Bloom
-A use case for this converter is to visualize your obsidian.md graph in [Neo4j bloom](https://neo4j.com/product/bloom/). Neo4j bloom is very powerful graph visualization software 
+A use case for this converter is to visualize your obsidian.md graph in [Neo4j bloom](https://neo4j.com/product/bloom/). Neo4j bloom is very powerful graph visualization software. 
 Compared to the Obsidian graph view, it allows
 - Coloring and styling notes with different tags
 - Coloring and styling relationships with different types
