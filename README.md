@@ -1,7 +1,7 @@
 # Semantic Markdown converter
  Converts different typed link formats in Markdown into each other and to external formats. Designed for visualizing obsidian.md vaults using [Neo4j bloom](https://neo4j.com/product/bloom/).
 
-## Requirements
+## Getting started
 Requires python 3.5+. 
 
 - Install with `pip install semantic-markdown-converter`

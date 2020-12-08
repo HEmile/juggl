@@ -9,7 +9,10 @@ def escape_cypher(string):
     r = escape_quotes(string)
     # Note: CYPHER doesn't allow putting semicolons in text, for some reason. This is lossy!
     r = r.replace(";", ",")
-    return r.replace("\\u", "\\\\u")
+    r = r.replace("\\u", "\\\\u")
+    if r and r[-1] == '\\':
+        r += ' '
+    return r
 
 class Cypher(Format):
 
@@ -26,7 +29,11 @@ IF NOT EXISTS ON (n) ASSERT n.name IS UNIQUE;
 CREATE INDEX index_name IF NOT EXISTS FOR (n:)
 ON (n.name);
 """)
+            i = 0
             for name, note in parsed_notes.items():
+                if i== 328:
+                    print(name)
+                i+=1
                 line = "CREATE ("
                 if note.tags:
                     line += ":" + ":".join(note.tags)
