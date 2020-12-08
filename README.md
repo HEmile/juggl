@@ -18,6 +18,7 @@ This collects all notes with extension .md in the input directory (default: `mar
 - The name of the note is stored in the property `name`
 - The content of the note (everything except YAML frontmatter and typed links) is stored in the property `content`
 - Links to notes that do not exist yet are created without any types.
+- The obsidian url is added as property `obsidian_url`
 
 
 ## Supported output formats

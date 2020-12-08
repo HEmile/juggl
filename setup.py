@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(name='semantic-markdown-converter',
-      version='0.1.3',
+      version='0.1.5',
       description='Converts different typed link formats in Markdown into each other and to external formats.',
       long_description=long_description,
       long_description_content_type="text/markdown",

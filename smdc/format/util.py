@@ -37,7 +37,7 @@ def get_wikilinks_from_line(line) -> [str]:
         return r
     return []
 
-def escape_quotes(string):
+def escape_quotes(string) -> str:
     r1 = string.replace("\\\'", "\\\\\'")
     r1 = r1.replace("'", "\\\'")
     return r1.replace('\"', "\\\"")

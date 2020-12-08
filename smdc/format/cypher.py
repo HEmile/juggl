@@ -29,11 +29,7 @@ IF NOT EXISTS ON (n) ASSERT n.name IS UNIQUE;
 CREATE INDEX index_name IF NOT EXISTS FOR (n:)
 ON (n.name);
 """)
-            i = 0
             for name, note in parsed_notes.items():
-                if i== 328:
-                    print(name)
-                i+=1
                 line = "CREATE ("
                 if note.tags:
                     line += ":" + ":".join(note.tags)

@@ -4,8 +4,11 @@ import argparse
 
 
 def convert(args):
+    vault_name = args.vault_name
+    if not vault_name:
+        vault_name = args.input
     notes = parse.parse_folder(FORMAT_TYPES[args.input_format], notes_path=args.input, recursive=args.r,
-                               note_extension=args.extension)
+                               note_extension=args.extension, vault_name=vault_name)
     FORMAT_TYPES[args.output_format].write(args.output, notes)
 
 
@@ -22,6 +25,7 @@ def main():
                         help='format of inputs')
     parser.add_argument('--extension', metavar='e', type=str, default=".md",
                         help='extension of markdown files')
+    parser.add_argument("--vault_name", metavar='n', type=str, default=None, help="Defaults to input directory name")
     parser.add_argument('-r', action="store_false", default=True)
     args = parser.parse_args()
     print(args.__dir__())
