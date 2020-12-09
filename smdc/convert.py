@@ -21,7 +21,7 @@ def main():
                         help='directory for output files')
     parser.add_argument('--input_format', metavar='f', type=str, default="typed_list",
                         help='format of inputs')
-    parser.add_argument('--output_format', metavar='r', type=str, default="cypher",
+    parser.add_argument('--output_format', metavar='r', type=str, default="neo4j",
                         help='format of inputs')
     parser.add_argument('--extension', metavar='e', type=str, default=".md",
                         help='extension of markdown files')
