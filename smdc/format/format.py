@@ -9,5 +9,5 @@ class Format(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def write(self, file, parsed_notes: [Note]):
+    def write(self, parsed_notes: [Note], args):
         ...

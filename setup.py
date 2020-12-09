@@ -5,13 +5,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 
 setup(name='semantic-markdown-converter',
-      version='0.1.9',
+      version='0.2.1',
       description='Converts different typed link formats in Markdown into each other and to external formats.',
       long_description=long_description,
       long_description_content_type="text/markdown",
       url='https://github.com/HEmile/semantic-markdown-converter',
       packages=find_packages(),
-      install_requires=['pyyaml', 'tqdm'],
+      install_requires=['pyyaml', 'tqdm', 'py2neo'],
       entry_points={
           'console_scripts': ['smdc=smdc.convert:main']
       },
