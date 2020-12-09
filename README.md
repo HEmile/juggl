@@ -31,6 +31,7 @@ Streams the input into the currently active Neo4j database. WARNING: This clears
 
 ### CYPHER
 Converts the input into a single .cypher file (default: `out.cypher`) with statements that create nodes and relationships in Neo4j. This can be loaded in Neo4j desktop as follows:
+1. Run `smdc --input "folder with notes" --output_format "cypher"`
 1. Create a new database
 2. Manage your database (three dots, manage)
     1. Plugins -> Install APOC
