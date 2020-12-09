@@ -34,6 +34,8 @@ class Neo4j(Format):
             if note.tags:
                 tags = map(escape_cypher, note.tags)
             properties = {}
+            properties['name'] = name
+            properties['content'] = note.content
             for property, value in note.properties.items():
                 properties[property] = escape_cypher(str(value))
             node = Node(*tags, **properties)
