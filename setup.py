@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 
 setup(name='semantic-markdown-converter',
-      version='0.1.6',
+      version='0.1.7',
       description='Converts different typed link formats in Markdown into each other and to external formats.',
       long_description=long_description,
       long_description_content_type="text/markdown",
