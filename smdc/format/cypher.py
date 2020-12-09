@@ -23,7 +23,7 @@ class Cypher(Format):
 
     def write(self, file, parsed_notes: [Note]):
         # First create all nodes in the graph before doing the relationships, so they all exist.
-        with open(file + '.cypher', 'w') as f:
+        with open(file + '.cypher', 'w', encoding='utf-8') as f:
             for name, note in parsed_notes.items():
                 line = "CREATE ("
                 if note.tags:

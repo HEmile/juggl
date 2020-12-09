@@ -95,6 +95,7 @@ class TypedList(Format):
                         continue
             content.append(line)
             tags.update(get_tags_from_line(line))
+            # TODO: Save aliases as Relation property
             for wikilink in get_wikilinks_from_line(line):
                 rel = Relationship("inline", properties={"context": line})
                 if wikilink in relations:
