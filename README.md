@@ -2,10 +2,10 @@
  Converts different typed link formats in Markdown into each other and to external formats. Designed for visualizing obsidian.md vaults using [Neo4j bloom](https://neo4j.com/product/bloom/).
 
 ## Getting started
-Requires python 3.5+. 
+Requires python 3.5+ and Neo4j desktop
 
 - Install with `pip install semantic-markdown-converter`
-- Run `smdc --input "folder with notes"`
+- Run `smdc --input "folder with notes" --password "neo4j database password"`
 
 ## Supported input formats
 There is currently only one input format supported. An issue or use a pull request for different formats are appreciated! In particular for different markdown syntax for interpreting semantic links.
@@ -22,8 +22,12 @@ This collects all notes with extension .md in the input directory (default: `mar
 
 
 ## Supported output formats
-Currently, only the propietary Neo4j CYPHER format is supported. This is rather slow. I'll try to do a CSV format soon. 
-### Neo4j CYPHER
+### Neo4j
+Streams the input into the currently active Neo4j database. WARNING: This clears all the data in your database by default! Run with `--retaindb` if this is not desired. 
+1. Start the database in Neo4j you want to use
+2. Run using `smdc --input "folder with notes" --password "neo4j database password"`. This can take a couple of minutes for large vaults. 
+
+### CYPHER
 Converts the input into a single .cypher file (default: `out.cypher`) with statements that create nodes and relationships in Neo4j. This can be loaded in Neo4j desktop as follows:
 1. Create a new database
 2. Manage your database (three dots, manage)

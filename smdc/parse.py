@@ -13,6 +13,7 @@ def parse_folder(format: Format, notes_path="", recursive=True, note_extension='
         iterate = Path(notes_path).glob("*" + note_extension)
     all_files = list(iterate)
     parsed_notes = {}
+    print("Parsing notes")
     for path in tqdm(all_files):
         with open(path, mode='r', encoding='utf-8') as f:
             name = os.path.basename(path)[:-len(note_extension)]
