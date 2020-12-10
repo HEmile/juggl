@@ -13,12 +13,12 @@ class Relationship:
 class Note:
 
     def __init__(self, name:str, tags: [str], content:str, properties={}, out_rels={}, in_rels={}):
-        self.name = name
         self.tags = tags
-        self.content = content
         self.out_rels = out_rels
         self.in_rels = in_rels
         self.properties = properties
+        self.properties['name'] = name
+        self.properties['content'] = content
 
 
     def add_out_rel(self, to:str, rel:Relationship):
@@ -32,6 +32,14 @@ class Note:
             self.in_rels[src].append(rel)
         else:
             self.in_rels[src] = [rel]
+
+    @property
+    def name(self):
+        return self.properties['name']
+
+    @property
+    def content(self):
+        return self.properties['content']
 
     def __str__(self):
         return self.name + os.linesep + self.tags.__str__() + os.linesep + self.content + os.linesep + self.out_rels.__str__()
