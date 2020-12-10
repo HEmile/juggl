@@ -51,8 +51,6 @@ class Neo4j(Format):
         node_graph = None
         # First create all nodes in the graph before doing the relationships, so they all exist.
         for name, note in tqdm.tqdm(parsed_notes.items()):
-            if name == 'strang':
-                print("here")
             node = node_from_note(note)
             nodes[name] = node
             if node_graph is None:

@@ -36,7 +36,7 @@ class SMDSEventHandler():
         node.clear()
         escaped_properties = {}
         for key, value in note.properties.items():
-            escaped_properties[key] = escape_cypher(value)
+            escaped_properties[key] = escape_cypher(str(value))
         node.update(escaped_properties)
         self.graph.push(node)
 
