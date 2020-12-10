@@ -2,9 +2,10 @@ from pathlib import Path
 from smdc.format import Format
 from tqdm import tqdm
 import os
+from urllib.parse import quote
 
 def obsidian_url(name:str, vault:str) -> str:
-    return "obsidian://open?vault=" + vault + "&file=" + name.replace(" ", "%20") + ".md"
+    return "obsidian://open?vault=" + quote(vault) + "&file=" + quote(name) + ".md"
 
 def parse_folder(format: Format, notes_path="", recursive=True, note_extension='.md', vault_name="", add_obsidian_url=True):
     if recursive:
