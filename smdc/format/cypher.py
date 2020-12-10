@@ -20,10 +20,11 @@ def to_cyper(parsed_notes: [Note]):
     for name, note in parsed_notes.items():
         line = "CREATE ("
         if note.tags:
-            line += ":" + ":".join(note.tags)
-        line += " { name: '" + escape_cypher(name) + "', content: '" + escape_cypher(note.content) + "'"
+            line += ":" + ":".join(note.tags) + " {"
+        properties = []
         for property, value in note.properties.items():
-            line += ", " + property + ": '" + escape_cypher(str(value)) + "'"
+            properties.append(property + ": '" + escape_cypher(str(value)) + "'")
+        line += ", ".join(properties)
         line += "});"
         lines.append(line)
 
