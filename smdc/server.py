@@ -48,7 +48,7 @@ class SMDSEventHandler():
         for trgt, rels in note.out_rels.items():
             trgt_node = self.nodes.match(name=trgt)
             if len(trgt_node) == 0:
-                trgt_node = Node(name=escape_cypher(trgt),
+                trgt_node = Node("_no_tags", name=escape_cypher(trgt),
                                  obsidian_url=escape_cypher(obsidian_url(trgt, self.vault_name)))
                 if subgraph is None:
                     subgraph = trgt_node
@@ -76,6 +76,8 @@ class SMDSEventHandler():
             if len(in_rels) > 0:
                 # If there are still active incoming links, keep the node as a reference
                 node.clear()
+                node.clear_labels()
+                node.add_label("_no_tags")
                 node.name = escape_cypher(name)
                 node.obsidian_url = escape_cypher(obsidian_url(name, self.vault_name))
                 self._clear_outgoing(node)

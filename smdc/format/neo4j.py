@@ -68,7 +68,7 @@ class Neo4j(Format):
             src_node = nodes[name]
             for trgt, rels in note.out_rels.items():
                 if trgt not in nodes:
-                    nodes[trgt] = Node(name=trgt)
+                    nodes[trgt] = Node("_no_tags", name=trgt)
                     # node_graph = node_graph | nodes[trgt]
                     if rel_graph is None:
                         rel_graph = nodes[trgt]
