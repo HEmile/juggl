@@ -23,12 +23,10 @@ class SMDSEventHandler():
     def _process_node_on_graph(self, note: Note):
         in_graph = self.nodes.match(name=note.name)
         if len(in_graph) == 0:
-            print('creating')
             # Create new node
             node = node_from_note(note)
             self.graph.create(node)
             return
-        print("updating")
         # Update
         node = in_graph.first()
         # Update labels
@@ -72,7 +70,6 @@ class SMDSEventHandler():
 
     def on_deleted(self):
         def _on_deleted(event):
-            print(f"what the f**k! Someone deleted {event.src_path}!")
             name = note_name(event.src_path)
             node = self.nodes.match(name=name).first()
             in_rels = self.relationships.match([None, node])
@@ -94,7 +91,6 @@ class SMDSEventHandler():
 
     def on_moved(self):
         def _on_moved(event):
-            print(f"ok ok ok, someone moved {event.src_path} to {event.dest_path}")
             node = self.nodes.match(name=note_name(event.src_path)).first()
             new_name = note_name(event.dest_path)
             # TODO: What if this name already exists in the vault?
