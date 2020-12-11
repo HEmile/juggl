@@ -5,8 +5,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 
 setup(name='semantic-markdown-converter',
-      version='0.3.3',
-      description='Streams folders with semantic markdown to neo4j.',
+      version='0.3.4',
+      description='Converts different typed link formats in Markdown into each other and to external formats.',
       long_description=long_description,
       long_description_content_type="text/markdown",
       url='https://github.com/HEmile/semantic-markdown-converter',
