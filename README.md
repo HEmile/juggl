@@ -25,6 +25,10 @@ This collects all notes with extension .md in the input directory (default: `mar
 ## Semantic Markdown to Neo4j server
 The command `smds` first uploads the complete folder of notes into the active Neo4j database. Then, it listens to changes in the notes to update the Neo4j database.
 
+### Options
+- `--password`: Provide the password of the Neo4j database
+- `--input`: Provide the folder where to look for notes
+- `--index_content`: Set to true if you want Neo4j Bloom to search through the content of your notes when using the search bar. Can impact performance.
 
 ## Conversion mode
 The command `smdc` only converts 
