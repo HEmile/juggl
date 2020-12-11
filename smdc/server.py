@@ -3,17 +3,18 @@ from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 import time
 from py2neo import Node, Subgraph
-from smdc.format.neo4j import node_from_note, add_rels_between_nodes
+from smdc.format.neo4j import node_from_note, add_rels_between_nodes, CAT_DANGLING, create_index
 from smdc.format.cypher import escape_cypher
 
 
 class SMDSEventHandler():
-    def __init__(self, graph, input_format, vault_name):
+    def __init__(self, graph, input_format, vault_name, tags):
         self.graph = graph
         self.nodes = graph.nodes
         self.relationships = graph.relationships
         self.input_format = input_format
         self.vault_name = vault_name
+        self.tags = tags
 
     def _clear_outgoing(self, node: Node):
         rels = self.relationships.match([node, None])
@@ -23,22 +24,29 @@ class SMDSEventHandler():
     def _process_node_on_graph(self, note: Note):
         in_graph = self.nodes.match(name=note.name)
         if len(in_graph) == 0:
-            print('creating')
             # Create new node
             node = node_from_note(note)
             self.graph.create(node)
             return
-        print("updating")
         # Update
         node = in_graph.first()
         # Update labels
         node.clear_labels()
-        node.update_labels(map(escape_cypher, note.tags))
+        note_tags = map(escape_cypher, note.tags)
+        node.update_labels(note_tags)
+        for tag in note_tags:
+            if tag not in self.tags:
+                properties = ['name', 'aliases']
+                # TODO: Is this too slow?
+                if True:
+                    properties.append("content")
+                create_index(self.graph, tag, properties)
+                self.tags.add(tag)
         # Update properties
         node.clear()
         escaped_properties = {}
         for key, value in note.properties.items():
-            escaped_properties[key] = escape_cypher(value)
+            escaped_properties[key] = escape_cypher(str(value))
         node.update(escaped_properties)
         self.graph.push(node)
 
@@ -50,7 +58,7 @@ class SMDSEventHandler():
         for trgt, rels in note.out_rels.items():
             trgt_node = self.nodes.match(name=trgt)
             if len(trgt_node) == 0:
-                trgt_node = Node(name=escape_cypher(trgt),
+                trgt_node = Node(CAT_DANGLING, name=escape_cypher(trgt),
                                  obsidian_url=escape_cypher(obsidian_url(trgt, self.vault_name)))
                 if subgraph is None:
                     subgraph = trgt_node
@@ -72,13 +80,14 @@ class SMDSEventHandler():
 
     def on_deleted(self):
         def _on_deleted(event):
-            print(f"what the f**k! Someone deleted {event.src_path}!")
             name = note_name(event.src_path)
             node = self.nodes.match(name=name).first()
             in_rels = self.relationships.match([None, node])
             if len(in_rels) > 0:
                 # If there are still active incoming links, keep the node as a reference
                 node.clear()
+                node.clear_labels()
+                node.add_label(CAT_DANGLING)
                 node.name = escape_cypher(name)
                 node.obsidian_url = escape_cypher(obsidian_url(name, self.vault_name))
                 self._clear_outgoing(node)
@@ -94,7 +103,6 @@ class SMDSEventHandler():
 
     def on_moved(self):
         def _on_moved(event):
-            print(f"ok ok ok, someone moved {event.src_path} to {event.dest_path}")
             node = self.nodes.match(name=note_name(event.src_path)).first()
             new_name = note_name(event.dest_path)
             # TODO: What if this name already exists in the vault?
@@ -103,11 +111,11 @@ class SMDSEventHandler():
             self.graph.push(node)
         return _on_moved
 
-def server(graph, args):
+def server(graph, tags, args):
     # Code credit: http://thepythoncorner.com/dev/how-to-create-a-watchdog-in-python-to-look-for-filesystem-changes/
     event_handler = PatternMatchingEventHandler(patterns=["*.md"], case_sensitive=True)
 
-    smds_event_handler = SMDSEventHandler(graph, FORMAT_TYPES[args.input_format], args.vault_name)
+    smds_event_handler = SMDSEventHandler(graph, FORMAT_TYPES[args.input_format], args.vault_name, tags)
     event_handler.on_created = smds_event_handler.on_created()
     event_handler.on_deleted = smds_event_handler.on_deleted()
     event_handler.on_modified = smds_event_handler.on_modified()
@@ -131,10 +139,10 @@ def main():
     args.output_format = 'neo4j'
     print("initializing server")
     # Initialize the database
-    graph = convert(args)
+    graph, tags = convert(args)
 
     # Start the server
-    server(graph, args)
+    server(graph, tags, args)
 
 
 if __name__ == "__main__":

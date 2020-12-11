@@ -1,17 +1,18 @@
 from smdc.format import Format
 from smdc.note import Note
 import io
-import os
 from smdc.format.cypher import escape_cypher
-from py2neo import Graph, Node, Relationship, Subgraph
+from py2neo import Graph, Node, Relationship
 from py2neo.database.work import ClientError
 import tqdm
-from typing import Set
+
+CAT_DANGLING = "SMD_dangling"
+CAT_NO_TAGS = "SMD_no_tags"
 
 def node_from_note(note:Note) -> Node:
-    tags = ["_no_tags"]
+    tags = [CAT_NO_TAGS]
     if note.tags:
-        tags = map(escape_cypher, note.tags)
+        tags = list(map(escape_cypher, note.tags))
     properties = {}
     for property, value in note.properties.items():
         properties[property] = escape_cypher(str(value))
@@ -29,6 +30,10 @@ def add_rels_between_nodes(rels, src_node, trgt_node, subgraph):
         else:
             subgraph = subgraph | rel
     return subgraph
+
+def create_index(graph, tag, properties):
+    for prop in properties:
+        graph.run("CREATE INDEX index_" + prop + "_" + tag + " IF NOT EXISTS FOR (n:" + tag + ") ON " + "(n." + prop + ")")
 
 class Neo4j(Format):
 
@@ -51,8 +56,6 @@ class Neo4j(Format):
         node_graph = None
         # First create all nodes in the graph before doing the relationships, so they all exist.
         for name, note in tqdm.tqdm(parsed_notes.items()):
-            if name == 'strang':
-                print("here")
             node = node_from_note(note)
             nodes[name] = node
             if node_graph is None:
@@ -60,7 +63,11 @@ class Neo4j(Format):
             else:
                 node_graph = node | node_graph
         if node_graph is not None:
+            print("Transferring nodes to graph")
             tx.create(node_graph)
+        all_tags = set()
+        for node in nodes.values():
+            all_tags.update(node.labels)
         rel_graph = None
         print("Creating relationships")
         i = 1
@@ -70,7 +77,7 @@ class Neo4j(Format):
             src_node = nodes[name]
             for trgt, rels in note.out_rels.items():
                 if trgt not in nodes:
-                    nodes[trgt] = Node(name=trgt)
+                    nodes[trgt] = Node(CAT_DANGLING, name=trgt)
                     # node_graph = node_graph | nodes[trgt]
                     if rel_graph is None:
                         rel_graph = nodes[trgt]
@@ -87,6 +94,25 @@ class Neo4j(Format):
             tx.create(rel_graph)
         print("Committing data")
         tx.commit()
-        return g
+
+        print("Creating index")
+        properties = ['name', 'aliases']
+
+        # TODO: Schema inference for auto-indexing?
+        for tag in tqdm.tqdm(all_tags):
+            create_index(g, tag, properties)
+        try:
+            g.run("CALL db.index.fulltext.drop(\"SMDnameAlias\")")
+        except ClientError:
+            pass
+        try:
+            g.run("CALL db.index.fulltext.drop(\"SMDcontent\")")
+        except ClientError:
+            pass
+        g.run("CALL db.index.fulltext.createNodeIndex(\"SMDnameAlias\", [\"" + "\", \"".join(all_tags) + "\"], [\"name\", \"aliases\"])")
+        if args.index_content:
+            g.run("CALL db.index.fulltext.createNodeIndex(\"SMDcontent\", [\"" + "\", \"".join(all_tags) + "\"], [\"content\"])")
+        create_index(g, CAT_DANGLING, ["name"])
+        return g, all_tags
 
 
