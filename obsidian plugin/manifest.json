@@ -1,0 +1,10 @@
+{
+	"id": "semantic-markdown-obsidian",
+	"name": "Semantic Markdown (Graph Visualization and Querying)",
+	"version": "0.0.1",
+	"minAppVersion": "0.9.12",
+	"description": "An Obsidian plugin for interfacing with Neo4j Bloom. This allows very strong graph visualization and querying.",
+	"author": "Emile",
+	"authorUrl": "https://twitter.com/emilevankrieken",
+	"isDesktopOnly": true
+}
