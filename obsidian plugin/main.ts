@@ -55,13 +55,14 @@ export default class SemanticMarkdownPlugin extends Plugin {
 		// console.log(this.path);
 		console.log('Initializing semantic markdown');
 		try {
-			// TODO: Use normal pypi instead of testpypi!
+			// let {stdout, stderr} = await exec_promise("pip3 install --upgrade semantic-markdown-converter " +
+			// 	"--index-url https://test.pypi.org/simple/ --user ", {timeout: 10000000});
 			let {stdout, stderr} = await exec_promise("pip3 install --upgrade semantic-markdown-converter " +
-				"--index-url https://test.pypi.org/simple/ --user ", {timeout: 10000000});
+				"--user ", {timeout: 10000000});
 			console.log(stdout);
 			console.log(stderr);
 			let options = {
-				args: ['--input', this.path,  '--password', this.settings.password, '--debug']
+				args: ['--input', this.path,  '--password', this.settings.password]
 			};
 			// console.log(options);
 
