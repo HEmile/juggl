@@ -12,7 +12,7 @@ def obsidian_url(name:str, vault:str) -> str:
 
 def parse_note(format: Format, note_path, vault_name=""):
     name = note_name(note_path)
-    with open(note_path, 'r', encoding='utf-8') as f:
+    with open(Path(note_path), 'r', encoding='utf-8') as f:
         # TODO: This isn't passing parsed notes right now. But this isn't currently used.
         note = format.parse(f, name, [])
         note.properties["obsidian_url"] = obsidian_url(name, vault_name)

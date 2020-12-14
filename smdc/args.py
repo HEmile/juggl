@@ -1,7 +1,10 @@
 import argparse
+from pathlib import Path
+
+import smdc
 
 def _mutual_args(parser):
-    parser.add_argument('--input', metavar='i', type=str, default="markdown",
+    parser.add_argument('--input', metavar='i', type=str, default=".",
                         help='directory with markdown files')
     parser.add_argument('--input_format', metavar='f', type=str, default="typed_list",
                         help='format of inputs')
@@ -11,6 +14,7 @@ def _mutual_args(parser):
     parser.add_argument('--password', metavar='p', type=str, default="")
     parser.add_argument("--vault_name", metavar='n', type=str, default=None, help="Defaults to input directory name")
     parser.add_argument("--batch_size", metavar='b', type=int, default=75, help="Batch size for sending to neo4j")
+    parser.add_argument("--debug", action="store_true", help="Debug mode")
     parser.add_argument("--index_content", action="store_true", help="Use to index the content in neo4j. Can highly impact performance")
     parser.add_argument('-r', action="store_false", default=True)
 
@@ -20,7 +24,10 @@ def server_args():
     _mutual_args(parser)
     args = parser.parse_args()
     if not args.vault_name:
-        args.vault_name = args.input
+        args.vault_name = Path(args.input).name
+    if args.debug:
+        smdc.DEBUG = True
+        print(args)
     return args
 
 def convert_args():
@@ -33,5 +40,8 @@ def convert_args():
                         help='directory for output files')
     args = parser.parse_args()
     if not args.vault_name:
-        args.vault_name = args.input
+        args.vault_name = Path(args.input).name
+    if args.debug:
+        smdc.DEBUG = True
+        print(args)
     return args
