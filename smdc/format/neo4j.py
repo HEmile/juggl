@@ -62,12 +62,15 @@ class Neo4j(Format):
                 node_graph = node
             else:
                 node_graph = node | node_graph
+
         if node_graph is not None:
             print("Transferring nodes to graph")
             tx.create(node_graph)
+
         all_tags = set()
         for node in nodes.values():
             all_tags.update(node.labels)
+
         rel_graph = None
         print("Creating relationships")
         i = 1
@@ -109,10 +112,11 @@ class Neo4j(Format):
             g.run("CALL db.index.fulltext.drop(\"SMDcontent\")")
         except ClientError:
             pass
-        g.run("CALL db.index.fulltext.createNodeIndex(\"SMDnameAlias\", [\"" + "\", \"".join(all_tags) + "\"], [\"name\", \"aliases\"])")
-        if args.index_content:
-            g.run("CALL db.index.fulltext.createNodeIndex(\"SMDcontent\", [\"" + "\", \"".join(all_tags) + "\"], [\"content\"])")
-        create_index(g, CAT_DANGLING, ["name"])
+        if all_tags:
+            g.run("CALL db.index.fulltext.createNodeIndex(\"SMDnameAlias\", [\"" + "\", \"".join(all_tags) + "\"], [\"name\", \"aliases\"])")
+            if args.index_content:
+                g.run("CALL db.index.fulltext.createNodeIndex(\"SMDcontent\", [\"" + "\", \"".join(all_tags) + "\"], [\"content\"])")
+            create_index(g, CAT_DANGLING, ["name"])
         return g, all_tags
 
 

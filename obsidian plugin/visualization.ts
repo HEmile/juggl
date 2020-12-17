@@ -62,19 +62,23 @@ export class NeoVisView extends ItemView{
                 [NEOVIS_DEFAULT_CONFIG]: {
                     "caption": "name",
                     "size": "pagerank",
-                    "community": "defaultCommunity"
+                    "community": "defaultCommunity",
+                    "title_properties": [
+                        "name",
+                        "aliases"
+                    ],
                     //"sizeCypher": "defaultSizeCypher"
 
                 }
             },
             relationships: {
-                "INTERACTS": {
+                "inline": {
                     "thickness": "weight",
                     "caption": false
                 },
                 [NEOVIS_DEFAULT_CONFIG]: {
                     "thickness": "defaultThicknessProperty",
-                    "caption": "defaultCaption"
+                    "caption": true
                 }
             },
             initial_cypher: "MATCH (n)-[r]-(m) WHERE n.name=\"" + this.initial_note + "\" RETURN n,r,m"
