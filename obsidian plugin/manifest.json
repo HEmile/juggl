@@ -1,0 +1,10 @@
+{
+	"id": "neovis-graph-visualization",
+	"name": "Neovis Graph Visualization",
+	"version": "0.0.1",
+	"minAppVersion": "0.9.12",
+	"description": "An Obsidian plugin for advanced graph visualization and querying using Neovis.js.",
+	"author": "Emile",
+	"authorUrl": "https://twitter.com/emilevankrieken",
+	"isDesktopOnly": true
+}

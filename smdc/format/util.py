@@ -5,13 +5,13 @@ import re
 def parse_yaml_header(file):
     lines = []
     line = file.readline()
-    while line != "---" + os.linesep:
+    while line != "---" + os.linesep and line:
         lines.append(line)
         line = file.readline()
 
     return yaml.safe_load("".join(lines))
 
-PUNCTUATION = ["#", "$", "!", ".", ",", "?", "/", ":", ";", "`", " ", "-", "+", "=", os.linesep] + [str(i) for i in range(0, 10)]
+PUNCTUATION = ["#", "$", "!", ".", ",", "?", "/", ":", ";", "`", " ", "-", "+", "=", "|", os.linesep] + [str(i) for i in range(0, 10)]
 
 
 def get_tags_from_line(line) -> [str]:
