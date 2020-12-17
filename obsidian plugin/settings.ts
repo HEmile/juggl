@@ -1,19 +1,20 @@
-import { Notice, PluginSettingTab, Setting } from "obsidian";
+import {Notice, PluginSettingTab, Setting, SplitDirection} from "obsidian";
 
 import SemanticMarkdownPlugin from './main';
 
 export class SemanticMarkdownSettings {
     index_content = false;
     password = "";
+    splitDirection: SplitDirection = 'horizontal';
 }
 
 export class SemanticMarkdownSettingTab extends PluginSettingTab {
     display(): void {
-        const plugin: SemanticMarkdownPlugin = (this as any).plugin;
+        const plugin: SemanticMarkdownPlugin = (this as any).pluginn;
         let {containerEl} = this;
         containerEl.empty();
 
-        let pwd = new Setting(containerEl)
+        new Setting(containerEl)
             .setName("Neo4j database password")
             .setDesc("The password of your neo4j graph database.")
             .addText(text => {
