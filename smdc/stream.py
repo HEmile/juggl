@@ -65,22 +65,20 @@ class SMDSEventHandler():
         self._clear_outgoing(node)
 
         # Insert up-to-date relations
-        subgraph = None
+        rels_to_create = []
+        nodes_to_create = []
         for trgt, rels in note.out_rels.items():
             trgt_node = self.nodes.match(name=trgt)
             if len(trgt_node) == 0:
                 trgt_node = Node(CAT_DANGLING, name=escape_cypher(trgt),
                                  obsidian_url=escape_cypher(obsidian_url(trgt, self.vault_name)))
-                if subgraph is None:
-                    subgraph = trgt_node
-                else:
-                    subgraph = subgraph | trgt_node
+                nodes_to_create.append(trgt_node)
             else:
                 trgt_node = trgt_node.first()
             # Possibly refactor this with
-            subgraph = add_rels_between_nodes(rels, node, trgt_node, subgraph)
-        if subgraph is not None:
-            self.graph.create(subgraph)
+            add_rels_between_nodes(rels, node, trgt_node, rels_to_create)
+        if rels_to_create or nodes_to_create:
+            self.graph.create(Subgraph(nodes=nodes_to_create, relationships=rels_to_create))
 
     def on_created(self):
         def _on_created(event):
