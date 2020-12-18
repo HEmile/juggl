@@ -2,6 +2,7 @@ from smdc.format import Format
 from smdc.note import Note
 import io
 from smdc.format.cypher import escape_cypher
+from smdc.parse import obsidian_url
 from py2neo import Graph, Node, Relationship, Subgraph
 from py2neo.database.work import ClientError
 import tqdm
@@ -9,13 +10,17 @@ import tqdm
 CAT_DANGLING = "SMD_dangling"
 CAT_NO_TAGS = "SMD_no_tags"
 
-def node_from_note(note:Note) -> Node:
+def node_from_note(note:Note, all_tags: [str]) -> Node:
     tags = [CAT_NO_TAGS]
     if note.tags:
         tags = list(map(escape_cypher, note.tags))
+        for tag in tags:
+            if tag not in all_tags:
+                all_tags.append(tag)
     properties = {}
     for property, value in note.properties.items():
         properties[property] = escape_cypher(str(value))
+    properties["community"] = all_tags.index(tags[0])
     return Node(*tags, **properties)
 
 def add_rels_between_nodes(rels, src_node, trgt_node, subgraph: [Relationship]):
@@ -30,6 +35,10 @@ def add_rels_between_nodes(rels, src_node, trgt_node, subgraph: [Relationship]):
 def create_index(graph, tag, properties):
     for prop in properties:
         graph.run("CREATE INDEX index_" + prop + "_" + tag + " IF NOT EXISTS FOR (n:" + tag + ") ON " + "(n." + prop + ")")
+
+def create_dangling(name:str, vault_name:str, tags: [str]) -> Node:
+    return Node(CAT_DANGLING, name=escape_cypher(name), community=tags.index(CAT_DANGLING),
+                                 obsidian_url=escape_cypher(obsidian_url(name, vault_name)))
 
 class Neo4j(Format):
 
@@ -49,19 +58,15 @@ class Neo4j(Format):
 
         nodes = {}
         print("Converting nodes")
-        node_graph: Subgraph = None
+        all_tags = [CAT_NO_TAGS, CAT_DANGLING]
         # First create all nodes in the graph before doing the relationships, so they all exist.
         for name, note in tqdm.tqdm(parsed_notes.items()):
-            node = node_from_note(note)
+            node = node_from_note(note, all_tags)
             nodes[name] = node
 
         if nodes:
             print("Transferring nodes to graph")
             tx.create(Subgraph(nodes=nodes.values()))
-
-        all_tags = set()
-        for node in nodes.values():
-            all_tags.update(node.labels)
 
         rels_to_create = []
         nodes_to_create = []
@@ -73,8 +78,7 @@ class Neo4j(Format):
             src_node = nodes[name]
             for trgt, rels in note.out_rels.items():
                 if trgt not in nodes:
-                    nodes[trgt] = Node(CAT_DANGLING, name=trgt)
-                    # node_graph = node_graph | nodes[trgt]
+                    nodes[trgt] = create_dangling(trgt, args.vault_name, all_tags)
                     nodes_to_create.append(nodes[trgt])
                 trgt_node = nodes[trgt]
                 add_rels_between_nodes(rels, src_node, trgt_node, rels_to_create)

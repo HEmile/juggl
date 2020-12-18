@@ -16,6 +16,7 @@ def parse_note(format: Format, note_path, vault_name=""):
         # TODO: This isn't passing parsed notes right now. But this isn't currently used.
         note = format.parse(f, name, [])
         note.properties["obsidian_url"] = obsidian_url(name, vault_name)
+        note.properties["path"] = note_path
         return note
 
 def parse_folder(format: Format, notes_path="", recursive=True, note_extension='.md', vault_name=""):
@@ -32,6 +33,7 @@ def parse_folder(format: Format, notes_path="", recursive=True, note_extension='
             try:
                 note = format.parse(f, name, parsed_notes)
                 note.properties["obsidian_url"] = obsidian_url(name, vault_name)
+                note.properties["path"] = path
                 parsed_notes[name] = note
             except Exception as e:
                 print(e)

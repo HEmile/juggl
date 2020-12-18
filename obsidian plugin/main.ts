@@ -1,19 +1,15 @@
 import {
-	App,
 	FileSystemAdapter,
-	MarkdownView,
-	Modal,
+	MarkdownView, normalizePath,
 	Notice,
-	Plugin,
-	PluginSettingTab,
-	Setting,
+	Plugin, TAbstractFile, TFile,
 	WorkspaceLeaf
 } from 'obsidian';
 import {SemanticMarkdownSettings, SemanticMarkdownSettingTab} from "./settings";
 import { exec, ChildProcess } from 'child_process';
 import {promisify} from "util";
 import {PythonShell} from "python-shell";
-import {NV_VIEW_TYPE, NeoVisView} from "./visualization";
+import {NV_VIEW_TYPE, NeoVisView, MD_VIEW_TYPE} from "./visualization";
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -35,7 +31,7 @@ export default class SemanticMarkdownPlugin extends Plugin {
 		this.statusBar = this.addStatusBarItem();
 		this.statusBar.setText("Neo4j stream offline");
 
-		this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.settings, this.app.workspace.activeLeaf?.getDisplayText()))
+		this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.app.workspace.activeLeaf?.getDisplayText(), this))
 
 		this.addCommand({
 			id: 'restart-stream',
@@ -88,7 +84,7 @@ export default class SemanticMarkdownPlugin extends Plugin {
 				let name = active_view.getDisplayText();
 
 				const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
-				const neovisView = new NeoVisView(leaf, this.settings, name);
+				const neovisView = new NeoVisView(leaf, name, this);
 				leaf.open(neovisView);
 			},
 		});
@@ -96,6 +92,22 @@ export default class SemanticMarkdownPlugin extends Plugin {
 		this.addSettingTab(new SemanticMarkdownSettingTab(this.app, this));
 
 		await this.initialize();
+	}
+
+	public getFileFromAbsolutePath(abs_path: string): TAbstractFile {
+		const path = require('path');
+		const relPath = path.relative(this.path, abs_path);
+		return this.app.vault.getAbstractFileByPath(relPath);
+	}
+
+	public async openFile(file: TFile) {
+		const md_leaves = this.app.workspace.getLeavesOfType(MD_VIEW_TYPE);
+		if (md_leaves.length > 0) {
+			await md_leaves[0].openFile(file);
+		}
+		else {
+			await this.app.workspace.getLeaf(true).openFile(file);
+		}
 	}
 
 	public async restart() {
@@ -110,8 +122,9 @@ export default class SemanticMarkdownPlugin extends Plugin {
 		console.log('Initializing semantic markdown');
 		try {
 			// console.log(stdout);
-			// 	"--index-url https://test.pypi.org/simple/ --user ", {timeout: 10000000});
 			let {stdout, stderr} = await exec_promise("pip3 install --upgrade semantic-markdown-converter " +
+				"--index-url https://test.pypi.org/simple/ " + // Use this for debugging
+				"--no-warn-script-location " +
 				"--user ", {timeout: 10000000});
 			console.log(stderr);
 			let options = {

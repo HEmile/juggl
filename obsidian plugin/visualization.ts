@@ -2,7 +2,8 @@
 import {NEOVIS_DEFAULT_CONFIG} from "neovis.js";
 import NeoVis from 'neovis.js';
 import {SemanticMarkdownSettings} from "./settings";
-import {EventRef, ItemView, MarkdownView, Workspace, WorkspaceLeaf} from "obsidian";
+import {EventRef, ItemView, MarkdownView, normalizePath, TFile, Vault, Workspace, WorkspaceLeaf} from "obsidian";
+import SemanticMarkdownPlugin from "./main";
 
 export const NV_VIEW_TYPE = "neovis";
 export const MD_VIEW_TYPE = 'markdown';
@@ -13,12 +14,16 @@ export class NeoVisView extends ItemView{
     listeners: EventRef[];
     settings: SemanticMarkdownSettings;
     initial_note: string;
+    vault: Vault;
+    plugin: SemanticMarkdownPlugin;
 
-    constructor(leaf: WorkspaceLeaf, settings: SemanticMarkdownSettings, active_note: string) {
+    constructor(leaf: WorkspaceLeaf, active_note: string, plugin: SemanticMarkdownPlugin) {
         super(leaf);
-        this.settings = settings;
+        this.settings = plugin.settings;
         this.workspace = this.app.workspace;
         this.initial_note = active_note;
+        this.vault = this.app.vault;
+        this.plugin = plugin;
     }
 
     async onOpen() {
@@ -30,8 +35,6 @@ export class NeoVisView extends ItemView{
             // this.leaf.on('group-change', (group) => this.updateLinkedLeaf(group, this))
         ];
 
-
-
         const div = document.createElement("div");
         div.id = "neovis_id";
         this.containerEl.children[1].appendChild(div);
@@ -39,34 +42,37 @@ export class NeoVisView extends ItemView{
         console.log('changed');
         console.log(this.containerEl);
         console.log(this.leaf);
-        var config = {
+        const config = {
             container_id: "neovis_id",
             server_url: "bolt://localhost:7687",
             server_user: "neo4j",
-            server_password: this.settings.password  ,
+            server_password: this.settings.password,
             arrows: true, // TODO: ADD CONFIG
             labels: {
                 //"Character": "name",
-                "SMD_no_tags": {
-                    "caption": "name",
-                    "size": "pagerank",
-                    // "font": "???" # Use css for this
-                    // "community": "community", # Should default to color by label
-                    //"image": 'https://visjs.org/images/visjs_logo.png',
-                    "title_properties": [
-                        "name",
-                        "aliases"
-                    ],
-                    //"sizeCypher": "MATCH (n) WHERE id(n) = {id} MATCH (n)-[r]-() RETURN sum(r.weight) AS c"
-                },
+                // "SMD_no_tags": {
+                //     "caption": "name",
+                //     "size": "pagerank",
+                //     // "font": "???" # Use css for this
+                //     // "community": "community", # Should default to color by label
+                //     //"image": 'https://visjs.org/images/visjs_logo.png',
+                //     "title_properties": [
+                //         "aliases",
+                //         "content"
+                //     ],
+                //     //"sizeCypher": "MATCH (n) WHERE id(n) = {id} MATCH (n)-[r]-() RETURN sum(r.weight) AS c"
+                // },
                 [NEOVIS_DEFAULT_CONFIG]: {
                     "caption": "name",
                     "size": "pagerank",
-                    "community": "defaultCommunity",
+                    "community": "community",
                     "title_properties": [
-                        "name",
-                        "aliases"
+                        "aliases",
+                        "content"
                     ],
+                    "font": {
+                        "size": 26
+                    }
                     //"sizeCypher": "defaultSizeCypher"
 
                 }
@@ -91,20 +97,31 @@ export class NeoVisView extends ItemView{
             console.log(viz["_network"]);
             // @ts-ignore
             viz["_network"].on("click", (event)=>{
-                let node = viz.nodes.get(event.nodes[0]);
-                console.log(node);
-                // TODO: add community and path properties to smds
-
-                // @ts-ignore
-                const note_name = node.label;
-                // const view = this.workspace.getLeavesOfType(MD_VIEW_TYPE);
-                // let leaf = view[0];
-                // let file = this.app.vault.getMarkdownFiles().
+                this.onClickNode(viz.nodes.get(event.nodes[0]));
             });
         });
         console.log("rendering")
         this.load();
         viz.render();
+
+        // this.app.o
+    }
+
+    async onClickNode(node: Object) {
+        // @ts-ignore
+        const file = node.raw.properties["path"];
+        if (file) {
+            const tfile = this.plugin.getFileFromAbsolutePath(file) as TFile;
+            await this.plugin.openFile(tfile)
+        }
+        else {
+            // Create dangling file
+            // TODO: Add default folder
+            // @ts-ignore
+            const filename = node.label + ".md";
+            const createdFile = await this.vault.create(filename, '');
+            await this.plugin.openFile(createdFile);
+        }
     }
 
     async checkAndUpdate() {
