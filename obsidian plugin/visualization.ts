@@ -16,9 +16,12 @@ export class NeoVisView extends ItemView{
     initial_note: string;
     vault: Vault;
     plugin: SemanticMarkdownPlugin;
+    viz: NeoVis;
+    hasClickListener = false;
 
     constructor(leaf: WorkspaceLeaf, active_note: string, plugin: SemanticMarkdownPlugin) {
         super(leaf);
+        console.log(leaf);
         this.settings = plugin.settings;
         this.workspace = this.app.workspace;
         this.initial_note = active_note;
@@ -39,9 +42,7 @@ export class NeoVisView extends ItemView{
         div.id = "neovis_id";
         this.containerEl.children[1].appendChild(div);
         div.setAttr("style", "height: 100%; width:100%");
-        console.log('changed');
         console.log(this.containerEl);
-        console.log(this.leaf);
         const config = {
             container_id: "neovis_id",
             server_url: "bolt://localhost:7687",
@@ -49,19 +50,6 @@ export class NeoVisView extends ItemView{
             server_password: this.settings.password,
             arrows: true, // TODO: ADD CONFIG
             labels: {
-                //"Character": "name",
-                // "SMD_no_tags": {
-                //     "caption": "name",
-                //     "size": "pagerank",
-                //     // "font": "???" # Use css for this
-                //     // "community": "community", # Should default to color by label
-                //     //"image": 'https://visjs.org/images/visjs_logo.png',
-                //     "title_properties": [
-                //         "aliases",
-                //         "content"
-                //     ],
-                //     //"sizeCypher": "MATCH (n) WHERE id(n) = {id} MATCH (n)-[r]-() RETURN sum(r.weight) AS c"
-                // },
                 [NEOVIS_DEFAULT_CONFIG]: {
                     "caption": "name",
                     "size": "pagerank",
@@ -87,29 +75,40 @@ export class NeoVisView extends ItemView{
                     "caption": true
                 }
             },
-            initial_cypher: "MATCH (n)-[r]-(m) WHERE n.name=\"" + this.initial_note + "\" RETURN n,r,m"
+            initial_cypher: this.localNeighborhoodCypher(this.initial_note)
         };
-        console.log(this.containerEl.id);
-        let viz = new NeoVis(config);
-
-        viz.registerOnEvent("completed", (e)=>{
-            // @ts-ignore
-            console.log(viz["_network"]);
-            // @ts-ignore
-            viz["_network"].on("click", (event)=>{
-                this.onClickNode(viz.nodes.get(event.nodes[0]));
-            });
+        this.viz = new NeoVis(config);
+        this.viz.registerOnEvent("completed", (e)=>{
+            console.log("onCompleted");
+            if (!this.hasClickListener) {
+                // @ts-ignore
+                this.viz["_network"].on("click", (event) => {
+                    console.log("onClick");
+                    this.onClickNode(this.viz.nodes.get(event.nodes[0]));
+                });
+                this.hasClickListener = true;
+            }
         });
         console.log("rendering")
         this.load();
-        viz.render();
+        this.viz.render();
 
         // this.app.o
     }
 
+    localNeighborhoodCypher(label:string): string {
+        return "MATCH (n)-[r]-(m) WHERE n.name=\"" + label + "\" RETURN n,r,m"
+    }
+
     async onClickNode(node: Object) {
         // @ts-ignore
+        if (!node.raw) {
+            return;
+        }
+        // @ts-ignore
         const file = node.raw.properties["path"];
+        // @ts-ignore
+        const label = node.label;
         if (file) {
             const tfile = this.plugin.getFileFromAbsolutePath(file) as TFile;
             await this.plugin.openFile(tfile)
@@ -117,10 +116,13 @@ export class NeoVisView extends ItemView{
         else {
             // Create dangling file
             // TODO: Add default folder
-            // @ts-ignore
-            const filename = node.label + ".md";
+            const filename = label + ".md";
             const createdFile = await this.vault.create(filename, '');
             await this.plugin.openFile(createdFile);
+        }
+        if (this.settings.auto_expand) {
+            console.log(this.localNeighborhoodCypher(label));
+            await this.viz.updateWithCypher(this.localNeighborhoodCypher(label));
         }
     }
 
