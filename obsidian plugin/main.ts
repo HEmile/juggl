@@ -2,7 +2,7 @@ import {
 	FileSystemAdapter,
 	MarkdownView, normalizePath,
 	Notice,
-	Plugin, TAbstractFile, TFile,
+	Plugin, Scope, TAbstractFile, TFile,
 	WorkspaceLeaf
 } from 'obsidian';
 import {SemanticMarkdownSettings, SemanticMarkdownSettingTab} from "./settings";
@@ -33,7 +33,7 @@ export default class SemanticMarkdownPlugin extends Plugin {
 		this.statusBar = this.addStatusBarItem();
 		this.statusBar.setText(STATUS_OFFLINE);
 
-		this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.app.workspace.activeLeaf?.getDisplayText(), this))
+		// this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.app.workspace.activeLeaf?.getDisplayText(), this))
 
 		this.addCommand({
 			id: 'restart-stream',
@@ -92,6 +92,7 @@ export default class SemanticMarkdownPlugin extends Plugin {
 		});
 
 		this.addSettingTab(new SemanticMarkdownSettingTab(this.app, this));
+
 
 		await this.initialize();
 	}
