@@ -55,7 +55,8 @@ export class NeoVisView extends ItemView{
             server_url: "bolt://localhost:7687",
             server_user: "neo4j",
             server_password: this.settings.password,
-            arrows: true, // TODO: ADD CONFIG
+            arrows: this.settings.show_arrows, // TODO: ADD CONFIG
+            hierarchical: this.settings.hierarchical,
             labels: {
                 [NEOVIS_DEFAULT_CONFIG]: {
                     "caption": "name",

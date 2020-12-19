@@ -6,6 +6,8 @@ export class SemanticMarkdownSettings {
     index_content = false;
     auto_expand = true;
     auto_add_nodes = true;
+    hierarchical = false;
+    show_arrows = true;
     password = "";
     splitDirection: SplitDirection = 'horizontal';
 }
@@ -32,6 +34,28 @@ export class SemanticMarkdownSettingTab extends PluginSettingTab {
                         this.plugin.settings.password = new_folder;
                         this.plugin.saveData(this.plugin.settings);
                     }).inputEl.setAttribute("type", "password")
+            });
+
+        new Setting(containerEl)
+            .setName("Hierarchical layout")
+            .setDesc("Use the hierarchical graph layout instead of the normal one.")
+            .addToggle(toggle => {
+                toggle.setValue(this.plugin.settings.hierarchical)
+                    .onChange((new_value) => {
+                        this.plugin.settings.hierarchical = new_value;
+                        this.plugin.saveData(this.plugin.settings);
+                    })
+            });
+
+        new Setting(containerEl)
+            .setName("Show arrows")
+            .setDesc("Show arrows on edges.")
+            .addToggle(toggle => {
+                toggle.setValue(this.plugin.settings.show_arrows)
+                    .onChange((new_value) => {
+                        this.plugin.settings.show_arrows = new_value;
+                        this.plugin.saveData(this.plugin.settings);
+                    })
             });
 
         new Setting(containerEl)
