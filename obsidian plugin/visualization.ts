@@ -5,7 +5,7 @@ import {SemanticMarkdownSettings} from "./settings";
 import {EventRef, ItemView, MarkdownView, normalizePath, TFile, Vault, Workspace, WorkspaceLeaf} from "obsidian";
 import SemanticMarkdownPlugin from "./main";
 import {Relationship, Node} from "neo4j-driver";
-import {IdType, Network} from "vis-network";
+import {Data, IdType, Network} from "vis-network";
 
 export const NV_VIEW_TYPE = "neovis";
 export const MD_VIEW_TYPE = 'markdown';
@@ -212,7 +212,35 @@ export class NeoVisView extends ItemView{
     }
 
     async hideSelection() {
+        console.log(this.viz);
+
+        // @ts-ignore
+        // this.network["_edges"].clear();
         this.network.deleteSelected();
+
+        // This super hacky code is used because neovis.js doesn't like me removing nodes from the graph.
+        // Essentially, whenever it'd execute a new query, it'd re-add all hidden nodes!
+        // This resets the state of NeoVis so that it only acts as an interface with neo4j instead of also keeping
+        // track of the data.
+        // @ts-ignore
+        let data = {nodes: this.viz.nodes, edges: this.viz.edges} as Data;
+        this.viz.clearNetwork();
+        this.network.setData(data);
+
+        // for (let id of this.network.getSelectedNodes()) {
+        //     this.viz.nodes.remove(id);
+        //     for (let edge in this.viz.edges) {
+        //         console.log(edge);
+        //     }
+        //     // @ts-ignore
+        //     // this.viz.nodes.clear();
+        //     // this.viz.edges.clear();
+        //     // node.hidden = true;
+        //     // n?ode.
+        // }
+        console.log(this.viz);
+
+
     }
 
     async checkAndUpdate() {
