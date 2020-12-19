@@ -4,21 +4,28 @@ from tqdm import tqdm
 import os
 from urllib.parse import quote
 
+PROP_OBSIDIAN_URL = "obsidian_url"
+PROP_PATH = "SMD_path"
+PROP_VAULT = "SMD_vault"
+
 def note_name(path, extension=".md"):
     return os.path.basename(path)[:-len(extension)]
 
 def obsidian_url(name:str, vault:str) -> str:
     return "obsidian://open?vault=" + quote(vault) + "&file=" + quote(name) + ".md"
 
-def parse_note(format: Format, note_path, vault_name=""):
+def parse_note(format: Format, note_path, vault_name):
     name = note_name(note_path)
     with open(Path(note_path), 'r', encoding='utf-8') as f:
         # TODO: This isn't passing parsed notes right now. But this isn't currently used.
         note = format.parse(f, name, [])
-        note.properties["obsidian_url"] = obsidian_url(name, vault_name)
+        # Assign automatic properties for handling data and plugins
+        note.properties[PROP_OBSIDIAN_URL] = obsidian_url(name, vault_name)
+        note.properties[PROP_PATH] = note_path
+        note.properties[PROP_VAULT] = vault_name
         return note
 
-def parse_folder(format: Format, notes_path="", recursive=True, note_extension='.md', vault_name=""):
+def parse_folder(format: Format, vault_name, notes_path="", recursive=True, note_extension='.md'):
     if recursive:
         iterate = Path(notes_path).rglob("*" + note_extension)
     else:
@@ -31,7 +38,9 @@ def parse_folder(format: Format, notes_path="", recursive=True, note_extension='
             name = note_name(path, note_extension)
             try:
                 note = format.parse(f, name, parsed_notes)
-                note.properties["obsidian_url"] = obsidian_url(name, vault_name)
+                note.properties[PROP_OBSIDIAN_URL] = obsidian_url(name, vault_name)
+                note.properties[PROP_PATH] = path
+                note.properties[PROP_VAULT] = vault_name
                 parsed_notes[name] = note
             except Exception as e:
                 print(e)

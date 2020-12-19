@@ -6,10 +6,10 @@ from smdc.format.util import escape_quotes
 
 
 def escape_cypher(string):
-    r = escape_quotes(string)
+    # r = escape_quotes(string)
     # Note: CYPHER doesn't allow putting semicolons in text, for some reason. This is lossy!
-    r = r.replace(";", ",")
-    r = r.replace("\\u", "\\\\u")
+    # r = r.replace(";", ",")
+    r = string.replace("\\u", "\\\\u")
     if r and r[-1] == '\\':
         r += ' '
     return r

@@ -1,23 +1,22 @@
 import {
-	App,
 	FileSystemAdapter,
-	MarkdownView,
-	Modal,
+	MarkdownView, normalizePath,
 	Notice,
-	Plugin,
-	PluginSettingTab,
-	Setting,
+	Plugin, Scope, TAbstractFile, TFile,
 	WorkspaceLeaf
 } from 'obsidian';
 import {SemanticMarkdownSettings, SemanticMarkdownSettingTab} from "./settings";
 import { exec, ChildProcess } from 'child_process';
 import {promisify} from "util";
 import {PythonShell} from "python-shell";
-import {NV_VIEW_TYPE, NeoVisView} from "./visualization";
+import {NV_VIEW_TYPE, NeoVisView, MD_VIEW_TYPE} from "./visualization";
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
 const exec_promise = promisify(exec);
+
+const STATUS_OFFLINE = "Neo4j stream offline";
+const DEBUG = false;
 
 export default class SemanticMarkdownPlugin extends Plugin {
 	settings: SemanticMarkdownSettings;
@@ -33,9 +32,9 @@ export default class SemanticMarkdownPlugin extends Plugin {
 
 		this.settings = (await this.loadData()) || new SemanticMarkdownSettings();
 		this.statusBar = this.addStatusBarItem();
-		this.statusBar.setText("Neo4j stream offline");
+		this.statusBar.setText(STATUS_OFFLINE);
 
-		this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.settings, this.app.workspace.activeLeaf?.getDisplayText()))
+		// this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.app.workspace.activeLeaf?.getDisplayText(), this))
 
 		this.addCommand({
 			id: 'restart-stream',
@@ -88,14 +87,31 @@ export default class SemanticMarkdownPlugin extends Plugin {
 				let name = active_view.getDisplayText();
 
 				const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
-				const neovisView = new NeoVisView(leaf, this.settings, name);
+				const neovisView = new NeoVisView(leaf, name, this);
 				leaf.open(neovisView);
 			},
 		});
 
 		this.addSettingTab(new SemanticMarkdownSettingTab(this.app, this));
 
+
 		await this.initialize();
+	}
+
+	public getFileFromAbsolutePath(abs_path: string): TAbstractFile {
+		const path = require('path');
+		const relPath = path.relative(this.path, abs_path);
+		return this.app.vault.getAbstractFileByPath(relPath);
+	}
+
+	public async openFile(file: TFile) {
+		const md_leaves = this.app.workspace.getLeavesOfType(MD_VIEW_TYPE);
+		if (md_leaves.length > 0) {
+			await md_leaves[0].openFile(file);
+		}
+		else {
+			await this.app.workspace.getLeaf(true).openFile(file);
+		}
 	}
 
 	public async restart() {
@@ -107,12 +123,14 @@ export default class SemanticMarkdownPlugin extends Plugin {
 	public async initialize() {
 
 		// console.log(this.path);
-		console.log('Initializing semantic markdown');
+		console.log('Initializing Neo4j stream');
 		try {
-			// console.log(stdout);
-			// 	"--index-url https://test.pypi.org/simple/ --user ", {timeout: 10000000});
 			let {stdout, stderr} = await exec_promise("pip3 install --upgrade semantic-markdown-converter " +
+				"--no-warn-script-location " +
+				(DEBUG ? "--index-url https://test.pypi.org/simple/ " : "") +
 				"--user ", {timeout: 10000000});
+			// Use this for debugging
+			// console.log(stdout);
 			console.log(stderr);
 			let options = {
 				args: ['--input', this.path,  '--password', this.settings.password]
@@ -122,8 +140,7 @@ export default class SemanticMarkdownPlugin extends Plugin {
 			this.stream_process = PythonShell.runString("from smdc.stream import main;" +
 				"main();", options, function(err, results) {
 				if (err) throw err;
-				console.log('finished');
-				console.log(results);
+				console.log('Neo4j stream killed');
 			});
 			let plugin = this;
 			process.on("exit", function() {
@@ -132,14 +149,23 @@ export default class SemanticMarkdownPlugin extends Plugin {
 			let statusbar = this.statusBar
 			this.stream_process.on('message', function (message) {
 				// received a message sent from the Python script (a simple "print" statement)
-				console.log(message);
+				// console.log(message);
 				if (message === 'Stream is active!') {
+					console.log(message);
 					new Notice("Neo4j stream online!");
 					statusbar.setText("Neo4j stream online");
 				}
+				else if (message == 'invalid user credentials') {
+					console.log(message);
+					new Notice('Please provide a password in the Neo4j Graph View settings');
+					statusbar.setText(STATUS_OFFLINE);
+				}
+				else if (message == 'no connection to db') {
+					console.log(message);
+					new Notice("No connection to Neo4j database. Please start Neo4j Database in Neo4j Desktop");
+					statusbar.setText(STATUS_OFFLINE);
+				}
 			});
-			this.stream_process.stdout.pipe(process.stdout);
-			this.stream_process.stderr.pipe(process.stderr);
 
 			new Notice("Initializing Neo4j stream.");
 			this.statusBar.setText('Initializing Neo4j stream');

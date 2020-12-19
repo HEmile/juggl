@@ -3,18 +3,22 @@ from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 import time
 from py2neo import Node, Subgraph
-from smdc.format.neo4j import node_from_note, add_rels_between_nodes, CAT_DANGLING, CAT_NO_TAGS, create_index
+from smdc.format.neo4j import node_from_note, add_rels_between_nodes, CAT_DANGLING, CAT_NO_TAGS, create_index, \
+    create_dangling, PROP_COMMUNITY
 from smdc.format.cypher import escape_cypher
 from pathlib import Path
 import smdc
+from smdc.parse import PROP_VAULT
+
 
 class SMDSEventHandler():
-    def __init__(self, graph, input_format, vault_name, tags):
+    def __init__(self, graph, tags: [str], args):
         self.graph = graph
         self.nodes = graph.nodes
         self.relationships = graph.relationships
-        self.input_format = input_format
-        self.vault_name = vault_name
+        self.input_format = args.input_format
+        self.vault_name = args.vault_name
+        self.index_content = args.index_content
         self.tags = tags
 
     def _clear_outgoing(self, node: Node):
@@ -25,10 +29,10 @@ class SMDSEventHandler():
     def _process_node_on_graph(self, note: Note):
         if smdc.DEBUG:
             print(note, flush=True)
-        in_graph = self.nodes.match(name=note.name)
+        in_graph = self.nodes.match(**{'name': note.name, PROP_VAULT: self.vault_name})
         if len(in_graph) == 0:
             # Create new node
-            node = node_from_note(note)
+            node = node_from_note(note, self.tags)
             if smdc.DEBUG:
                 print("creating")
                 print(node, flush=True)
@@ -47,17 +51,14 @@ class SMDSEventHandler():
         node.update_labels(note_tags)
         for tag in note_tags:
             if tag not in self.tags:
-                properties = ['name', 'aliases']
-                # TODO: Is this too slow?
-                if True:
-                    properties.append("content")
-                create_index(self.graph, tag, properties)
-                self.tags.add(tag)
+                create_index(self.graph, tag)
+                self.tags.append(tag)
         # Update properties
         node.clear()
         escaped_properties = {}
         for key, value in note.properties.items():
             escaped_properties[key] = escape_cypher(str(value))
+        escaped_properties[PROP_COMMUNITY] = self.tags.index(note_tags[0])
         node.update(escaped_properties)
         self.graph.push(node)
 
@@ -70,8 +71,7 @@ class SMDSEventHandler():
         for trgt, rels in note.out_rels.items():
             trgt_node = self.nodes.match(name=trgt)
             if len(trgt_node) == 0:
-                trgt_node = Node(CAT_DANGLING, name=escape_cypher(trgt),
-                                 obsidian_url=escape_cypher(obsidian_url(trgt, self.vault_name)))
+                trgt_node = create_dangling(trgt, self.vault_name, self.tags)
                 nodes_to_create.append(trgt_node)
             else:
                 trgt_node = trgt_node.first()
@@ -132,7 +132,7 @@ def stream(graph, tags, args):
     # Code credit: http://thepythoncorner.com/dev/how-to-create-a-watchdog-in-python-to-look-for-filesystem-changes/
     event_handler = PatternMatchingEventHandler(patterns=["*.md"], case_sensitive=True)
 
-    smds_event_handler = SMDSEventHandler(graph, FORMAT_TYPES[args.input_format], args.vault_name, tags)
+    smds_event_handler = SMDSEventHandler(graph, tags, args)
     event_handler.on_created = smds_event_handler.on_created()
     event_handler.on_deleted = smds_event_handler.on_deleted()
     event_handler.on_modified = smds_event_handler.on_modified()

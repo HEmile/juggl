@@ -2,10 +2,17 @@
 import {NEOVIS_DEFAULT_CONFIG} from "neovis.js";
 import NeoVis from 'neovis.js';
 import {SemanticMarkdownSettings} from "./settings";
-import {EventRef, ItemView, MarkdownView, Workspace, WorkspaceLeaf} from "obsidian";
+import {EventRef, ItemView, MarkdownView, normalizePath, TFile, Vault, Workspace, WorkspaceLeaf} from "obsidian";
+import SemanticMarkdownPlugin from "./main";
+import {Relationship, Node} from "neo4j-driver";
+import {Data, IdType, Network} from "vis-network";
 
 export const NV_VIEW_TYPE = "neovis";
 export const MD_VIEW_TYPE = 'markdown';
+
+export const PROP_VAULT = "SMD_vault"
+export const PROP_PATH = "SMD_path"
+export const PROP_COMMUNITY = "SMD_community"
 
 export class NeoVisView extends ItemView{
 
@@ -13,16 +20,23 @@ export class NeoVisView extends ItemView{
     listeners: EventRef[];
     settings: SemanticMarkdownSettings;
     initial_note: string;
+    vault: Vault;
+    plugin: SemanticMarkdownPlugin;
+    viz: NeoVis;
+    network: Network;
+    hasClickListener = false;
 
-    constructor(leaf: WorkspaceLeaf, settings: SemanticMarkdownSettings, active_note: string) {
+    constructor(leaf: WorkspaceLeaf, active_note: string, plugin: SemanticMarkdownPlugin) {
         super(leaf);
-        this.settings = settings;
+        this.settings = plugin.settings;
         this.workspace = this.app.workspace;
         this.initial_note = active_note;
+        this.vault = this.app.vault;
+        this.plugin = plugin;
     }
 
     async onOpen() {
-        this.registerInterval(window.setInterval(()=> this.checkAndUpdate));
+        // this.registerInterval(window.setInterval(()=> this.checkAndUpdate));
         this.listeners = [
             this.workspace.on('layout-ready', () => this.update()),
             this.workspace.on('resize', () => this.update()),
@@ -30,43 +44,30 @@ export class NeoVisView extends ItemView{
             // this.leaf.on('group-change', (group) => this.updateLinkedLeaf(group, this))
         ];
 
-
-
         const div = document.createElement("div");
         div.id = "neovis_id";
         this.containerEl.children[1].appendChild(div);
         div.setAttr("style", "height: 100%; width:100%");
-        console.log('changed');
-        console.log(this.containerEl);
-        console.log(this.leaf);
-        var config = {
+        // console.log(this.containerEl);
+        const config = {
             container_id: "neovis_id",
             server_url: "bolt://localhost:7687",
             server_user: "neo4j",
-            server_password: this.settings.password  ,
-            arrows: true, // TODO: ADD CONFIG
+            server_password: this.settings.password,
+            arrows: this.settings.show_arrows, // TODO: ADD CONFIG
+            hierarchical: this.settings.hierarchical,
             labels: {
-                //"Character": "name",
-                "SMD_no_tags": {
-                    "caption": "name",
-                    "size": "pagerank",
-                    // "font": "???" # Use css for this
-                    // "community": "community", # Should default to color by label
-                    //"image": 'https://visjs.org/images/visjs_logo.png',
-                    "title_properties": [
-                        "name",
-                        "aliases"
-                    ],
-                    //"sizeCypher": "MATCH (n) WHERE id(n) = {id} MATCH (n)-[r]-() RETURN sum(r.weight) AS c"
-                },
                 [NEOVIS_DEFAULT_CONFIG]: {
                     "caption": "name",
                     "size": "pagerank",
-                    "community": "defaultCommunity",
+                    "community": PROP_COMMUNITY,
                     "title_properties": [
-                        "name",
-                        "aliases"
+                        "aliases",
+                        "content"
                     ],
+                    "font": {
+                        "size": 26
+                    }
                     //"sizeCypher": "defaultSizeCypher"
 
                 }
@@ -81,30 +82,149 @@ export class NeoVisView extends ItemView{
                     "caption": true
                 }
             },
-            initial_cypher: "MATCH (n)-[r]-(m) WHERE n.name=\"" + this.initial_note + "\" RETURN n,r,m"
+            initial_cypher: this.settings.auto_expand ?
+                this.localNeighborhoodCypher(this.initial_note) :
+                this.nodeCypher(this.initial_note)
         };
-        console.log(this.containerEl.id);
-        let viz = new NeoVis(config);
-
-        viz.registerOnEvent("completed", (e)=>{
-            // @ts-ignore
-            console.log(viz["_network"]);
-            // @ts-ignore
-            viz["_network"].on("click", (event)=>{
-                let node = viz.nodes.get(event.nodes[0]);
-                console.log(node);
-                // TODO: add community and path properties to smds
-
+        this.viz = new NeoVis(config);
+        this.viz.registerOnEvent("completed", (e)=>{
+            if (!this.hasClickListener) {
                 // @ts-ignore
-                const note_name = node.label;
-                // const view = this.workspace.getLeavesOfType(MD_VIEW_TYPE);
-                // let leaf = view[0];
-                // let file = this.app.vault.getMarkdownFiles().
-            });
+                this.network = this.viz["_network"] as Network;
+                // Register on click event
+                this.network.on("click", (event) => {
+                    if (event.nodes.length > 0) {
+                        this.onClickNode(this.findNode(event.nodes[0]));
+                    }
+                    else if (event.edges.length == 1) {
+                        this.onClickEdge(this.findEdge(event.edges[0]));
+                    }
+                });
+                this.hasClickListener = true;
+            }
         });
-        console.log("rendering")
         this.load();
-        viz.render();
+        this.viz.render();
+
+        // Register on file open event
+        this.workspace.on("file-open", (file) => {
+            if (file && this.settings.auto_add_nodes) {
+                const name = file.basename;
+                if (this.settings.auto_expand) {
+                    this.viz.updateWithCypher(this.localNeighborhoodCypher(name));
+                }
+                else {
+                    this.viz.updateWithCypher(this.nodeCypher(name));
+                }
+            }
+        });
+
+        // Register keypress event
+        this.containerEl.addEventListener("keydown", (evt) => {
+            if (evt.key === "e"){
+                this.expandSelection();
+            }
+            else if (evt.key === "h"){
+                this.hideSelection();
+            }
+        });
+    }
+
+    nodeCypher(label: string): string {
+        return "MATCH (n) WHERE n.name=\"" + label +
+            "\" AND n." + PROP_VAULT + "=\"" + this.vault.getName() +
+            "\" RETURN n"
+    }
+
+    localNeighborhoodCypher(label:string): string {
+        return "MATCH (n)-[r]-(m) WHERE n.name=\"" + label +
+            "\" AND n." + PROP_VAULT + "=\"" + this.vault.getName() +
+            "\" RETURN n,r,m"
+    }
+
+    findNode(id: IdType): Node {
+        // @ts-ignore
+        return this.viz.nodes.get(id)?.raw as Node;
+    }
+
+    findEdge(id: IdType): Relationship {
+        // @ts-ignore
+        return this.viz.edges.get(id)?.raw as Relationship;
+    }
+
+    async onClickNode(node: Node) {
+        // @ts-ignore
+        const file = node.properties[PROP_PATH];
+        // @ts-ignore
+        const label = node.properties["name"];
+        if (file) {
+            const tfile = this.plugin.getFileFromAbsolutePath(file) as TFile;
+            await this.plugin.openFile(tfile)
+        }
+        else {
+            // Create dangling file
+            // TODO: Add default folder
+            const filename = label + ".md";
+            const createdFile = await this.vault.create(filename, '');
+            await this.plugin.openFile(createdFile);
+        }
+        if (this.settings.auto_expand) {
+            await this.viz.updateWithCypher(this.localNeighborhoodCypher(label));
+        }
+    }
+
+    async onClickEdge(edge: Object) {
+        // @ts-ignore
+        // if (!edge.raw) {
+        //     return;
+        // }
+        // // @ts-ignore
+        // const rel = edge.raw as Relationship;
+        // console.log(edge);
+        // // @ts-ignore
+        // const file = rel.properties["context"];
+        // const node = this.viz.nodes.get(rel.start.high);
+        // const label = node.label;
+
+        // TODO: Figure out how to open a node at the context point
+        // this.workspace.openLinkText()
+
+    }
+
+    async expandSelection() {
+        let selected_nodes = this.network.getSelectedNodes();
+        if (selected_nodes.length === 0) {
+            return;
+        }
+        let query = "MATCH (n)-[r]-(m) WHERE n." + PROP_VAULT + "= \"" + this.vault.getName() + "\" AND ("
+        let first = true;
+        for (let id of selected_nodes) {
+            // @ts-ignore
+            const title = this.findNode(id).properties["name"] as string;
+            if (!first) {
+                query += " OR ";
+            }
+            query += "n.name = \"" + title + "\"";
+            first = false;
+        }
+        query +=  ") RETURN n,r,m"
+        this.viz.updateWithCypher(query);
+    }
+
+    async hideSelection() {
+        if (this.network.getSelectedNodes().length === 0) {
+            return;
+        }
+        this.network.deleteSelected();
+
+        // This super hacky code is used because neovis.js doesn't like me removing nodes from the graph.
+        // Essentially, whenever it'd execute a new query, it'd re-add all hidden nodes!
+        // This resets the state of NeoVis so that it only acts as an interface with neo4j instead of also keeping
+        // track of the data.
+        // @ts-ignore
+        let data = {nodes: this.viz.nodes, edges: this.viz.edges} as Data;
+        this.viz.clearNetwork();
+        this.network.setData(data);
     }
 
     async checkAndUpdate() {
@@ -146,7 +266,7 @@ export class NeoVisView extends ItemView{
     }
 
     getDisplayText(): string {
-        return "Graph";
+        return "Neo4j Graph";
     }
 
     getViewType(): string {
