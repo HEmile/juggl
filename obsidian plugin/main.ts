@@ -16,6 +16,7 @@ import {NV_VIEW_TYPE, NeoVisView, MD_VIEW_TYPE} from "./visualization";
 const exec_promise = promisify(exec);
 
 const STATUS_OFFLINE = "Neo4j stream offline";
+const DEBUG = false;
 
 export default class SemanticMarkdownPlugin extends Plugin {
 	settings: SemanticMarkdownSettings;
@@ -126,8 +127,9 @@ export default class SemanticMarkdownPlugin extends Plugin {
 		try {
 			let {stdout, stderr} = await exec_promise("pip3 install --upgrade semantic-markdown-converter " +
 				"--no-warn-script-location " +
+				(DEBUG ? "--index-url https://test.pypi.org/simple/ " : "") +
 				"--user ", {timeout: 10000000});
-			"--index-url https://test.pypi.org/simple/ " + // Use this for debugging
+			// Use this for debugging
 			// console.log(stdout);
 			console.log(stderr);
 			let options = {
@@ -138,8 +140,7 @@ export default class SemanticMarkdownPlugin extends Plugin {
 			this.stream_process = PythonShell.runString("from smdc.stream import main;" +
 				"main();", options, function(err, results) {
 				if (err) throw err;
-				console.log('finished');
-				console.log(results);
+				console.log('Neo4j stream killed');
 			});
 			let plugin = this;
 			process.on("exit", function() {

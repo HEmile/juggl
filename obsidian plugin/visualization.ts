@@ -28,7 +28,6 @@ export class NeoVisView extends ItemView{
 
     constructor(leaf: WorkspaceLeaf, active_note: string, plugin: SemanticMarkdownPlugin) {
         super(leaf);
-        console.log(leaf);
         this.settings = plugin.settings;
         this.workspace = this.app.workspace;
         this.initial_note = active_note;
@@ -213,10 +212,9 @@ export class NeoVisView extends ItemView{
     }
 
     async hideSelection() {
-        console.log(this.viz);
-
-        // @ts-ignore
-        // this.network["_edges"].clear();
+        if (this.network.getSelectedNodes().length === 0) {
+            return;
+        }
         this.network.deleteSelected();
 
         // This super hacky code is used because neovis.js doesn't like me removing nodes from the graph.
@@ -227,21 +225,6 @@ export class NeoVisView extends ItemView{
         let data = {nodes: this.viz.nodes, edges: this.viz.edges} as Data;
         this.viz.clearNetwork();
         this.network.setData(data);
-
-        // for (let id of this.network.getSelectedNodes()) {
-        //     this.viz.nodes.remove(id);
-        //     for (let edge in this.viz.edges) {
-        //         console.log(edge);
-        //     }
-        //     // @ts-ignore
-        //     // this.viz.nodes.clear();
-        //     // this.viz.edges.clear();
-        //     // node.hidden = true;
-        //     // n?ode.
-        // }
-        console.log(this.viz);
-
-
     }
 
     async checkAndUpdate() {
