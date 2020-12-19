@@ -8,6 +8,10 @@ import SemanticMarkdownPlugin from "./main";
 export const NV_VIEW_TYPE = "neovis";
 export const MD_VIEW_TYPE = 'markdown';
 
+export const PROP_VAULT = "SMD_vault"
+export const PROP_PATH = "SMD_path"
+export const PROP_COMMUNITY = "SMD_community"
+
 export class NeoVisView extends ItemView{
 
     workspace: Workspace;
@@ -53,7 +57,7 @@ export class NeoVisView extends ItemView{
                 [NEOVIS_DEFAULT_CONFIG]: {
                     "caption": "name",
                     "size": "pagerank",
-                    "community": "community",
+                    "community": PROP_COMMUNITY,
                     "title_properties": [
                         "aliases",
                         "content"
@@ -75,7 +79,9 @@ export class NeoVisView extends ItemView{
                     "caption": true
                 }
             },
-            initial_cypher: this.localNeighborhoodCypher(this.initial_note)
+            initial_cypher: this.settings.auto_expand ?
+                this.localNeighborhoodCypher(this.initial_note) :
+                this.nodeCypher(this.initial_note)
         };
         this.viz = new NeoVis(config);
         this.viz.registerOnEvent("completed", (e)=>{
@@ -93,11 +99,33 @@ export class NeoVisView extends ItemView{
         this.load();
         this.viz.render();
 
+        this.workspace.on("file-open", (file) => {
+            if (this.settings.auto_add_nodes) {
+                console.log(file.basename);
+                console.log(file.name);
+                const name = file.name;
+                if (this.settings.auto_expand) {
+                    this.viz.updateWithCypher(this.localNeighborhoodCypher(name));
+                }
+                else {
+                    this.viz.updateWithCypher(this.nodeCypher(name));
+                }
+            }
+        });
+
         // this.app.o
     }
 
+    nodeCypher(label: string): string {
+        return "MATCH (n) WHERE n.name=\"" + label +
+            "\" AND n." + PROP_VAULT + "=\"" + this.vault.getName() +
+            "\" RETURN n"
+    }
+
     localNeighborhoodCypher(label:string): string {
-        return "MATCH (n)-[r]-(m) WHERE n.name=\"" + label + "\" RETURN n,r,m"
+        return "MATCH (n)-[r]-(m) WHERE n.name=\"" + label +
+            "\" AND n." + PROP_VAULT + "=\"" + this.vault.getName() +
+            "\" RETURN n,r,m"
     }
 
     async onClickNode(node: Object) {
@@ -106,7 +134,7 @@ export class NeoVisView extends ItemView{
             return;
         }
         // @ts-ignore
-        const file = node.raw.properties["path"];
+        const file = node.raw.properties[PROP_PATH];
         // @ts-ignore
         const label = node.label;
         if (file) {
@@ -165,7 +193,7 @@ export class NeoVisView extends ItemView{
     }
 
     getDisplayText(): string {
-        return "Graph";
+        return "Neo4j Graph";
     }
 
     getViewType(): string {

@@ -1,9 +1,9 @@
 {
-	"id": "neovis-graph-visualization",
-	"name": "Neovis Graph Visualization",
+	"id": "neo4j-graph-view",
+	"name": "Neo4j Graph View",
 	"version": "0.0.1",
 	"minAppVersion": "0.9.12",
-	"description": "An Obsidian plugin for advanced graph visualization and querying using Neovis.js.",
+	"description": "An Obsidian plugin for advanced graph visualization and querying using Neo4j.",
 	"author": "Emile",
 	"authorUrl": "https://twitter.com/emilevankrieken",
 	"isDesktopOnly": true

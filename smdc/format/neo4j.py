@@ -1,14 +1,19 @@
+from py2neo.client import ConnectionUnavailable
+
 from smdc.format import Format
 from smdc.note import Note
 import io
 from smdc.format.cypher import escape_cypher
-from smdc.parse import obsidian_url
+from smdc.parse import obsidian_url, PROP_VAULT
 from py2neo import Graph, Node, Relationship, Subgraph
 from py2neo.database.work import ClientError
 import tqdm
 
 CAT_DANGLING = "SMD_dangling"
 CAT_NO_TAGS = "SMD_no_tags"
+
+PROP_COMMUNITY = "SMD_community"
+INDEX_PROPS = ['name', 'aliases']
 
 def node_from_note(note:Note, all_tags: [str]) -> Node:
     tags = [CAT_NO_TAGS]
@@ -20,7 +25,7 @@ def node_from_note(note:Note, all_tags: [str]) -> Node:
     properties = {}
     for property, value in note.properties.items():
         properties[property] = escape_cypher(str(value))
-    properties["community"] = all_tags.index(tags[0])
+    properties[PROP_COMMUNITY] = all_tags.index(tags[0])
     return Node(*tags, **properties)
 
 def add_rels_between_nodes(rels, src_node, trgt_node, subgraph: [Relationship]):
@@ -32,13 +37,16 @@ def add_rels_between_nodes(rels, src_node, trgt_node, subgraph: [Relationship]):
         subgraph.append(Relationship(src_node, escape_cypher(rel.type), trgt_node, **properties))
 
 
-def create_index(graph, tag, properties):
-    for prop in properties:
-        graph.run("CREATE INDEX index_" + prop + "_" + tag + " IF NOT EXISTS FOR (n:" + tag + ") ON " + "(n." + prop + ")")
+def create_index(graph, tag):
+    for prop in INDEX_PROPS:
+        graph.run(f"CREATE INDEX index_{prop}_{tag} IF NOT EXISTS FOR (n:{tag}) ON (n.{prop})")
+    graph.run(f"CREATE INDEX index_name_vault IF NOT EXISTS for (n:{tag}) ON (n.{prop})")
 
 def create_dangling(name:str, vault_name:str, tags: [str]) -> Node:
-    return Node(CAT_DANGLING, name=escape_cypher(name), community=tags.index(CAT_DANGLING),
+    n = Node(CAT_DANGLING, name=escape_cypher(name), community=tags.index(CAT_DANGLING),
                                  obsidian_url=escape_cypher(obsidian_url(name, vault_name)))
+    n[PROP_VAULT] = vault_name
+    return n
 
 class Neo4j(Format):
 
@@ -49,12 +57,15 @@ class Neo4j(Format):
         try:
             g = Graph(password=args.password)
         except ClientError as e:
-            print(e)
-            raise Exception("Please provide a password through smdc --password <pwd>!")
+            print("invalid user credentials")
+            raise e
+        except ConnectionUnavailable as e:
+            print("no connection to db")
+            raise e
         tx = g.begin()
         if not args.retaindb:
             print("Clearing neo4j database")
-            tx.run("MATCH (n) DETACH DELETE n")
+            tx.run(f"MATCH (n) WHERE n.{PROP_VAULT}='{args.vault_name}' DETACH DELETE n")
 
         nodes = {}
         print("Converting nodes")
@@ -94,11 +105,9 @@ class Neo4j(Format):
         tx.commit()
 
         print("Creating index")
-        properties = ['name', 'aliases']
-
         # TODO: Schema inference for auto-indexing?
         for tag in tqdm.tqdm(all_tags):
-            create_index(g, tag, properties)
+            create_index(g, tag)
         try:
             g.run("CALL db.index.fulltext.drop(\"SMDnameAlias\")")
         except ClientError:
@@ -111,7 +120,6 @@ class Neo4j(Format):
             g.run("CALL db.index.fulltext.createNodeIndex(\"SMDnameAlias\", [\"" + "\", \"".join(all_tags) + "\"], [\"name\", \"aliases\"])")
             if args.index_content:
                 g.run("CALL db.index.fulltext.createNodeIndex(\"SMDcontent\", [\"" + "\", \"".join(all_tags) + "\"], [\"content\"])")
-            create_index(g, CAT_DANGLING, ["name"])
         return g, all_tags
 
 

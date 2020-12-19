@@ -4,10 +4,12 @@ from watchdog.observers import Observer
 import time
 from py2neo import Node, Subgraph
 from smdc.format.neo4j import node_from_note, add_rels_between_nodes, CAT_DANGLING, CAT_NO_TAGS, create_index, \
-    create_dangling
+    create_dangling, PROP_COMMUNITY
 from smdc.format.cypher import escape_cypher
 from pathlib import Path
 import smdc
+from smdc.parse import PROP_VAULT
+
 
 class SMDSEventHandler():
     def __init__(self, graph, tags: [str], args):
@@ -27,7 +29,7 @@ class SMDSEventHandler():
     def _process_node_on_graph(self, note: Note):
         if smdc.DEBUG:
             print(note, flush=True)
-        in_graph = self.nodes.match(name=note.name)
+        in_graph = self.nodes.match(**{'name': note.name, PROP_VAULT: self.vault_name})
         if len(in_graph) == 0:
             # Create new node
             node = node_from_note(note, self.tags)
@@ -49,17 +51,14 @@ class SMDSEventHandler():
         node.update_labels(note_tags)
         for tag in note_tags:
             if tag not in self.tags:
-                properties = ['name', 'aliases']
-                if self.index_content:
-                    properties.append("content")
-                create_index(self.graph, tag, properties)
+                create_index(self.graph, tag)
                 self.tags.append(tag)
         # Update properties
         node.clear()
         escaped_properties = {}
         for key, value in note.properties.items():
             escaped_properties[key] = escape_cypher(str(value))
-        escaped_properties["community"] = self.tags.index(note_tags[0])
+        escaped_properties[PROP_COMMUNITY] = self.tags.index(note_tags[0])
         node.update(escaped_properties)
         self.graph.push(node)
 

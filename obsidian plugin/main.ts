@@ -15,6 +15,8 @@ import {NV_VIEW_TYPE, NeoVisView, MD_VIEW_TYPE} from "./visualization";
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
 const exec_promise = promisify(exec);
 
+const STATUS_OFFLINE = "Neo4j stream offline";
+
 export default class SemanticMarkdownPlugin extends Plugin {
 	settings: SemanticMarkdownSettings;
 	stream_process: PythonShell;
@@ -29,7 +31,7 @@ export default class SemanticMarkdownPlugin extends Plugin {
 
 		this.settings = (await this.loadData()) || new SemanticMarkdownSettings();
 		this.statusBar = this.addStatusBarItem();
-		this.statusBar.setText("Neo4j stream offline");
+		this.statusBar.setText(STATUS_OFFLINE);
 
 		this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.app.workspace.activeLeaf?.getDisplayText(), this))
 
@@ -119,13 +121,13 @@ export default class SemanticMarkdownPlugin extends Plugin {
 	public async initialize() {
 
 		// console.log(this.path);
-		console.log('Initializing semantic markdown');
+		console.log('Initializing Neo4j stream');
 		try {
-			// console.log(stdout);
 			let {stdout, stderr} = await exec_promise("pip3 install --upgrade semantic-markdown-converter " +
-				"--index-url https://test.pypi.org/simple/ " + // Use this for debugging
 				"--no-warn-script-location " +
 				"--user ", {timeout: 10000000});
+			"--index-url https://test.pypi.org/simple/ " + // Use this for debugging
+			// console.log(stdout);
 			console.log(stderr);
 			let options = {
 				args: ['--input', this.path,  '--password', this.settings.password]
@@ -145,14 +147,23 @@ export default class SemanticMarkdownPlugin extends Plugin {
 			let statusbar = this.statusBar
 			this.stream_process.on('message', function (message) {
 				// received a message sent from the Python script (a simple "print" statement)
-				console.log(message);
+				// console.log(message);
 				if (message === 'Stream is active!') {
+					console.log(message);
 					new Notice("Neo4j stream online!");
 					statusbar.setText("Neo4j stream online");
 				}
+				else if (message == 'invalid user credentials') {
+					console.log(message);
+					new Notice('Please provide a password in the Neo4j Graph View settings');
+					statusbar.setText(STATUS_OFFLINE);
+				}
+				else if (message == 'no connection to db') {
+					console.log(message);
+					new Notice("No connection to Neo4j database. Please start Neo4j Database in Neo4j Desktop");
+					statusbar.setText(STATUS_OFFLINE);
+				}
 			});
-			this.stream_process.stdout.pipe(process.stdout);
-			this.stream_process.stderr.pipe(process.stderr);
 
 			new Notice("Initializing Neo4j stream.");
 			this.statusBar.setText('Initializing Neo4j stream');
