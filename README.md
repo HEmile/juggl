@@ -1,17 +1,36 @@
-# Semantic Markdown to Neo4j
- Creates an active data stream from a folder of Markdown notes to a Neo4j database. Designed for visualizing obsidian.md vaults using [Neo4j bloom](https://neo4j.com/product/bloom/) by streaming the vault to neo4j. 
+## Neo4j Graph View
+![](obsidian plugin/resources/obsidian%20neo4j%20plugin.gif)
 
-## Getting started
-Requires python 3.5+ and Neo4j desktop
+Adds a new and much more functional graph view to Obsidian. It does so by connecting
+to a [Neo4j](https://neo4j.com/) database. Features:
+- Color nodes by tags
+- Selective expansion and hiding of nodes
+- Typed links using `- linkType [[note 1]], [[note 2|alias]]`
+- Hierarchical layout
 
-- Install with `pip install --upgrade semantic-markdown-converter`
-- Create a new database in Neo4j desktop and start it 
-- Run `smds --input "folder with notes" --password "neo4j database password"`
+### Installation
+1. Make sure you have python 3.6+ installed
+2. Make sure you have [Neo4j desktop](https://neo4j.com/download/) installed
+4. Create a new database in Neo4j desktop and start it. Record the password you use!
+5. In the settings of the plugin, enter the password. Then run the restart command.
 
-WARNING: This clears all current data in the active neo4j database!
-## Supported input formats
-There is currently only one input format supported. An issue or use a pull request for different formats are appreciated! In particular for different markdown syntax for interpreting semantic links.
-### Plain markdown with a rudimentary typed links format. 
+### Use
+On an open node, use the command "Neo4j Graph View: Open local graph of note".
+- Click on a node to open it in the Markdown view
+- Double-click on a node to expand its neighbors
+- Shift-drag in the graph view to select nodes
+   - Use E to expand the neighbors of all selected nodes
+   - Use H or Backspace to hide all selected nodes from the view
+   - Use I (invert) to select all nodes that are not currently selected
+   - Use A to select all nodes
+- All notes visited are added to the graph
+
+
+### Possible problems
+All changes made in obsidian should be automatically reflected in Neo4j, but this is still very buggy. There also seem
+to be problems with duplicate nodes in the graph.
+
+### Semantics
 This collects all notes with extension .md in the input directory (default: `markdown/`). Each note is interpreted as follows:
 - Interprets tags as entity types
 - Interprets YAML frontmatter as entity properties
@@ -20,42 +39,57 @@ This collects all notes with extension .md in the input directory (default: `mar
 - The name of the note is stored in the property `name`
 - The content of the note (everything except YAML frontmatter and typed links) is stored in the property `content`
 - Links to notes that do not exist yet are created without any types.
-- The obsidian url is added as property `obsidian_url`
 
-## Semantic Markdown to Neo4j server
+This uses a very simple syntax for typed links. There is no agreed-upon Markdown syntax for this as of yet.
+If you are interested in using a different syntax than the list format `"- linkType [[note 1]], [[note 2|alias]]"`,
+please  submit an issue.
+
+## Other visualization and querying options
+Another use case for this plugin is to use your Obsidian vault in one of the many apps in the Neo4j desktop
+Graph Apps Store. Using with this plugin active will automatically connect it to your vault. Here are some suggestions:
+### Neo4j Bloom
+[Neo4j bloom](https://neo4j.com/product/bloom/) is very powerful graph visualization software. Compared to the embedded
+graph view in Obsidian, it offers much more freedom in customization.
+  
+### GraphXR
+[GraphXR](https://www.kineviz.com/) is a 3D graph view, which looks quite gorgeous!
+
+### Neo4j Browser
+A query browser that uses the Cypher language to query your vault. Can be used for advanced queries or data anlysis of
+your vault. 
+
+
+## Python code: Semantic Markdown to Neo4j
+This Obsidian plugin uses the Python package `semantic-markdown-converter`, which is also in this repo. 
+It creates an active data stream from a folder of Markdown notes to a Neo4j database. 
+
+### Getting started
+Note: The obsidian plugin automatically installs this package!
+
+Requires python 3.5+ and Neo4j desktop
+
+- Install with `pip install --upgrade semantic-markdown-converter`
+- Create a new database in Neo4j desktop and start it 
+- Run `smds --input "folder with notes" --password "neo4j database password"`
+
+WARNING: This clears all current data in the active neo4j database!
+### Supported input formats
+There is currently only one input format supported. An issue or use a pull request for different formats are appreciated! In particular for different markdown syntax for interpreting semantic links.
+
+### Semantic Markdown to Neo4j server
 The command `smds` first uploads the complete folder of notes into the active Neo4j database. Then, it listens to changes in the notes to update the Neo4j database.
 
-### Options
+#### Options
 - `--password`: Provide the password of the Neo4j database
 - `--input`: Provide the folder where to look for notes
 - `--index_content`: Set to true if you want Neo4j Bloom to search through the content of your notes when using the search bar. Can impact performance.
 
-## Conversion mode
+### Conversion mode
 The command `smdc` only converts 
-### Neo4j
+#### Neo4j
 Streams the input into the currently active Neo4j database. WARNING: This clears all the data in your database by default! Run with `--retaindb` if this is not desired. 
 1. Start the database in Neo4j you want to use
 2. Run using `smdc --input "folder with notes" --password "neo4j database password"`. This can take a couple of minutes for large vaults. 
 
-### CYPHER
-Converts the input into a single .cypher file (default: `out.cypher`) with statements that create nodes and relationships in Neo4j. This can be loaded in Neo4j desktop as follows:
-1. Run `smdc --input "folder with notes" --output_format "cypher"`
-1. Create a new database
-2. Manage your database (three dots, manage)
-    1. Plugins -> Install APOC
-    2. Settings: Add line `apoc.import.file.enabled=true`
-    3. Open project folder, then copy `out.cypher` to the import folder within the project folder.
-3. Start database
-4. Open Neo4j browser
-    1. Run `CALL apoc.cypher.runFile('out.cypher')`
-    
-Importing with Cypher can take quite a while (multiple minutes). I'll look into alternative methods if people are interested.
 
-## Neo4j Bloom
-A use case for this converter is to visualize your obsidian.md graph in [Neo4j bloom](https://neo4j.com/product/bloom/). Neo4j bloom is very powerful graph visualization software. 
-Compared to the Obsidian graph view, it allows
-- Coloring and styling notes with different tags
-- Coloring and styling relationships with different types
-- Selective expansion
-- A hierarchical view
-- Very strong querying capabilities
+
