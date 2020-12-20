@@ -1,45 +1,45 @@
-## Obsidian Sample Plugin
+## Neo4j Graph View
+![](resources/obsidian%20neo4j%20plugin.gif)
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Adds a new and much more functional graph view to Obsidian. It does so by connecting
+to a [Neo4j](https://neo4j.com/) database. Features: 
+- Color nodes by tags
+- Selective expansion and hiding of nodes
+- Typed links using `- linkType [[note 1]], [[note 2|alias]]` 
+- Hierarchical layout
+ 
+### Installation
+1. Make sure you have python 3.6+ installed
+2. Make sure you have [Neo4j desktop](https://neo4j.com/download/) installed
+4. Create a new database in Neo4j desktop and start it. Record the password you use!
+5. In the settings of the plugin, enter the password. Then run the restart command.
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
-
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
-
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Changes the default font color to red using `styles.css`.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+### Use
+On an open node, use the command "Neo4j Graph View: Open local graph of note". 
+- Click on a node to open it in the Markdown view
+- Double-click on a node to expand its neighbors
+- Shift-drag in the graph view to select nodes
+  - Use E to expand the neighbors of all selected nodes
+  - Use H or Backspace to hide all selected nodes from the view
+  - Use I (invert) to select all nodes that are not currently selected
+  - Use A to select all nodes
+- All notes visited are added to the graph
 
 
-### Releasing new releases
+### Possible problems
+All changes made in obsidian should be automatically reflected in Neo4j, but this is still very buggy. There also seem
+to be problems with duplicate nodes in the graph.  
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments.
-- Publish the release.
+### Semantics
+This collects all notes with extension .md in the input directory (default: `markdown/`). Each note is interpreted as follows:
+- Interprets tags as entity types
+- Interprets YAML frontmatter as entity properties
+- Interprets wikilinks as links with type `inline`, and adds content
+- Lines of the format `"- linkType [[note 1]], [[note 2|alias]]"` creates links with type `linkType` from the current note to `note 1` and `note 2`.
+- The name of the note is stored in the property `name`
+- The content of the note (everything except YAML frontmatter and typed links) is stored in the property `content`
+- Links to notes that do not exist yet are created without any types.
 
-### Adding your plugin to the community plugin list
-
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-### How to use
-
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
-
-### Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-### API Documentation
-
-See https://github.com/obsidianmd/obsidian-api
+This uses a very simple syntax for typed links. There is no agreed-upon Markdown syntax for this as of yet. 
+If you are interested in using a different syntax than the list format `"- linkType [[note 1]], [[note 2|alias]]"`, 
+please  submit an issue.
