@@ -29,7 +29,7 @@ export default class Neo4jViewPlugin extends Plugin {
 			this.path = this.app.vault.adapter.getBasePath();
 		}
 
-		this.settings = (await this.loadData()) || DefaultNeo4jViewSettings;
+		this.settings = Object.assign(DefaultNeo4jViewSettings, await this.loadData());//(await this.loadData()) || DefaultNeo4jViewSettings;
 		this.statusBar = this.addStatusBarItem();
 		this.statusBar.setText(STATUS_OFFLINE);
 
