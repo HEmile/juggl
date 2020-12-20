@@ -38,9 +38,13 @@ def add_rels_between_nodes(rels, src_node, trgt_node, subgraph: [Relationship]):
 
 
 def create_index(graph, tag):
-    for prop in INDEX_PROPS:
-        graph.run(f"CREATE INDEX index_{prop}_{tag} IF NOT EXISTS FOR (n:{tag}) ON (n.{prop})")
-    graph.run(f"CREATE INDEX index_name_vault IF NOT EXISTS for (n:{tag}) ON (n.{prop})")
+    try:
+        for prop in INDEX_PROPS:
+            graph.run(f"CREATE INDEX index_{prop}_{tag} IF NOT EXISTS FOR (n:{tag}) ON (n.{prop})")
+        graph.run(f"CREATE INDEX index_name_vault IF NOT EXISTS for (n:{tag}) ON (n.{prop})")
+    except ClientError as e:
+        print(e)
+        print(f"Warning: Could not create index for {tag}")
 
 def create_dangling(name:str, vault_name:str, tags: [str]) -> Node:
     n = Node(CAT_DANGLING, name=escape_cypher(name), community=tags.index(CAT_DANGLING),
