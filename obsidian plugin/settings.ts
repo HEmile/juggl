@@ -1,20 +1,31 @@
 import {App, Notice, PluginSettingTab, Setting, SplitDirection} from "obsidian";
 
-import SemanticMarkdownPlugin from './main';
+import Neo4jViewPlugin from './main';
 
-export class SemanticMarkdownSettings {
-    index_content = false;
-    auto_expand = false;
-    auto_add_nodes = true;
-    hierarchical = false;
-    show_arrows = true;
-    password = "";
-    splitDirection: SplitDirection = 'horizontal';
+export interface INeo4jViewSettings {
+    index_content: boolean// false;
+    auto_expand: boolean //false;
+    auto_add_nodes: boolean// true;
+    hierarchical: boolean// false;
+    show_arrows: boolean// true;
+    password: string // "";
+    splitDirection: SplitDirection// 'horizontal';
 }
 
-export class SemanticMarkdownSettingTab extends PluginSettingTab {
-    plugin: SemanticMarkdownPlugin;
-    constructor(app: App, plugin: SemanticMarkdownPlugin) {
+export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
+    auto_add_nodes: true,
+    auto_expand: false,
+    hierarchical: false,
+    index_content: false,
+    password: "",
+    show_arrows: true,
+    splitDirection: 'horizontal'
+
+}
+
+export class Neo4jViewSettingTab extends PluginSettingTab {
+    plugin: Neo4jViewPlugin;
+    constructor(app: App, plugin: Neo4jViewPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }

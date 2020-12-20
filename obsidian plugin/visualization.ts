@@ -1,9 +1,9 @@
 // import NeoVis from 'neovis.js/dist/neovis.js';
 import {NEOVIS_DEFAULT_CONFIG} from "neovis.js";
 import NeoVis from 'neovis.js';
-import {SemanticMarkdownSettings} from "./settings";
+import {INeo4jViewSettings} from "./settings";
 import {EventRef, ItemView, MarkdownView, normalizePath, TFile, Vault, Workspace, WorkspaceLeaf} from "obsidian";
-import SemanticMarkdownPlugin from "./main";
+import Neo4jViewPlugin from "./main";
 import {Relationship, Node} from "neo4j-driver";
 import {Data, IdType, Network} from "vis-network";
 import {filter} from "rxjs/operators";
@@ -19,16 +19,16 @@ export class NeoVisView extends ItemView{
 
     workspace: Workspace;
     listeners: EventRef[];
-    settings: SemanticMarkdownSettings;
+    settings: INeo4jViewSettings;
     initial_note: string;
     vault: Vault;
-    plugin: SemanticMarkdownPlugin;
+    plugin: Neo4jViewPlugin;
     viz: NeoVis;
     network: Network;
     hasClickListener = false;
     rebuildRelations = true;
 
-    constructor(leaf: WorkspaceLeaf, active_note: string, plugin: SemanticMarkdownPlugin) {
+    constructor(leaf: WorkspaceLeaf, active_note: string, plugin: Neo4jViewPlugin) {
         super(leaf);
         this.settings = plugin.settings;
         this.workspace = this.app.workspace;

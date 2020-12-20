@@ -5,12 +5,11 @@ import {
 	Plugin, Scope, TAbstractFile, TFile,
 	WorkspaceLeaf
 } from 'obsidian';
-import {SemanticMarkdownSettings, SemanticMarkdownSettingTab} from "./settings";
+import {INeo4jViewSettings, Neo4jViewSettingTab, DefaultNeo4jViewSettings} from "./settings";
 import { exec, ChildProcess } from 'child_process';
 import {promisify} from "util";
 import {PythonShell} from "python-shell";
 import {NV_VIEW_TYPE, NeoVisView, MD_VIEW_TYPE} from "./visualization";
-
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
 const exec_promise = promisify(exec);
@@ -18,8 +17,8 @@ const exec_promise = promisify(exec);
 const STATUS_OFFLINE = "Neo4j stream offline";
 const DEBUG = false;
 
-export default class SemanticMarkdownPlugin extends Plugin {
-	settings: SemanticMarkdownSettings;
+export default class Neo4jViewPlugin extends Plugin {
+	settings: INeo4jViewSettings;
 	stream_process: PythonShell;
 	path: string;
 	statusBar: HTMLElement;
@@ -30,7 +29,7 @@ export default class SemanticMarkdownPlugin extends Plugin {
 			this.path = this.app.vault.adapter.getBasePath();
 		}
 
-		this.settings = (await this.loadData()) || new SemanticMarkdownSettings();
+		this.settings = (await this.loadData()) || DefaultNeo4jViewSettings;
 		this.statusBar = this.addStatusBarItem();
 		this.statusBar.setText(STATUS_OFFLINE);
 
@@ -92,7 +91,7 @@ export default class SemanticMarkdownPlugin extends Plugin {
 			},
 		});
 
-		this.addSettingTab(new SemanticMarkdownSettingTab(this.app, this));
+		this.addSettingTab(new Neo4jViewSettingTab(this.app, this));
 
 
 		await this.initialize();
