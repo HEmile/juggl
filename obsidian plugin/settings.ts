@@ -4,7 +4,7 @@ import SemanticMarkdownPlugin from './main';
 
 export class SemanticMarkdownSettings {
     index_content = false;
-    auto_expand = true;
+    auto_expand = false;
     auto_add_nodes = true;
     hierarchical = false;
     show_arrows = true;
@@ -60,7 +60,8 @@ export class SemanticMarkdownSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Automatic expand")
-            .setDesc("This will automatically expand the neighbourhood around any nodes clicked on or added to the graph.")
+            .setDesc("This will automatically expand the neighbourhood around any nodes clicked on or added to the graph. " +
+                "This normally only happens when pressing E or when double-clicking.")
             .addToggle(toggle => {
                 toggle.setValue(this.plugin.settings.auto_expand)
                     .onChange((new_value) => {
