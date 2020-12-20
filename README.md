@@ -1,5 +1,5 @@
 ## Neo4j Graph View
-![](obsidian plugin/resources/obsidian%20neo4j%20plugin.gif)
+![](obsidian%20plugin/resources/obsidian%20neo4j%20plugin.gif)
 
 Adds a new and much more functional graph view to Obsidian. It does so by connecting
 to a [Neo4j](https://neo4j.com/) database. Features:
