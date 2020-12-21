@@ -50,13 +50,21 @@ Graph Apps Store. Using with this plugin active will automatically connect it to
 ### Neo4j Bloom
 [Neo4j bloom](https://neo4j.com/product/bloom/) is very powerful graph visualization software. Compared to the embedded
 graph view in Obsidian, it offers much more freedom in customization.
+
+![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/bloom_screenshot.jpg)
+
   
 ### GraphXR
 [GraphXR](https://www.kineviz.com/) is a 3D graph view, which looks quite gorgeous!
 
+![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/graphxr.gif)
+
+
 ### Neo4j Browser
 A query browser that uses the Cypher language to query your vault. Can be used for advanced queries or data anlysis of
 your vault. 
+
+![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/browser_screenshot.png)
 
 
 ## Python code: Semantic Markdown to Neo4j
