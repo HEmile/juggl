@@ -16,6 +16,7 @@ class SMDSEventHandler():
         self.graph = graph
         self.nodes = graph.nodes
         self.relationships = graph.relationships
+        self.args = args
         self.input_format = args.input_format
         self.vault_name = args.vault_name
         self.index_content = args.index_content
@@ -85,7 +86,7 @@ class SMDSEventHandler():
             if smdc.DEBUG:
                 print("On created", event.src_path, flush=True)
             # TODO: What if this name already exists in the vault? Does it make sense to override old data?
-            note = parse_note(self.input_format, event.src_path, self.vault_name)
+            note = parse_note(self.input_format, event.src_path, self.args)
             self._process_node_on_graph(note)
         return _on_created
 
@@ -112,7 +113,7 @@ class SMDSEventHandler():
         def _on_modified(event):
             if smdc.DEBUG:
                 print("On modified", event.src_path, flush=True)
-            note = parse_note(self.input_format, event.src_path, self.vault_name)
+            note = parse_note(self.input_format, event.src_path, self.args)
             self._process_node_on_graph(note)
         return _on_modified
 

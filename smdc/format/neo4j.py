@@ -54,7 +54,7 @@ def create_dangling(name:str, vault_name:str, tags: [str]) -> Node:
 
 class Neo4j(Format):
 
-    def parse(self, file: io.TextIOWrapper, name, parsed_notes: [Note]) -> Note:
+    def parse(self, file: io.TextIOWrapper, name, parsed_notes: [Note], args) -> Note:
         raise NotImplementedError
 
     def write(self, parsed_notes: [Note], args):

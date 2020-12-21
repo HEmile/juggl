@@ -4,8 +4,7 @@ from smdc.format import FORMAT_TYPES
 
 
 def convert(args):
-    notes = parse.parse_folder(FORMAT_TYPES[args.input_format], notes_path=args.input, recursive=args.r,
-                               note_extension=args.extension, vault_name=args.vault_name)
+    notes = parse.parse_folder(FORMAT_TYPES[args.input_format], args)
     return FORMAT_TYPES[args.output_format].write(notes, args)
 
 

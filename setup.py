@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 
 setup(name='semantic-markdown-converter',
-      version='0.4.0.1',
+      version='0.4.1',
       description='Converts different typed link formats in Markdown into each other and to external formats. Supports Obsidian Neo4j plugin.',
       long_description=long_description,
       long_description_content_type="text/markdown",

@@ -25,7 +25,7 @@ class TypedList(Format):
 
         return j
 
-    def parse(self, file: io.TextIOWrapper, name, parsed_notes: [Note]) -> Note:
+    def parse(self, file: io.TextIOWrapper, name, parsed_notes: [Note], args) -> Note:
         line = file.readline()
         parsed_yaml = None
         # Find YAML header, or continue
@@ -43,7 +43,7 @@ class TypedList(Format):
         relations = {}
         tags = set()
         while line:
-            if line.startswith("- ") and len(line) > 2:
+            if line.startswith(f"{args.typed_links_prefix} ") and len(line) > 2:
                 is_rel = True
                 index = self.parse_word(line, 2, breaks=PUNCTUATION)
                 type = line[2:index]

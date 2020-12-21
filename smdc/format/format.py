@@ -5,7 +5,7 @@ import io
 class Format(abc.ABC):
 
     @abc.abstractmethod
-    def parse(self, file: io.TextIOWrapper, name: str, parsed_notes: [Note]) -> Note:
+    def parse(self, file: io.TextIOWrapper, name: str, parsed_notes: [Note], args) -> Note:
         ...
 
     @abc.abstractmethod

@@ -3,13 +3,15 @@ import {App, Notice, PluginSettingTab, Setting, SplitDirection} from "obsidian";
 import Neo4jViewPlugin from './main';
 
 export interface INeo4jViewSettings {
-    index_content: boolean// false;
-    auto_expand: boolean //false;
-    auto_add_nodes: boolean// true;
-    hierarchical: boolean// false;
-    show_arrows: boolean// true;
-    password: string // "";
-    splitDirection: SplitDirection// 'horizontal';
+    index_content: boolean;
+    auto_expand: boolean;
+    auto_add_nodes: boolean;
+    hierarchical: boolean;
+    show_arrows: boolean;
+    password: string;
+    typed_link_prefix: string;
+    splitDirection: SplitDirection; // 'horizontal';
+    debug: boolean;
 }
 
 export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
@@ -19,8 +21,9 @@ export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
     index_content: false,
     password: "",
     show_arrows: true,
-    splitDirection: 'horizontal'
-
+    splitDirection: 'horizontal',
+    typed_link_prefix: '-',
+    debug: false
 }
 
 export class Neo4jViewSettingTab extends PluginSettingTab {
@@ -99,6 +102,29 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
                 toggle.setValue(this.plugin.settings.index_content)
                     .onChange((new_value) => {
                         this.plugin.settings.index_content = new_value;
+                        this.plugin.saveData(this.plugin.settings);
+                    })
+            });
+
+        new Setting(containerEl)
+            .setName("Typed links prefix")
+            .setDesc("Prefix to use for typed links. Default is '-'.")
+            .addText(text => {
+                text.setPlaceholder("")
+                    .setValue(this.plugin.settings.typed_link_prefix)
+                    .onChange((new_folder) => {
+                        this.plugin.settings.typed_link_prefix = new_folder;
+                        this.plugin.saveData(this.plugin.settings);
+                    })
+            });
+
+        new Setting(containerEl)
+            .setName("Debug")
+            .setDesc("Enable debug mode. Prints a lot of stuff in the developers console.")
+            .addToggle(toggle => {
+                toggle.setValue(this.plugin.settings.debug)
+                    .onChange((new_value) => {
+                        this.plugin.settings.debug = new_value;
                         this.plugin.saveData(this.plugin.settings);
                     })
             });

@@ -15,7 +15,8 @@ import {NV_VIEW_TYPE, NeoVisView, MD_VIEW_TYPE} from "./visualization";
 const exec_promise = promisify(exec);
 
 const STATUS_OFFLINE = "Neo4j stream offline";
-const DEBUG = false;
+
+const DEVELOP_MODE = false;
 
 export default class Neo4jViewPlugin extends Plugin {
 	settings: INeo4jViewSettings;
@@ -126,13 +127,17 @@ export default class Neo4jViewPlugin extends Plugin {
 		try {
 			let {stdout, stderr} = await exec_promise("pip3 install --upgrade semantic-markdown-converter " +
 				"--no-warn-script-location " +
-				(DEBUG ? "--index-url https://test.pypi.org/simple/ " : "") +
+				(DEVELOP_MODE ? "--index-url https://test.pypi.org/simple/ " : "") +
 				"--user ", {timeout: 10000000});
-			// Use this for debugging
-			// console.log(stdout);
+			if (this.settings.debug) {
+				console.log(stdout);
+			}
 			console.log(stderr);
 			let options = {
-				args: ['--input', this.path,  '--password', this.settings.password]
+				args: ['--input', this.path,
+					'--password', this.settings.password,
+					'--typed_links_prefix', this.settings.typed_link_prefix]
+					.concat(this.settings.debug ? ["--debug"] : [])
 			};
 
 			// @ts-ignore
@@ -145,10 +150,10 @@ export default class Neo4jViewPlugin extends Plugin {
 			process.on("exit", function() {
 				plugin.shutdown();
 			})
-			let statusbar = this.statusBar
+			let statusbar = this.statusBar;
+			const _debug = this.settings.debug;
 			this.stream_process.on('message', function (message) {
 				// received a message sent from the Python script (a simple "print" statement)
-				// console.log(message);
 				if (message === 'Stream is active!') {
 					console.log(message);
 					new Notice("Neo4j stream online!");
@@ -163,6 +168,9 @@ export default class Neo4jViewPlugin extends Plugin {
 					console.log(message);
 					new Notice("No connection to Neo4j database. Please start Neo4j Database in Neo4j Desktop");
 					statusbar.setText(STATUS_OFFLINE);
+				}
+				else if (_debug) {
+					console.log(message);
 				}
 			});
 
