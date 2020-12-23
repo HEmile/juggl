@@ -4,9 +4,10 @@ from smdc.format import Format
 from smdc.note import Note
 import io
 from smdc.format.cypher import escape_cypher
-from smdc.parse import obsidian_url, PROP_VAULT
+from smdc.parse import obsidian_url, PROP_VAULT, PROP_PATH
 from py2neo import Graph, Node, Relationship, Subgraph
 from py2neo.database.work import ClientError
+from pathlib import Path
 import tqdm
 
 CAT_DANGLING = "SMD_dangling"
@@ -15,7 +16,19 @@ CAT_NO_TAGS = "SMD_no_tags"
 PROP_COMMUNITY = "SMD_community"
 INDEX_PROPS = ['name', 'aliases']
 
-def node_from_note(note:Note, all_tags: [str]) -> Node:
+def get_community(note: Note, communities: [str], community_type: str):
+    if community_type == "tags":
+        if note.tags:
+            community = escape_cypher(note.tags[0])
+        else:
+            community = CAT_NO_TAGS
+    elif community_type == "folders":
+        community = str(Path(note.properties[PROP_PATH]).parent)
+        if community not in communities:
+            communities.append(community)
+    return communities.index(community)
+
+def node_from_note(note: Note, all_tags: [str], all_communities: [str], community_type: str) -> Node:
     tags = [CAT_NO_TAGS]
     if note.tags:
         tags = list(map(escape_cypher, note.tags))
@@ -25,7 +38,7 @@ def node_from_note(note:Note, all_tags: [str]) -> Node:
     properties = {}
     for property, value in note.properties.items():
         properties[property] = escape_cypher(str(value))
-    properties[PROP_COMMUNITY] = all_tags.index(tags[0])
+    properties[PROP_COMMUNITY] = get_community(note, all_communities, community_type)
     return Node(*tags, **properties)
 
 def add_rels_between_nodes(rels, src_node, trgt_node, subgraph: [Relationship]):
@@ -46,8 +59,8 @@ def create_index(graph, tag):
         print(e)
         print(f"Warning: Could not create index for {tag}")
 
-def create_dangling(name:str, vault_name:str, tags: [str]) -> Node:
-    n = Node(CAT_DANGLING, name=escape_cypher(name), community=tags.index(CAT_DANGLING),
+def create_dangling(name:str, vault_name:str, all_communities: [str]) -> Node:
+    n = Node(CAT_DANGLING, name=escape_cypher(name), community=all_communities.index(CAT_DANGLING),
                                  obsidian_url=escape_cypher(obsidian_url(name, vault_name)))
     n[PROP_VAULT] = vault_name
     return n
@@ -73,10 +86,11 @@ class Neo4j(Format):
 
         nodes = {}
         print("Converting nodes")
-        all_tags = [CAT_NO_TAGS, CAT_DANGLING]
+        all_tags = [CAT_DANGLING, CAT_NO_TAGS]
+        all_communities = all_tags if args.community == "tags" else [CAT_DANGLING]
         # First create all nodes in the graph before doing the relationships, so they all exist.
         for name, note in tqdm.tqdm(parsed_notes.items()):
-            node = node_from_note(note, all_tags)
+            node = node_from_note(note, all_tags, all_communities, args.community)
             nodes[name] = node
 
         if nodes:
@@ -93,7 +107,7 @@ class Neo4j(Format):
             src_node = nodes[name]
             for trgt, rels in note.out_rels.items():
                 if trgt not in nodes:
-                    nodes[trgt] = create_dangling(trgt, args.vault_name, all_tags)
+                    nodes[trgt] = create_dangling(trgt, args.vault_name, all_communities)
                     nodes_to_create.append(nodes[trgt])
                 trgt_node = nodes[trgt]
                 add_rels_between_nodes(rels, src_node, trgt_node, rels_to_create)
@@ -124,6 +138,6 @@ class Neo4j(Format):
             g.run("CALL db.index.fulltext.createNodeIndex(\"SMDnameAlias\", [\"" + "\", \"".join(all_tags) + "\"], [\"name\", \"aliases\"])")
             if args.index_content:
                 g.run("CALL db.index.fulltext.createNodeIndex(\"SMDcontent\", [\"" + "\", \"".join(all_tags) + "\"], [\"content\"])")
-        return g, all_tags
+        return g, all_tags, all_communities
 
 

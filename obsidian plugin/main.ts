@@ -136,7 +136,8 @@ export default class Neo4jViewPlugin extends Plugin {
 			let options = {
 				args: ['--input', this.path,
 					'--password', this.settings.password,
-					'--typed_links_prefix', this.settings.typed_link_prefix]
+					'--typed_links_prefix', this.settings.typed_link_prefix,
+					'--community', this.settings.community]
 					.concat(this.settings.debug ? ["--debug"] : [])
 			};
 

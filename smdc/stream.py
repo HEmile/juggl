@@ -4,7 +4,7 @@ from watchdog.observers import Observer
 import time
 from py2neo import Node, Subgraph
 from smdc.format.neo4j import node_from_note, add_rels_between_nodes, CAT_DANGLING, CAT_NO_TAGS, create_index, \
-    create_dangling, PROP_COMMUNITY
+    create_dangling, PROP_COMMUNITY, get_community
 from smdc.format.cypher import escape_cypher
 from pathlib import Path
 import smdc
@@ -21,7 +21,7 @@ def wrapper(fn):
 
 
 class SMDSEventHandler():
-    def __init__(self, graph, tags: [str], args):
+    def __init__(self, graph, tags: [str], communities: [str], args):
         self.graph = graph
         self.nodes = graph.nodes
         self.relationships = graph.relationships
@@ -30,6 +30,7 @@ class SMDSEventHandler():
         self.vault_name = args.vault_name
         self.index_content = args.index_content
         self.tags = tags
+        self.communities = communities
 
     def _clear_outgoing(self, node: Node):
         rels = self.relationships.match([node, None])
@@ -42,7 +43,7 @@ class SMDSEventHandler():
         in_graph = self.nodes.match(**{'name': note.name, PROP_VAULT: self.vault_name})
         if len(in_graph) == 0:
             # Create new node
-            node = node_from_note(note, self.tags)
+            node = node_from_note(note, self.tags, self.communities, self.args.community)
             if smdc.DEBUG:
                 print("creating")
                 print(node, flush=True)
@@ -68,7 +69,7 @@ class SMDSEventHandler():
         escaped_properties = {}
         for key, value in note.properties.items():
             escaped_properties[key] = escape_cypher(str(value))
-        escaped_properties[PROP_COMMUNITY] = self.tags.index(note_tags[0])
+        escaped_properties[PROP_COMMUNITY] = get_community(note, self.communities, self.args.community)
         node.update(escaped_properties)
         self.graph.push(node)
 
@@ -138,11 +139,11 @@ class SMDSEventHandler():
             self.graph.push(node)
         return wrapper(_on_moved)
 
-def stream(graph, tags, args):
+def stream(graph, tags, communities, args):
     # Code credit: http://thepythoncorner.com/dev/how-to-create-a-watchdog-in-python-to-look-for-filesystem-changes/
     event_handler = PatternMatchingEventHandler(patterns=["*.md"], case_sensitive=True)
 
-    smds_event_handler = SMDSEventHandler(graph, tags, args)
+    smds_event_handler = SMDSEventHandler(graph, tags, communities, args)
     event_handler.on_created = smds_event_handler.on_created()
     event_handler.on_deleted = smds_event_handler.on_deleted()
     event_handler.on_modified = smds_event_handler.on_modified()
@@ -171,10 +172,10 @@ def main():
     args = server_args()
     args.output_format = 'neo4j'
     # Initialize the database
-    graph, tags = convert(args)
+    graph, tags, communities = convert(args)
     # return
     # Start the server
-    stream(graph, tags, args)
+    stream(graph, tags, communities, args)
 
 
 if __name__ == "__main__":

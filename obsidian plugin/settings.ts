@@ -6,6 +6,7 @@ export interface INeo4jViewSettings {
     index_content: boolean;
     auto_expand: boolean;
     auto_add_nodes: boolean;
+    community: string;
     hierarchical: boolean;
     show_arrows: boolean;
     password: string;
@@ -19,6 +20,7 @@ export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
     auto_expand: false,
     hierarchical: false,
     index_content: false,
+    community: "tags",
     password: "",
     show_arrows: true,
     splitDirection: 'horizontal',
@@ -49,6 +51,20 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
                         this.plugin.saveData(this.plugin.settings);
                     }).inputEl.setAttribute("type", "password")
             });
+
+        new Setting(containerEl)
+            .setName("Color-coding")
+            .setDesc("What property to choose for coloring the nodes in the graph.")
+            .addDropdown(dropdown => dropdown
+                .addOption('tags','Tags')
+                .addOption('folders','Folders')
+                .addOption('none','No color-coding')
+                .setValue(this.plugin.settings.community)
+                .onChange((value) => {
+                    this.plugin.settings.community = value;
+                    this.plugin.saveData(this.plugin.settings);
+                }));
+
 
         new Setting(containerEl)
             .setName("Hierarchical layout")

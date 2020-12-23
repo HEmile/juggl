@@ -41,7 +41,7 @@ class TypedList(Format):
 
         content = []
         relations = {}
-        tags = set()
+        tags = []
         while line:
             if line.startswith(f"{args.typed_links_prefix} ") and len(line) > 2:
                 is_rel = True
@@ -94,7 +94,9 @@ class TypedList(Format):
                         line = file.readline()
                         continue
             content.append(line)
-            tags.update(get_tags_from_line(line))
+            for tag in get_tags_from_line(line):
+                if tag not in tags:
+                    tags.append(tag)
             # TODO: Save aliases as Relation property
             for wikilink in get_wikilinks_from_line(line):
                 rel = Relationship("inline", properties={"context": line})
