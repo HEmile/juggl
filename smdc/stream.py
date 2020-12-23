@@ -11,13 +11,22 @@ import smdc
 from smdc.parse import PROP_VAULT
 
 
+def wrapper(fn):
+    def _return(event):
+        try:
+            fn(event)
+        except BaseException as e:
+            print(e)
+    return _return
+
+
 class SMDSEventHandler():
     def __init__(self, graph, tags: [str], args):
         self.graph = graph
         self.nodes = graph.nodes
         self.relationships = graph.relationships
         self.args = args
-        self.input_format = args.input_format
+        self.input_format = FORMAT_TYPES[args.input_format]
         self.vault_name = args.vault_name
         self.index_content = args.index_content
         self.tags = tags
@@ -48,7 +57,7 @@ class SMDSEventHandler():
         node.clear_labels()
         note_tags = [CAT_NO_TAGS]
         if note.tags:
-            note_tags = map(escape_cypher, note.tags)
+            note_tags = list(map(escape_cypher, note.tags))
         node.update_labels(note_tags)
         for tag in note_tags:
             if tag not in self.tags:
@@ -88,7 +97,7 @@ class SMDSEventHandler():
             # TODO: What if this name already exists in the vault? Does it make sense to override old data?
             note = parse_note(self.input_format, event.src_path, self.args)
             self._process_node_on_graph(note)
-        return _on_created
+        return wrapper(_on_created)
 
     def on_deleted(self):
         def _on_deleted(event):
@@ -107,7 +116,7 @@ class SMDSEventHandler():
                 self._clear_outgoing(node)
             else:
                 self.graph.delete(node)
-        return _on_deleted
+        return wrapper(_on_deleted)
 
     def on_modified(self):
         def _on_modified(event):
@@ -115,7 +124,7 @@ class SMDSEventHandler():
                 print("On modified", event.src_path, flush=True)
             note = parse_note(self.input_format, event.src_path, self.args)
             self._process_node_on_graph(note)
-        return _on_modified
+        return wrapper(_on_modified)
 
     def on_moved(self):
         def _on_moved(event):
@@ -127,7 +136,7 @@ class SMDSEventHandler():
             node.name = new_name
             node.obsidian_url = obsidian_url(new_name, self.vault_name)
             self.graph.push(node)
-        return _on_moved
+        return wrapper(_on_moved)
 
 def stream(graph, tags, args):
     # Code credit: http://thepythoncorner.com/dev/how-to-create-a-watchdog-in-python-to-look-for-filesystem-changes/
