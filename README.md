@@ -30,6 +30,9 @@ On an open node, use the command "Neo4j Graph View: Open local graph of note".
 All changes made in obsidian should be automatically reflected in Neo4j, but this is still very buggy. There also seem
 to be problems with duplicate nodes in the graph.
 
+If you are running into issues, enable Debug in the settings and check out the developer console (View -> Toggle Developer Tools). On Windows, this can be opened using Ctrl+Shift+I. Here are some issues found so far: 
+- `xcrun: error: invalid active developer path...  missing xcrun at...`: (Install xcrun)[https://apple.stackexchange.com/questions/254380/why-am-i-getting-an-invalid-active-developer-path-when-attempting-to-use-git-a] in terminal using `xcode-select --install` 
+
 ### Semantics
 This collects all notes with extension .md in the input directory (default: `markdown/`). Each note is interpreted as follows:
 - Interprets tags as entity types
