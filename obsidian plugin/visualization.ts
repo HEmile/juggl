@@ -216,9 +216,13 @@ export class NeoVisView extends ItemView{
         this.viz.edges.forEach((edge) => {
             // @ts-ignore
             let edge_sth = this.network.body.edges[edge.id];
-            let specificOptions = edge.label in edgeOptions ? [edgeOptions[edge.label]] : [];
+            let type = edge.raw.type;
+            let specificOptions = type in edgeOptions ? [edgeOptions[type]] : [];
+            // console.log(edge);
             console.log(Object.assign({}, edgeOptions["defaultStyle"], ...specificOptions));
-            edge_sth.setOptions(Object.assign({}, edgeOptions["defaultStyle"], ...specificOptions));
+            if (!(edge_sth === undefined)) {
+                edge_sth.setOptions(Object.assign({}, edgeOptions["defaultStyle"], ...specificOptions));
+            }
         })
     }
 
