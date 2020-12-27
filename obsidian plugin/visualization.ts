@@ -5,7 +5,7 @@ import {INeo4jViewSettings} from "./settings";
 import {EventRef, ItemView, MarkdownView, normalizePath, TFile, Vault, Workspace, WorkspaceLeaf} from "obsidian";
 import Neo4jViewPlugin from "./main";
 import {Relationship, Node} from "neo4j-driver";
-import {Data, IdType, Network} from "vis-network";
+import {Data, IdType, Network, NodeOptions} from "vis-network";
 import {filter} from "rxjs/operators";
 
 export const NV_VIEW_TYPE = "neovis";
@@ -61,15 +61,16 @@ export class NeoVisView extends ItemView{
             labels: {
                 [NEOVIS_DEFAULT_CONFIG]: {
                     "caption": "name",
-                    "size": "pagerank",
+                    //"size": this.settings.node_size,
                     "community": PROP_COMMUNITY,
                     "title_properties": [
                         "aliases",
                         "content"
                     ],
-                    "font": {
-                        "size": 26
-                    }
+                    // "font": {
+                    //     "size": this.settings.font_size,
+                    //     "strokeWidth": this.settings.font_stroke_width
+                    // }
                     //"sizeCypher": "defaultSizeCypher"
 
                 }
@@ -90,6 +91,7 @@ export class NeoVisView extends ItemView{
         };
         this.viz = new NeoVis(config);
         this.viz.registerOnEvent("completed", (e)=>{
+
             if (!this.hasClickListener) {
                 // @ts-ignore
                 this.network = this.viz["_network"] as Network;
@@ -117,6 +119,7 @@ export class NeoVisView extends ItemView{
                 this.viz.updateWithCypher(query);
                 this.rebuildRelations = false;
             }
+            this.updateStyle();
         });
         this.load();
         this.viz.render();
@@ -192,6 +195,31 @@ export class NeoVisView extends ItemView{
     updateWithCypher(cypher: string) {
         this.viz.updateWithCypher(cypher);
         this.rebuildRelations = true;
+    }
+
+    updateStyle() {
+        let nodeOptions = JSON.parse(this.settings.nodeSettings);
+        this.viz.nodes.forEach((node) => {
+            let nodeId = this.network.findNode(node.id);
+            // @ts-ignore
+            let node_sth = this.network.body.nodes[nodeId];
+            let specificOptions: NodeOptions[] = [];
+            node.raw.labels.forEach((label) => {
+                if (label in nodeOptions) {
+                    specificOptions.push(nodeOptions[label]);
+                }
+            });
+            console.log(Object.assign({}, nodeOptions["defaultStyle"], ...specificOptions));
+            node_sth.setOptions(Object.assign({}, nodeOptions["defaultStyle"], ...specificOptions));
+        });
+        let edgeOptions = JSON.parse(this.settings.edgeSettings);
+        this.viz.edges.forEach((edge) => {
+            // @ts-ignore
+            let edge_sth = this.network.body.edges[edge.id];
+            let specificOptions = edge.label in edgeOptions ? [edgeOptions[edge.label]] : [];
+            console.log(Object.assign({}, edgeOptions["defaultStyle"], ...specificOptions));
+            edge_sth.setOptions(Object.assign({}, edgeOptions["defaultStyle"], ...specificOptions));
+        })
     }
 
     async onClickNode(node: Node) {

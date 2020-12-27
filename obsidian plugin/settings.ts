@@ -1,6 +1,8 @@
 import {App, Notice, PluginSettingTab, Setting, SplitDirection} from "obsidian";
 
 import Neo4jViewPlugin from './main';
+import {EdgeOptions, NodeOptions} from "vis-network";
+import {NeoVisView, NV_VIEW_TYPE} from "./visualization";
 
 export interface INeo4jViewSettings {
     index_content: boolean;
@@ -13,6 +15,26 @@ export interface INeo4jViewSettings {
     typed_link_prefix: string;
     splitDirection: SplitDirection; // 'horizontal';
     debug: boolean;
+    nodeSettings: string;
+    edgeSettings: string;
+}
+
+export const DefaultNodeSettings: NodeOptions = {
+    size: 9,
+    font: {
+        size: 12,
+        strokeWidth: 2
+    },
+    borderWidth: 0,
+    widthConstraint: {maximum: 200},
+}
+
+export const DefaultEdgeSettings: EdgeOptions = {
+    font: {
+        size: 12,
+        strokeWidth: 2
+    },
+    width: 0.5,
 }
 
 export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
@@ -25,8 +47,20 @@ export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
     show_arrows: true,
     splitDirection: 'horizontal',
     typed_link_prefix: '-',
-    debug: false
+    debug: false,
+    nodeSettings: JSON.stringify({
+        "defaultStyle": DefaultNodeSettings,
+        "exampleTag": {
+            size: 20,
+            color: "yellow"
+        }
+    }),
+    edgeSettings: JSON.stringify({
+        "defaultStyle": DefaultEdgeSettings,
+    })
 }
+
+
 
 export class Neo4jViewSettingTab extends PluginSettingTab {
     plugin: Neo4jViewPlugin;
@@ -52,9 +86,12 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
                     }).inputEl.setAttribute("type", "password")
             });
 
+        containerEl.createEl('h3');
+        containerEl.createEl('h3', {text: 'Appearance'});
+
         new Setting(containerEl)
             .setName("Color-coding")
-            .setDesc("What property to choose for coloring the nodes in the graph.")
+            .setDesc("What property to choose for coloring the nodes in the graph. Requires a server restart.")
             .addDropdown(dropdown => dropdown
                 .addOption('tags','Tags')
                 .addOption('folders','Folders')
@@ -87,6 +124,79 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
                         this.plugin.saveData(this.plugin.settings);
                     })
             });
+        containerEl.createEl('h4');
+        containerEl.createEl('h4', {text: 'Node Styling'});
+
+        const div = document.createElement("div");
+        div.className = "neovis_setting";
+        this.containerEl.children[this.containerEl.children.length - 1].appendChild(div);
+        div.setAttr("style", "height: 100%; width:100%");
+
+        let input = div.createEl("textarea");
+        input.placeholder = JSON.stringify(DefaultNodeSettings);
+        input.value = this.plugin.settings.nodeSettings;
+        input.onchange = (ev) => {
+            this.plugin.settings.nodeSettings = input.value;
+            this.plugin.saveData(this.plugin.settings);
+            let leaves = this.plugin.app.workspace.getLeavesOfType(NV_VIEW_TYPE);
+            leaves.forEach((leaf) =>{
+                (leaf.view as NeoVisView).updateStyle();
+            });
+        };
+        input.setAttr("style", "height: 300px; width: 100%; " +
+            "-webkit-box-sizing: border-box; -moz-box-sizing: border-box;  box-sizing: border-box;");
+
+        let temp_link = document.createElement("a");
+        temp_link.href = "https://visjs.github.io/vis-network/docs/network/nodes.html";
+        temp_link.target = '_blank';
+        temp_link.innerHTML ='this link';
+
+        let par = document.createElement("p");
+        par.innerHTML = "Styling of nodes in .json format. " +
+            "The first key determines what tags or folders to apply this style to. " +
+            "For instance, {\"exampleTag\":{\"color\":\"yellow\"}} would color all notes with #exampleTag yellow. " +
+            "Use {\"defaultStyle\": {}} for the default styling of nodes. " +
+            "See " + temp_link.outerHTML + " for all options for styling the nodes."
+
+        containerEl.createEl('h4');
+        containerEl.createEl('h4', {text: 'Edge Styling'});
+
+        const div2 = document.createElement("div");
+        div2.className = "neovis_setting2";
+        this.containerEl.children[this.containerEl.children.length - 1].appendChild(div2);
+        div2.setAttr("style", "height: 100%; width:100%");
+
+        let input2 = div2.createEl("textarea");
+        input2.placeholder = JSON.stringify(DefaultEdgeSettings);
+        input2.value = this.plugin.settings.edgeSettings;
+        input2.onchange = (ev) => {
+            this.plugin.settings.edgeSettings = input2.value;
+            this.plugin.saveData(this.plugin.settings);
+            let leaves = this.plugin.app.workspace.getLeavesOfType(NV_VIEW_TYPE);
+            leaves.forEach((leaf) =>{
+                (leaf.view as NeoVisView).updateStyle();
+            });
+        };
+        input2.setAttr("style", "height: 300px; width: 100%; " +
+            "-webkit-box-sizing: border-box; -moz-box-sizing: border-box;  box-sizing: border-box;");
+
+        let temp_link2 = document.createElement("a");
+        temp_link2.href = "https://visjs.github.io/vis-network/docs/network/edges.html";
+        temp_link2.target = '_blank';
+        temp_link2.innerHTML = 'this link';
+
+        let par2 = document.createElement("p");
+        par2.innerHTML = "Styling of edges in .json format. " +
+            "The first key determines what types of links to apply this style to. " +
+            "For instance, {\"hasTopic\":{\"color\":\"yellow\"}} would color all edge with type \"hasTopic\" yellow. " +
+            "Use {\"defaultStyle\": {}} for the default styling of edges, and {\"inline\":{} } for the styling of untyped links. " +
+            "See " + temp_link2.outerHTML + " for all options for styling edges."
+
+        containerEl.appendChild(par2);
+
+
+        containerEl.createEl('h3');
+        containerEl.createEl('h3', {text: 'Advanced'});
 
         new Setting(containerEl)
             .setName("Automatic expand")
@@ -124,7 +234,7 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Typed links prefix")
-            .setDesc("Prefix to use for typed links. Default is '-'.")
+            .setDesc("Prefix to use for typed links. Default is '-'. Requires a server restart.")
             .addText(text => {
                 text.setPlaceholder("")
                     .setValue(this.plugin.settings.typed_link_prefix)
@@ -136,7 +246,7 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Debug")
-            .setDesc("Enable debug mode. Prints a lot of stuff in the developers console.")
+            .setDesc("Enable debug mode. Prints a lot of stuff in the developers console. Requires a server restart.")
             .addToggle(toggle => {
                 toggle.setValue(this.plugin.settings.debug)
                     .onChange((new_value) => {
