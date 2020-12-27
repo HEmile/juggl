@@ -23,7 +23,7 @@ export const DefaultNodeSettings: NodeOptions = {
     size: 9,
     font: {
         size: 12,
-        strokeWidth: 2
+        strokeWidth: 1
     },
     borderWidth: 0,
     widthConstraint: {maximum: 200},
@@ -156,7 +156,10 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
             "The first key determines what tags or folders to apply this style to. " +
             "For instance, {\"exampleTag\":{\"color\":\"yellow\"}} would color all notes with #exampleTag yellow. " +
             "Use {\"defaultStyle\": {}} for the default styling of nodes. " +
-            "See " + temp_link.outerHTML + " for all options for styling the nodes."
+            "When color-coding is set to Folders, use the path to the folder for this key. " +
+            "For instance, if you have a folder called \"dailies\", use {\"dailies\": {}}. " +
+            "Use {\"/\" for the root folder. " +
+            "See " +    temp_link.outerHTML + " for all options for styling the nodes."
 
         containerEl.createEl('h4');
         containerEl.createEl('h4', {text: 'Edge Styling'});

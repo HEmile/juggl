@@ -204,12 +204,21 @@ export class NeoVisView extends ItemView{
             // @ts-ignore
             let node_sth = this.network.body.nodes[nodeId];
             let specificOptions: NodeOptions[] = [];
-            node.raw.labels.forEach((label) => {
-                if (label in nodeOptions) {
-                    specificOptions.push(nodeOptions[label]);
+            if (this.settings.community === "tags") {
+                node.raw.labels.forEach((label) => {
+                    if (label in nodeOptions) {
+                        specificOptions.push(nodeOptions[label]);
+                    }
+                });
+            }
+            else if (this.settings.community === "folders") {
+                // @ts-ignore
+                const file = this.plugin.getFileFromAbsolutePath(node.raw.properties[PROP_PATH]) as TFile;
+                const path = file.parent.path;
+                if (path in nodeOptions) {
+                    specificOptions.push(nodeOptions[path]);
                 }
-            });
-            console.log(Object.assign({}, nodeOptions["defaultStyle"], ...specificOptions));
+            }
             node_sth.setOptions(Object.assign({}, nodeOptions["defaultStyle"], ...specificOptions));
         });
         let edgeOptions = JSON.parse(this.settings.edgeSettings);
@@ -218,8 +227,6 @@ export class NeoVisView extends ItemView{
             let edge_sth = this.network.body.edges[edge.id];
             let type = edge.raw.type;
             let specificOptions = type in edgeOptions ? [edgeOptions[type]] : [];
-            // console.log(edge);
-            console.log(Object.assign({}, edgeOptions["defaultStyle"], ...specificOptions));
             if (!(edge_sth === undefined)) {
                 edge_sth.setOptions(Object.assign({}, edgeOptions["defaultStyle"], ...specificOptions));
             }
