@@ -1,4 +1,3 @@
-// import NeoVis from 'neovis.js/dist/neovis.js';
 import {NEOVIS_DEFAULT_CONFIG} from "neovis.js";
 import NeoVis from 'neovis.js';
 import {INeo4jViewSettings} from "./settings";
@@ -6,7 +5,6 @@ import {EventRef, ItemView, MarkdownView, normalizePath, TFile, Vault, Workspace
 import Neo4jViewPlugin from "./main";
 import {Relationship, Node} from "neo4j-driver";
 import {Data, IdType, Network, NodeOptions} from "vis-network";
-import {filter} from "rxjs/operators";
 
 export const NV_VIEW_TYPE = "neovis";
 export const MD_VIEW_TYPE = 'markdown';
@@ -27,6 +25,7 @@ export class NeoVisView extends ItemView{
     network: Network;
     hasClickListener = false;
     rebuildRelations = true;
+    selectName:string = undefined;
 
     constructor(leaf: WorkspaceLeaf, active_note: string, plugin: Neo4jViewPlugin) {
         super(leaf);
@@ -38,14 +37,6 @@ export class NeoVisView extends ItemView{
     }
 
     async onOpen() {
-        // this.registerInterval(window.setInterval(()=> this.checkAndUpdate));
-        this.listeners = [
-            this.workspace.on('layout-ready', () => this.update()),
-            this.workspace.on('resize', () => this.update()),
-            this.workspace.on('css-change', () => this.update()),
-            // this.leaf.on('group-change', (group) => this.updateLinkedLeaf(group, this))
-        ];
-
         const div = document.createElement("div");
         div.id = "neovis_id";
         this.containerEl.children[1].appendChild(div);
@@ -67,12 +58,6 @@ export class NeoVisView extends ItemView{
                         "aliases",
                         "content"
                     ],
-                    // "font": {
-                    //     "size": this.settings.font_size,
-                    //     "strokeWidth": this.settings.font_stroke_width
-                    // }
-                    //"sizeCypher": "defaultSizeCypher"
-
                 }
             },
             relationships: {
@@ -120,6 +105,15 @@ export class NeoVisView extends ItemView{
                 this.rebuildRelations = false;
             }
             this.updateStyle();
+            if (!(this.selectName=== undefined)) {
+                this.viz.nodes.forEach(node => {
+                    if (node.label === this.selectName) {
+                        this.network.setSelection({nodes: [node.id], edges: []});
+                        this.selectName = undefined;
+                    }
+                })
+            }
+
         });
         this.load();
         this.viz.render();
@@ -128,12 +122,14 @@ export class NeoVisView extends ItemView{
         this.workspace.on("file-open", (file) => {
             if (file && this.settings.auto_add_nodes) {
                 const name = file.basename;
+                //todo: Select node
                 if (this.settings.auto_expand) {
                     this.updateWithCypher(this.localNeighborhoodCypher(name));
                 }
                 else {
                     this.updateWithCypher(this.nodeCypher(name));
                 }
+                this.selectName = name;
             }
         });
 
@@ -204,6 +200,12 @@ export class NeoVisView extends ItemView{
             // @ts-ignore
             let node_sth = this.network.body.nodes[nodeId];
             let specificOptions: NodeOptions[] = [];
+            // @ts-ignore
+            let path = node.raw.properties[PROP_PATH];
+            let file = undefined;
+            if (!(path === undefined)) {
+                file = this.plugin.getFileFromAbsolutePath(path) as TFile;
+            }
             if (this.settings.community === "tags") {
                 node.raw.labels.forEach((label) => {
                     if (label in nodeOptions) {
@@ -211,12 +213,21 @@ export class NeoVisView extends ItemView{
                     }
                 });
             }
-            else if (this.settings.community === "folders") {
+            else if (this.settings.community === "folders" && !(file === undefined)) {
                 // @ts-ignore
-                const file = this.plugin.getFileFromAbsolutePath(node.raw.properties[PROP_PATH]) as TFile;
                 const path = file.parent.path;
                 if (path in nodeOptions) {
                     specificOptions.push(nodeOptions[path]);
+                }
+            }
+            // Style images
+            if (/(\.png|\.jpg|\.jpeg|\.gif|\.svg)$/.test(node.label)) {
+                file = this.app.metadataCache.getFirstLinkpathDest(node.label, '');
+                specificOptions.push({shape: "image", image: "http://localhost:" +
+                        this.settings.imgServerPort +  "/"
+                        + encodeURI(file.path)});
+                if ("image" in nodeOptions) {
+                    specificOptions.push(nodeOptions["image"]);
                 }
             }
             node_sth.setOptions(Object.assign({}, nodeOptions["defaultStyle"], ...specificOptions));
@@ -303,6 +314,7 @@ export class NeoVisView extends ItemView{
         let data = {nodes: this.viz.nodes, edges: this.viz.edges} as Data;
         this.viz.clearNetwork();
         this.network.setData(data);
+        this.updateStyle();
     }
 
     invertSelection() {
@@ -331,30 +343,10 @@ export class NeoVisView extends ItemView{
     }
 
     async update(){
-        // if(this.filePath) {
-        //     await this.readMarkDown();
-        //     if(this.currentMd.length === 0 || this.getLeafTarget().view.getViewType() != MD_VIEW_TYPE){
-        //         this.displayEmpty(true);
-        //         removeExistingSVG();
-        //     } else {
-        //         const { root, features } = await this.transformMarkdown();
-        //         this.displayEmpty(false);
-        //         this.svg = createSVG(this.containerEl, this.settings.lineHeight);
-        //         this.renderMarkmap(root, this.svg);
-        //     }
-        // }
-        // this.displayText = this.fileName != undefined ? `Mind Map of ${this.fileName}` : 'Mind Map';
-
         this.load();
     }
 
     async checkActiveLeaf() {
-        // TODO: Wait for callbacks in python
-        // if(this.app.workspace.activeLeaf.view.getViewType() === MM_VIEW_TYPE){
-        //     return false;
-        // }
-        // const markDownHasChanged = await this.readMarkDown();
-        // const updateRequired = markDownHasChanged;
         return false;
     }
 

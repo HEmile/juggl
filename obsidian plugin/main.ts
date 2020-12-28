@@ -6,10 +6,12 @@ import {
 	WorkspaceLeaf
 } from 'obsidian';
 import {INeo4jViewSettings, Neo4jViewSettingTab, DefaultNeo4jViewSettings} from "./settings";
-import { exec, ChildProcess } from 'child_process';
+import {exec, ChildProcess, spawn} from 'child_process';
 import {promisify} from "util";
 import {PythonShell} from "python-shell";
 import {NV_VIEW_TYPE, NeoVisView, MD_VIEW_TYPE} from "./visualization";
+// import 'express';
+import {IncomingMessage, ServerResponse} from "http";
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
 const exec_promise = promisify(exec);
@@ -121,8 +123,6 @@ export default class Neo4jViewPlugin extends Plugin {
 	}
 
 	public async initialize() {
-
-		// console.log(this.path);
 		console.log('Initializing Neo4j stream');
 		try {
 			let {stdout, stderr} = await exec_promise("pip3 install --upgrade semantic-markdown-converter " +
@@ -182,6 +182,56 @@ export default class Neo4jViewPlugin extends Plugin {
 			console.log("Error during initialization of semantic markdown: \n", error);
 			new Notice("Error during initialization of the Neo4j stream. Check the console for crash report.");
 		}
+		this.httpServer();
+	}
+
+	async httpServer() {
+		let path = require('path');
+		let http = require('http');
+		let fs = require('fs');
+
+		let dir = path.join(this.path);
+
+		let mime = {
+			gif: 'image/gif',
+			jpg: 'image/jpeg',
+			png: 'image/png',
+			svg: 'image/svg+xml',
+		};
+
+		let server = http.createServer(function (req: IncomingMessage, res: ServerResponse) {
+			console.log("entering query");
+			console.log(req);
+			let reqpath = req.url.toString().split('?')[0];
+			if (req.method !== 'GET') {
+				res.statusCode = 501;
+				res.setHeader('Content-Type', 'text/plain');
+				return res.end('Method not implemented');
+			}
+			let file = path.join(dir, decodeURI(reqpath.replace(/\/$/, '/index.html')));
+			console.log(file);
+			if (file.indexOf(dir + path.sep) !== 0) {
+				res.statusCode = 403;
+				res.setHeader('Content-Type', 'text/plain');
+				return res.end('Forbidden');
+			}
+			// @ts-ignore
+			let type = mime[path.extname(file).slice(1)];
+			let s = fs.createReadStream(file);
+			s.on('open', function () {
+				res.setHeader('Content-Type', type);
+				s.pipe(res);
+			});
+			s.on('error', function () {
+				res.setHeader('Content-Type', 'text/plain');
+				res.statusCode = 404;
+				res.end('Not found');
+			});
+		});
+		let port = this.settings.imgServerPort;
+		server.listen(port, function () {
+			console.log('Listening on http://localhost:' + port + '/');
+		});
 	}
 
 	public async shutdown() {

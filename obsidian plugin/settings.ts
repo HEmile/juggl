@@ -14,6 +14,7 @@ export interface INeo4jViewSettings {
     password: string;
     typed_link_prefix: string;
     splitDirection: SplitDirection; // 'horizontal';
+    imgServerPort: number;
     debug: boolean;
     nodeSettings: string;
     edgeSettings: string;
@@ -47,12 +48,19 @@ export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
     show_arrows: true,
     splitDirection: 'horizontal',
     typed_link_prefix: '-',
+    imgServerPort: 3000,
     debug: false,
     nodeSettings: JSON.stringify({
         "defaultStyle": DefaultNodeSettings,
         "exampleTag": {
             size: 20,
             color: "yellow"
+        },
+        "image": {
+            size: 40,
+            font: {
+                size: 0
+            }
         }
     }),
     edgeSettings: JSON.stringify({
@@ -156,10 +164,13 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
             "The first key determines what tags or folders to apply this style to. " +
             "For instance, {\"exampleTag\":{\"color\":\"yellow\"}} would color all notes with #exampleTag yellow. " +
             "Use {\"defaultStyle\": {}} for the default styling of nodes. " +
+            "Use {\"image\": {}} to style images. Use {\"SMD_dangling\": {}} to style dangling notes. " +
             "When color-coding is set to Folders, use the path to the folder for this key. " +
             "For instance, if you have a folder called \"dailies\", use {\"dailies\": {}}. " +
             "Use {\"/\" for the root folder. " +
             "See " +    temp_link.outerHTML + " for all options for styling the nodes."
+
+        containerEl.appendChild(par);
 
         containerEl.createEl('h4');
         containerEl.createEl('h4', {text: 'Edge Styling'});
@@ -243,6 +254,18 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
                     .setValue(this.plugin.settings.typed_link_prefix)
                     .onChange((new_folder) => {
                         this.plugin.settings.typed_link_prefix = new_folder;
+                        this.plugin.saveData(this.plugin.settings);
+                    })
+            });
+
+        new Setting(containerEl)
+            .setName("Image server port")
+            .setDesc("Set the port of the image server. If you use multiple vaults, these need to be set differently. Default 3000.")
+            .addText(text => {
+                text.setValue(this.plugin.settings.imgServerPort + '')
+                    .setPlaceholder('3000')
+                    .onChange((new_value) => {
+                        this.plugin.settings.imgServerPort = parseInt(new_value.trim());
                         this.plugin.saveData(this.plugin.settings);
                     })
             });
