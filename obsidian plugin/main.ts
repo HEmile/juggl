@@ -107,7 +107,8 @@ export default class Neo4jViewPlugin extends Plugin {
 	}
 
 	public async openFile(file: TFile) {
-		const md_leaves = this.app.workspace.getLeavesOfType(MD_VIEW_TYPE);
+		const md_leaves = this.app.workspace.getLeavesOfType(MD_VIEW_TYPE).concat(this.app.workspace.getLeavesOfType('image'));
+		// this.app.workspace.iterateAllLeaves(leaf => console.log(leaf.view.getViewType()));
 		if (md_leaves.length > 0) {
 			await md_leaves[0].openFile(file);
 		}

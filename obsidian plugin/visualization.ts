@@ -246,12 +246,14 @@ export class NeoVisView extends ItemView{
 
     async onClickNode(node: Node) {
         // @ts-ignore
-        const file = node.properties[PROP_PATH];
         // @ts-ignore
         const label = node.properties["name"];
+        // const file = node.properties[PROP_PATH];
+        const file = this.app.metadataCache.getFirstLinkpathDest(label, '');
+
         if (file) {
-            const tfile = this.plugin.getFileFromAbsolutePath(file) as TFile;
-            await this.plugin.openFile(tfile)
+            // const tfile = this.plugin.getFileFromAbsolutePath(file) as TFile;
+            await this.plugin.openFile(file);
         }
         else {
             // Create dangling file

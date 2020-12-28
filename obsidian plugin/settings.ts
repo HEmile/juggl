@@ -168,7 +168,8 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
             "When color-coding is set to Folders, use the path to the folder for this key. " +
             "For instance, if you have a folder called \"dailies\", use {\"dailies\": {}}. " +
             "Use {\"/\" for the root folder. " +
-            "See " +    temp_link.outerHTML + " for all options for styling the nodes."
+            "See " +    temp_link.outerHTML + " for all options for styling the nodes. " +
+            "You can style using images in your vault with {\"shape\": \"image\", \"image\": \"http://localhost:3000/path/to/image\"}."
 
         containerEl.appendChild(par);
 
