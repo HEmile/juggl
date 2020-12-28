@@ -1,12 +1,17 @@
 ## Neo4j Graph View
-![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/obsidian%20neo4j%20plugin.gif)
+![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/styled_screenshot.gif)
+
 
 Adds a new and much more functional graph view to Obsidian. It does so by connecting
 to a [Neo4j](https://neo4j.com/) database. Features:
-- Color nodes by tags or folders
+- Selectively style nodes and edges by tags, folders and link types
 - Selective expansion and hiding of nodes
+- View images within the graph
 - Typed links using `- linkType [[note 1]], [[note 2|alias]]`
 - Hierarchical layout
+
+![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/obsidian%20neo4j%20plugin.gif)
+
 
 ### Installation
 1. Make sure you have [Python 3.6+](https://www.python.org/downloads/) installed
