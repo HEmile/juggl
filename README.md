@@ -1,5 +1,5 @@
 ## Neo4j Graph View
-![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/styled_screenshot.gif)
+![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/styled_screenshot.png)
 
 
 Adds a new and much more functional graph view to Obsidian. It does so by connecting
