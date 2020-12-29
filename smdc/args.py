@@ -18,6 +18,7 @@ def _mutual_args(parser):
     parser.add_argument("--index_content", action="store_true", help="Use to index the content in neo4j. Can highly impact performance")
     parser.add_argument("--typed_links_prefix", metavar='t', type=str, default="-")
     parser.add_argument('--community', metavar='c', type=str, default="tags", help="Options: {tags, folders, none}. Used for color coding in Obsidian plugin.")
+    parser.add_argument('--convert_markdown', action="store_true", help="Converts content property to HTML. Takes quite a bit longer on startup. ")
     parser.add_argument('-r', action="store_false", default=True)
 
 def server_args():

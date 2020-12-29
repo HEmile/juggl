@@ -47,6 +47,6 @@ def parse_folder(format: Format, args):
                 parsed_notes[name] = note
             except Exception as e:
                 print(e)
-                print("Exception raised during parsing " + path + ". Skipping this note! Please report this.")
+                print("Exception raised during parsing " + str(path) + ". Skipping this note! Please report this.")
     return parsed_notes
 

@@ -2,7 +2,7 @@ from smdc.format import Format
 from smdc.note import Note, Relationship
 import io
 import os
-from smdc.format.util import parse_yaml_header, get_tags_from_line, get_wikilinks_from_line, PUNCTUATION
+from smdc.format.util import parse_yaml_header, get_tags_from_line, get_wikilinks_from_line, PUNCTUATION, markdownToHtml
 
 
 class TypedList(Format):
@@ -99,14 +99,15 @@ class TypedList(Format):
                     tags.append(tag)
             # TODO: Save aliases as Relation property
             for wikilink in get_wikilinks_from_line(line):
-                rel = Relationship("inline", properties={"context": line})
+                rel = Relationship("inline",
+                                   properties={"context": markdownToHtml(line) if args.convert_markdown else line})
                 if wikilink in relations:
                     relations[wikilink].append(rel)
                 else:
                     relations[wikilink] = [rel]
             line = file.readline()
-
-        return Note(name, tags, "".join(content), out_rels=relations, properties=parsed_yaml if parsed_yaml else {})
+        raw_content = markdownToHtml("".join(content)) if args.convert_markdown else "".join(content)
+        return Note(name, tags, raw_content, out_rels=relations, properties=parsed_yaml if parsed_yaml else {})
 
     def write(self, file, parsed_notes: [Note]):
         raise NotImplementedError
