@@ -6,6 +6,7 @@ import {NeoVisView, NV_VIEW_TYPE} from "./visualization";
 
 export interface INeo4jViewSettings {
     index_content: boolean;
+    convert_markdown: boolean;
     auto_expand: boolean;
     auto_add_nodes: boolean;
     community: string;
@@ -43,6 +44,7 @@ export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
     auto_expand: false,
     hierarchical: false,
     index_content: false,
+    convert_markdown: true,
     community: "tags",
     password: "",
     show_arrows: true,
@@ -231,6 +233,18 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
                 toggle.setValue(this.plugin.settings.auto_add_nodes)
                     .onChange((new_value) => {
                         this.plugin.settings.auto_add_nodes = new_value;
+                        this.plugin.saveData(this.plugin.settings);
+                    })
+            });
+
+        new Setting(containerEl)
+            .setName("Convert Markdown")
+            .setDesc("If true, the server will convert the content of notes to HTML. This can slow the server. " +
+                "Turn it off to increase server performance at the cost of not having proper previews on hovering in the graph. ")
+            .addToggle(toggle => {
+                toggle.setValue(this.plugin.settings.convert_markdown)
+                    .onChange((new_value) => {
+                        this.plugin.settings.convert_markdown = new_value;
                         this.plugin.saveData(this.plugin.settings);
                     })
             });

@@ -9,9 +9,12 @@ import {INeo4jViewSettings, Neo4jViewSettingTab, DefaultNeo4jViewSettings} from 
 import {exec, ChildProcess, spawn} from 'child_process';
 import {promisify} from "util";
 import {PythonShell} from "python-shell";
-import {NV_VIEW_TYPE, NeoVisView, MD_VIEW_TYPE} from "./visualization";
+import {NV_VIEW_TYPE, NeoVisView, MD_VIEW_TYPE, PROP_VAULT} from "./visualization";
 // import 'express';
-import {IncomingMessage, ServerResponse} from "http";
+import {IncomingMessage, Server, ServerResponse} from "http";
+import {Editor} from "codemirror";
+import {start} from "repl";
+import {Neo4jError} from "neo4j-driver";
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
 const exec_promise = promisify(exec);
@@ -26,6 +29,7 @@ export default class Neo4jViewPlugin extends Plugin {
 	path: string;
 	statusBar: HTMLElement;
 	neovisView: NeoVisView;
+	imgServer: Server;
 
 	async onload() {
 		if (this.app.vault.adapter instanceof FileSystemAdapter) {
@@ -80,7 +84,8 @@ export default class Neo4jViewPlugin extends Plugin {
 			name: 'Open local graph of note',
 			callback: () => {
 				if (!this.stream_process) {
-					new Notice("Cannot open in Neo4j Bloom as neo4j stream is not active.")
+					new Notice("Cannot open local graph as neo4j stream is not active.")
+					return;
 				}
 				let active_view = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (active_view == null) {
@@ -89,8 +94,21 @@ export default class Neo4jViewPlugin extends Plugin {
 				let name = active_view.getDisplayText();
 
 				const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
-				const neovisView = new NeoVisView(leaf, name, this);
+				const query = this.localNeighborhoodCypher(name)
+				const neovisView = new NeoVisView(leaf, query, this);
 				leaf.open(neovisView);
+			},
+		});
+
+		this.addCommand({
+			id: 'execute-query',
+			name: 'Execute Cypher query',
+			callback: () => {
+				if (!this.stream_process) {
+					new Notice("Cannot open local graph as neo4j stream is not active.")
+					return;
+				}
+				this.executeQuery();
 			},
 		});
 
@@ -128,7 +146,7 @@ export default class Neo4jViewPlugin extends Plugin {
 		try {
 			let {stdout, stderr} = await exec_promise("pip3 install --upgrade semantic-markdown-converter " +
 				"--no-warn-script-location " +
-				(DEVELOP_MODE ? "--index-url https://test.pypi.org/simple/ " : "") +
+				(DEVELOP_MODE ? "--index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple " : "") +
 				"--user ", {timeout: 10000000});
 			if (this.settings.debug) {
 				console.log(stdout);
@@ -140,6 +158,7 @@ export default class Neo4jViewPlugin extends Plugin {
 					'--typed_links_prefix', this.settings.typed_link_prefix,
 					'--community', this.settings.community]
 					.concat(this.settings.debug ? ["--debug"] : [])
+					.concat(this.settings.convert_markdown ? ["--convert_markdown"] : [])
 			};
 
 			// @ts-ignore
@@ -200,7 +219,7 @@ export default class Neo4jViewPlugin extends Plugin {
 			svg: 'image/svg+xml',
 		};
 
-		let server = http.createServer(function (req: IncomingMessage, res: ServerResponse) {
+		this.imgServer = http.createServer(function (req: IncomingMessage, res: ServerResponse) {
 			console.log("entering query");
 			console.log(req);
 			let reqpath = req.url.toString().split('?')[0];
@@ -230,9 +249,81 @@ export default class Neo4jViewPlugin extends Plugin {
 			});
 		});
 		let port = this.settings.imgServerPort;
-		server.listen(port, function () {
+		this.imgServer.listen(port, function () {
 			console.log('Listening on http://localhost:' + port + '/');
 		});
+	}
+
+	getLinesOffsetToGoal(start: number, goal: string, step = 1, cm: Editor): number {
+		// Code taken from https://github.com/mrjackphil/obsidian-text-expand/blob/0.6.4/main.ts
+		const lineCount = cm.lineCount();
+		let offset = 0;
+
+		while (!isNaN(start + offset) && start + offset < lineCount && start + offset >= 0) {
+			const result = goal === cm.getLine(start + offset);
+			if (result) {
+				return offset;
+			}
+			offset += step;
+		}
+
+		return start;
+	}
+
+	getContentBetweenLines(fromLineNum: number, startLine: string, endLine: string, cm: Editor) {
+		// Code taken from https://github.com/mrjackphil/obsidian-text-expand/blob/0.6.4/main.ts
+		const topOffset = this.getLinesOffsetToGoal(fromLineNum, startLine, -1, cm);
+		const botOffset = this.getLinesOffsetToGoal(fromLineNum, endLine, 1, cm);
+
+		const topLine = fromLineNum + topOffset + 1;
+		const botLine = fromLineNum + botOffset - 1;
+
+		if (!(cm.getLine(topLine - 1) === startLine && cm.getLine(botLine + 1) === endLine)) {
+			return "";
+		}
+
+		return cm.getRange({line: topLine || fromLineNum, ch: 0},
+			{line: botLine || fromLineNum, ch: cm.getLine(botLine)?.length });
+	}
+
+	nodeCypher(label: string): string {
+		return "MATCH (n) WHERE n.name=\"" + label +
+			"\" AND n." + PROP_VAULT + "=\"" + this.app.vault.getName() +
+			"\" RETURN n"
+	}
+
+	localNeighborhoodCypher(label:string): string {
+		return "MATCH (n)-[r]-(m) WHERE n.name=\"" + label +
+			"\" AND n." + PROP_VAULT + "=\"" + this.app.vault.getName() +
+			"\" RETURN n,r,m"
+	}
+
+	executeQuery() {
+		// Code taken from https://github.com/mrjackphil/obsidian-text-expand/blob/0.6.4/main.ts
+		const currentView = this.app.workspace.activeLeaf.view;
+
+		if (!(currentView instanceof MarkdownView)) {
+			return;
+		}
+
+		const cmDoc = currentView.sourceMode.cmEditor;
+		const curNum = cmDoc.getCursor().line;
+		const query = this.getContentBetweenLines(curNum, '```cypher', '```', cmDoc);
+		if (query.length > 0) {
+			const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
+			try {
+				const neovisView = new NeoVisView(leaf, query, this);
+				leaf.open(neovisView);
+			}
+			catch(e) {
+				if (e instanceof Neo4jError) {
+					new Notice("Invalid query. Check console for more info.");
+				}
+				else {
+					throw e;
+				}
+			}
+		}
 	}
 
 	public async shutdown() {
@@ -241,6 +332,8 @@ export default class Neo4jViewPlugin extends Plugin {
 			this.stream_process.kill();
 			this.statusBar.setText("Neo4j stream offline");
 			this.stream_process = null;
+			this.imgServer.close();
+			this.imgServer = null;
 		}
 	}
 

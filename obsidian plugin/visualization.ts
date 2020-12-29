@@ -18,7 +18,7 @@ export class NeoVisView extends ItemView{
     workspace: Workspace;
     listeners: EventRef[];
     settings: INeo4jViewSettings;
-    initial_note: string;
+    initial_query: string;
     vault: Vault;
     plugin: Neo4jViewPlugin;
     viz: NeoVis;
@@ -27,11 +27,11 @@ export class NeoVisView extends ItemView{
     rebuildRelations = true;
     selectName:string = undefined;
 
-    constructor(leaf: WorkspaceLeaf, active_note: string, plugin: Neo4jViewPlugin) {
+    constructor(leaf: WorkspaceLeaf, initial_query: string, plugin: Neo4jViewPlugin) {
         super(leaf);
         this.settings = plugin.settings;
         this.workspace = this.app.workspace;
-        this.initial_note = active_note;
+        this.initial_query = initial_query;
         this.vault = this.app.vault;
         this.plugin = plugin;
     }
@@ -70,9 +70,7 @@ export class NeoVisView extends ItemView{
                     "caption": true
                 }
             },
-            initial_cypher: this.settings.auto_expand ?
-                this.localNeighborhoodCypher(this.initial_note) :
-                this.nodeCypher(this.initial_note)
+            initial_cypher: this.initial_query
         };
         this.viz = new NeoVis(config);
         this.viz.registerOnEvent("completed", (e)=>{
@@ -124,10 +122,10 @@ export class NeoVisView extends ItemView{
                 const name = file.basename;
                 //todo: Select node
                 if (this.settings.auto_expand) {
-                    this.updateWithCypher(this.localNeighborhoodCypher(name));
+                    this.updateWithCypher(this.plugin.localNeighborhoodCypher(name));
                 }
                 else {
-                    this.updateWithCypher(this.nodeCypher(name));
+                    this.updateWithCypher(this.plugin.nodeCypher(name));
                 }
                 this.selectName = name;
             }
@@ -148,18 +146,6 @@ export class NeoVisView extends ItemView{
                 this.selectAll();
             }
         });
-    }
-
-    nodeCypher(label: string): string {
-        return "MATCH (n) WHERE n.name=\"" + label +
-            "\" AND n." + PROP_VAULT + "=\"" + this.vault.getName() +
-            "\" RETURN n"
-    }
-
-    localNeighborhoodCypher(label:string): string {
-        return "MATCH (n)-[r]-(m) WHERE n.name=\"" + label +
-            "\" AND n." + PROP_VAULT + "=\"" + this.vault.getName() +
-            "\" RETURN n,r,m"
     }
 
     findNode(id: IdType): Node {
@@ -263,14 +249,14 @@ export class NeoVisView extends ItemView{
             await this.plugin.openFile(createdFile);
         }
         if (this.settings.auto_expand) {
-            await this.updateWithCypher(this.localNeighborhoodCypher(label));
+            await this.updateWithCypher(this.plugin.localNeighborhoodCypher(label));
         }
     }
 
     async onDoubleClickNode(node: Node) {
         // @ts-ignore
         const label = node.properties["name"];
-        await this.updateWithCypher(this.localNeighborhoodCypher(label));
+        await this.updateWithCypher(this.plugin.localNeighborhoodCypher(label));
     }
 
     async onClickEdge(edge: Object) {
