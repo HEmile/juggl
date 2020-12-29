@@ -1,6 +1,6 @@
 import {
 	FileSystemAdapter,
-	MarkdownView, normalizePath,
+	MarkdownView, MenuItem, normalizePath,
 	Notice,
 	Plugin, Scope, TAbstractFile, TFile,
 	WorkspaceLeaf
@@ -83,20 +83,7 @@ export default class Neo4jViewPlugin extends Plugin {
 			id: 'open-vis',
 			name: 'Open local graph of note',
 			callback: () => {
-				if (!this.stream_process) {
-					new Notice("Cannot open local graph as neo4j stream is not active.")
-					return;
-				}
-				let active_view = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (active_view == null) {
-					return;
-				}
-				let name = active_view.getDisplayText();
-
-				const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
-				const query = this.localNeighborhoodCypher(name)
-				const neovisView = new NeoVisView(leaf, query, this);
-				leaf.open(neovisView);
+				this.openLocalGraph();
 			},
 		});
 
@@ -113,6 +100,15 @@ export default class Neo4jViewPlugin extends Plugin {
 		});
 
 		this.addSettingTab(new Neo4jViewSettingTab(this.app, this));
+
+		this.app.workspace.on("file-menu", (menu => {
+			menu.addItem((item) =>{
+				item.setTitle("Open Neo4j Graph View").setIcon("dot-network")
+					.onClick(evt => {
+					this.openLocalGraph();
+				});
+			})
+		}));
 
 
 		await this.initialize();
@@ -252,6 +248,23 @@ export default class Neo4jViewPlugin extends Plugin {
 		this.imgServer.listen(port, function () {
 			console.log('Listening on http://localhost:' + port + '/');
 		});
+	}
+
+	openLocalGraph() {
+		if (!this.stream_process) {
+			new Notice("Cannot open local graph as neo4j stream is not active.")
+			return;
+		}
+		let active_view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (active_view == null) {
+			return;
+		}
+		let name = active_view.getDisplayText();
+
+		const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
+		const query = this.localNeighborhoodCypher(name)
+		const neovisView = new NeoVisView(leaf, query, this);
+		leaf.open(neovisView);
 	}
 
 	getLinesOffsetToGoal(start: number, goal: string, step = 1, cm: Editor): number {

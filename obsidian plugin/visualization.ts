@@ -94,11 +94,21 @@ export class NeoVisView extends ItemView{
                 });
                 this.hasClickListener = true;
             }
+            console.log("In Completed")
             if (this.rebuildRelations) {
+                console.log("rebuilding rels")
+                // Remove all relations to prevent duplicates
+                // let originalNodes = this.viz.nodes;
+                // this.viz.edges.clear();
+                // this.viz.clearNetwork();
+                // @ts-ignore
+                // let data = {nodes: originalNodes, edges: []} as Data;
+                // this.network.setData(data);
                 let inQuery = this.getInQuery(this.viz.nodes.getIds());
                 let query = "MATCH (n)-[r]-(m) WHERE n." + PROP_VAULT + "= \"" + this.vault.getName() + "\" AND n.name " + inQuery
                     + " AND  m." + PROP_VAULT + "= \"" + this.vault.getName() + "\" AND m.name " + inQuery +
                     " RETURN r";
+                console.log(query);
                 this.viz.updateWithCypher(query);
                 this.rebuildRelations = false;
             }
@@ -111,6 +121,9 @@ export class NeoVisView extends ItemView{
                     }
                 })
             }
+            console.log(this.viz.nodes);
+            console.log(this.viz.edges);
+
 
         });
         this.load();
