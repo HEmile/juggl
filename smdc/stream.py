@@ -2,7 +2,7 @@ from smdc import server_args, convert, parse_note, FORMAT_TYPES, Note, note_name
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 import time
-from py2neo import Node, Subgraph
+from py2neo import Node, Subgraph, Relationship
 from smdc.format.neo4j import node_from_note, add_rels_between_nodes, CAT_DANGLING, CAT_NO_TAGS, create_index, \
     create_dangling, PROP_COMMUNITY, get_community
 from smdc.format.cypher import escape_cypher
@@ -32,10 +32,10 @@ class SMDSEventHandler():
         self.tags = tags
         self.communities = communities
 
-    def _clear_outgoing(self, node: Node):
-        rels = self.relationships.match([node, None])
-        if len(rels) > 0:
-            self.graph.separate(Subgraph(relationships=rels))
+    # def _clear_outgoing(self, node: Node):
+    #     rels = self.relationships.match([node, None])
+    #     if len(rels) > 0:
+    #         self.graph.separate(Subgraph(relationships=rels))
 
     def _process_node_on_graph(self, note: Note):
         if smdc.DEBUG:
@@ -73,23 +73,47 @@ class SMDSEventHandler():
         node.update(escaped_properties)
         self.graph.push(node)
 
-        # Delete active relations
-        self._clear_outgoing(node)
+        # # Delete active relations
+        # self._clear_outgoing(node)
 
         # Insert up-to-date relations
         rels_to_create = []
         nodes_to_create = []
+        rels_to_remove = []
         for trgt, rels in note.out_rels.items():
-            trgt_node = self.nodes.match(name=trgt)
+            trgt_node = self.nodes.match(**{'name': trgt, PROP_VAULT: self.vault_name})
             if len(trgt_node) == 0:
                 trgt_node = create_dangling(trgt, self.vault_name, self.tags)
                 nodes_to_create.append(trgt_node)
             else:
                 trgt_node = trgt_node.first()
+            active_rels = list(self.relationships.match([node, trgt_node]))
             # Possibly refactor this with
-            add_rels_between_nodes(rels, node, trgt_node, rels_to_create)
+            for i, rel in enumerate(rels):
+                properties = {}
+                for property, value in rel.properties.items():
+                    properties[property] = escape_cypher(str(value))
+                rel_type = escape_cypher(rel.type)
+                rem_rel = None
+                # Update instead of removing makes sure the relationship has a persistent id
+                for active_rel in active_rels:
+                    print(type(active_rel).__name__)
+                    if type(active_rel).__name__ == rel_type:
+                        # Maybe this can leave dangling properties? But that'' an edge case. Not sure how to clear properties.
+                        active_rel.clear()
+                        active_rel.update(properties)
+                        self.graph.push(active_rel)
+                        rem_rel = active_rel
+                        break
+                if rem_rel is not None:
+                    active_rels.remove(rem_rel)
+                else:
+                    rels_to_create.append(Relationship(node, rel_type, trgt_node, **properties))
+            rels_to_remove += active_rels
         if rels_to_create or nodes_to_create:
             self.graph.create(Subgraph(nodes=nodes_to_create, relationships=rels_to_create))
+        if len(rels_to_remove) > 0:
+            self.graph.separate(Subgraph(relationships=rels_to_remove))
 
     def on_created(self):
         def _on_created(event):
