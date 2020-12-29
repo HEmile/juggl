@@ -7,6 +7,7 @@ to a [Neo4j](https://neo4j.com/) database. Features:
 - Selectively style nodes and edges by tags, folders and link types
 - Selective expansion and hiding of nodes
 - View images within the graph
+- [Cypher](https://neo4j.com/developer/cypher/) querying
 - Typed links using `- linkType [[note 1]], [[note 2|alias]]`
 - Hierarchical layout
 
@@ -31,6 +32,13 @@ On an open note, use the command "Neo4j Graph View: Open local graph of note".
 - All notes visited are added to the graph
 
 The settings contains several options, such as coloring based on folders and a hierarchical layout. 
+
+#### Cypher Querying
+Create code blocks with language `cypher`. In this code block, create your Cypher query. Then, when the cursor is on this
+code block, use the Obsidian command 'Neo4j Graph View: Execute Cypher query'. Example: 
+
+![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/cypher_querying.png)
+
 
 ### Possible problems
 All changes made in obsidian should be automatically reflected in Neo4j, but this is still very buggy. There also seem
