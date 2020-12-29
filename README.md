@@ -21,7 +21,9 @@ to a [Neo4j](https://neo4j.com/) database. Features:
 5. In the settings of the plugin, enter the password. Then run the restart command.
 
 ### Use
-On an open note, use the command "Neo4j Graph View: Open local graph of note".
+On an open note, use the command "Neo4j Graph View: Open local graph of note". You can run commands using ctrl/cmd+p. Alternatively, you can bind this command to a hotkey in the settings.
+
+#### Graph functionality
 - Click on a node to open it in the Markdown view
 - Double-click on a node to expand its neighbors
 - Shift-drag in the graph view to select nodes
