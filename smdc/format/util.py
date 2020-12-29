@@ -1,9 +1,7 @@
 import yaml
 import os
-import re
 import markdown
 from markdown.extensions import Extension
-from markdown.extensions.wikilinks import WikiLinkExtension
 from markdown.preprocessors import Preprocessor
 import re
 
