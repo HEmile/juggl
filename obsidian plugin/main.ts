@@ -148,15 +148,20 @@ export default class Neo4jViewPlugin extends Plugin {
 				console.log(stdout);
 			}
 			console.log(stderr);
-			let options = {
-				args: ['--input', this.path,
-					'--password', this.settings.password,
-					'--typed_links_prefix', this.settings.typed_link_prefix,
-					'--community', this.settings.community]
-					.concat(this.settings.debug ? ["--debug"] : [])
-					.concat(this.settings.convert_markdown ? ["--convert_markdown"] : [])
-			};
-
+		}
+		catch (e) {
+			console.log("Error during updating semantic markdown: \n", e);
+			new Notice("Error during updating semantic markdown. Check the console for crash report.");
+		}
+		let options = {
+			args: ['--input', this.path,
+				'--password', this.settings.password,
+				'--typed_links_prefix', this.settings.typed_link_prefix,
+				'--community', this.settings.community]
+				.concat(this.settings.debug ? ["--debug"] : [])
+				.concat(this.settings.convert_markdown ? ["--convert_markdown"] : [])
+		};
+		try {
 			// @ts-ignore
 			this.stream_process = PythonShell.runString("from smdc.stream import main;" +
 				"main();", options, function(err, results) {
