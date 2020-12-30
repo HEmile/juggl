@@ -280,10 +280,16 @@ export default class Neo4jViewPlugin extends Plugin {
 				res.end('Not found');
 			});
 		});
-		let port = this.settings.imgServerPort;
-		this.imgServer.listen(port, function () {
-			console.log('Image server listening on http://localhost:' + port + '/');
-		});
+		try {
+			let port = this.settings.imgServerPort;
+			this.imgServer.listen(port, function () {
+				console.log('Image server listening on http://localhost:' + port + '/');
+			});
+		}
+		catch (e){
+			console.log(e);
+			new Notice("Neo4j: Couldn't start image server, see console");
+		}
 	}
 
 	openLocalGraph() {
