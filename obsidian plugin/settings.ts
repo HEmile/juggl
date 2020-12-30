@@ -52,7 +52,7 @@ export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
     inlineContext: false,
     splitDirection: 'horizontal',
     typed_link_prefix: '-',
-    imgServerPort: 3000,
+    imgServerPort: 3837,
     debug: false,
     nodeSettings: JSON.stringify({
         "defaultStyle": DefaultNodeSettings,
