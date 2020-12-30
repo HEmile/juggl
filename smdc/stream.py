@@ -8,7 +8,7 @@ from smdc.format.neo4j import node_from_note, add_rels_between_nodes, CAT_DANGLI
 from smdc.format.cypher import escape_cypher
 from pathlib import Path
 import smdc
-from smdc.parse import PROP_VAULT
+from smdc.parse import PROP_VAULT, PROP_PATH
 
 
 def wrapper(fn):
@@ -141,6 +141,7 @@ class SMDSEventHandler():
                 self._clear_outgoing(node)
             else:
                 self.graph.delete(node)
+            print("onDeletedEvent", flush=True)
         return wrapper(_on_deleted)
 
     def on_modified(self):
@@ -149,18 +150,21 @@ class SMDSEventHandler():
                 print("On modified", event.src_path, flush=True)
             note = parse_note(self.input_format, event.src_path, self.args)
             self._process_node_on_graph(note)
+            print("onModifyEvent", flush=True)
         return wrapper(_on_modified)
 
     def on_moved(self):
         def _on_moved(event):
             if smdc.DEBUG:
-                print("On moved", event.src_path, event.src_path, flush=True)
+                print("On moved", event.src_path, event.dest_path, flush=True)
             node = self.nodes.match(name=note_name(event.src_path)).first()
             new_name = note_name(event.dest_path)
             # TODO: What if this name already exists in the vault?
-            node.name = new_name
-            node.obsidian_url = obsidian_url(new_name, self.vault_name)
+            node['name'] = new_name
+            node['obsidian_url'] = obsidian_url(new_name, self.vault_name)
+            node[PROP_PATH] = event.dest_path
             self.graph.push(node)
+            print("onModifyEvent", flush=True)
         return wrapper(_on_moved)
 
 def stream(graph, tags, communities, args):
