@@ -168,7 +168,7 @@ export default class Neo4jViewPlugin extends Plugin {
 				plugin.shutdown();
 			})
 			let statusbar = this.statusBar;
-			const _debug = this.settings.debug;
+			let settings = this.settings;
 			this.stream_process.on('message', function (message) {
 				// received a message sent from the Python script (a simple "print" statement)
 				if (message === 'Stream is active!') {
@@ -176,17 +176,50 @@ export default class Neo4jViewPlugin extends Plugin {
 					new Notice("Neo4j stream online!");
 					statusbar.setText("Neo4j stream online");
 				}
-				else if (message == 'invalid user credentials') {
+				else if (message === 'invalid user credentials') {
 					console.log(message);
 					new Notice('Please provide a password in the Neo4j Graph View settings');
 					statusbar.setText(STATUS_OFFLINE);
 				}
-				else if (message == 'no connection to db') {
+				else if (message === 'no connection to db') {
 					console.log(message);
 					new Notice("No connection to Neo4j database. Please start Neo4j Database in Neo4j Desktop");
 					statusbar.setText(STATUS_OFFLINE);
 				}
-				else if (_debug) {
+				else if (/^onSMD/.test(message)) {
+					if (settings.debug) {console.log(message)}
+					console.log("handling event");
+					const parts = message.split("/");
+					const leaves = plugin.app.workspace.getLeavesOfType(NV_VIEW_TYPE);
+					const name = parts[1];
+					leaves.forEach((leaf) =>{
+						let view = leaf.view as NeoVisView;
+						console.log(view);
+						if (parts[0] === "onSMDModifyEvent") {
+							if (view.expandedNodes.includes(name)) {
+								view.updateWithCypher(plugin.localNeighborhoodCypher(name));
+							}
+							else {
+								view.updateWithCypher(plugin.nodeCypher(name));
+							}
+						}
+						else if (parts[0] === "onSMDDeletedEvent") {
+							//TODO
+						}
+						else if (parts[0] === "onSMDMovedEvent") {
+							let new_name = parts[2];
+							if (view.expandedNodes.includes(name)) {
+								view.updateWithCypher(plugin.localNeighborhoodCypher(new_name));
+								view.expandedNodes.remove(name);
+								view.expandedNodes.push(new_name);
+							}
+							else {
+								view.updateWithCypher(plugin.nodeCypher(new_name));
+							}
+						}
+					});
+				}
+				else if (settings.debug) {
 					console.log(message);
 				}
 			});
@@ -214,10 +247,9 @@ export default class Neo4jViewPlugin extends Plugin {
 			png: 'image/png',
 			svg: 'image/svg+xml',
 		};
-
+		let settings = this.settings;
 		this.imgServer = http.createServer(function (req: IncomingMessage, res: ServerResponse) {
-			console.log("entering query");
-			console.log(req);
+
 			let reqpath = req.url.toString().split('?')[0];
 			if (req.method !== 'GET') {
 				res.statusCode = 501;
@@ -225,7 +257,11 @@ export default class Neo4jViewPlugin extends Plugin {
 				return res.end('Method not implemented');
 			}
 			let file = path.join(dir, decodeURI(reqpath.replace(/\/$/, '/index.html')));
-			console.log(file);
+			if (settings.debug) {
+				console.log("entering query");
+				console.log(req);
+				console.log(file);
+			}
 			if (file.indexOf(dir + path.sep) !== 0) {
 				res.statusCode = 403;
 				res.setHeader('Content-Type', 'text/plain');
@@ -246,7 +282,7 @@ export default class Neo4jViewPlugin extends Plugin {
 		});
 		let port = this.settings.imgServerPort;
 		this.imgServer.listen(port, function () {
-			console.log('Listening on http://localhost:' + port + '/');
+			console.log('Image server listening on http://localhost:' + port + '/');
 		});
 	}
 
@@ -265,6 +301,7 @@ export default class Neo4jViewPlugin extends Plugin {
 		const query = this.localNeighborhoodCypher(name)
 		const neovisView = new NeoVisView(leaf, query, this);
 		leaf.open(neovisView);
+		neovisView.expandedNodes.push(name);
 	}
 
 	getLinesOffsetToGoal(start: number, goal: string, step = 1, cm: Editor): number {
@@ -330,7 +367,7 @@ export default class Neo4jViewPlugin extends Plugin {
 			}
 			catch(e) {
 				if (e instanceof Neo4jError) {
-					new Notice("Invalid query. Check console for more info.");
+					new Notice("Invalid cypher query. Check console for more info.");
 				}
 				else {
 					throw e;
@@ -351,7 +388,7 @@ export default class Neo4jViewPlugin extends Plugin {
 	}
 
 	async onunload() {
-		console.log('unloading plugin');
+		console.log('Unloading Neo4j Graph View plugin');
 		await this.shutdown();
 	}
 

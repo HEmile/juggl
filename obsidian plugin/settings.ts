@@ -6,12 +6,13 @@ import {NeoVisView, NV_VIEW_TYPE} from "./visualization";
 
 export interface INeo4jViewSettings {
     index_content: boolean;
-    convert_markdown: boolean;
     auto_expand: boolean;
     auto_add_nodes: boolean;
     community: string;
     hierarchical: boolean;
+    convert_markdown: boolean;
     show_arrows: boolean;
+    inlineContext: boolean;
     password: string;
     typed_link_prefix: string;
     splitDirection: SplitDirection; // 'horizontal';
@@ -48,6 +49,7 @@ export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
     community: "tags",
     password: "",
     show_arrows: true,
+    inlineContext: false,
     splitDirection: 'horizontal',
     typed_link_prefix: '-',
     imgServerPort: 3000,
@@ -63,7 +65,12 @@ export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
             font: {
                 size: 0
             }
-        }
+        },
+        "inline": {
+            font: {
+                multi: "markdown"
+            }
+        },
     }),
     edgeSettings: JSON.stringify({
         "defaultStyle": DefaultEdgeSettings,
@@ -131,6 +138,16 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
                 toggle.setValue(this.plugin.settings.show_arrows)
                     .onChange((new_value) => {
                         this.plugin.settings.show_arrows = new_value;
+                        this.plugin.saveData(this.plugin.settings);
+                    })
+            });
+        new Setting(containerEl)
+            .setName("Show context on inline links")
+            .setDesc("Shows the paragraph where an inline link is in on the edge.")
+            .addToggle(toggle => {
+                toggle.setValue(this.plugin.settings.inlineContext)
+                    .onChange((new_value) => {
+                        this.plugin.settings.inlineContext = new_value;
                         this.plugin.saveData(this.plugin.settings);
                     })
             });

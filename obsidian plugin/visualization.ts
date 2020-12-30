@@ -25,7 +25,8 @@ export class NeoVisView extends ItemView{
     network: Network;
     hasClickListener = false;
     rebuildRelations = true;
-    selectName:string = undefined;
+    selectName: string = undefined;
+    expandedNodes: string[] = [];
 
     constructor(leaf: WorkspaceLeaf, initial_query: string, plugin: Neo4jViewPlugin) {
         super(leaf);
@@ -47,7 +48,7 @@ export class NeoVisView extends ItemView{
             server_url: "bolt://localhost:7687",
             server_user: "neo4j",
             server_password: this.settings.password,
-            arrows: this.settings.show_arrows, // TODO: ADD CONFIG
+            arrows: this.settings.show_arrows,
             hierarchical: this.settings.hierarchical,
             labels: {
                 [NEOVIS_DEFAULT_CONFIG]: {
@@ -63,7 +64,10 @@ export class NeoVisView extends ItemView{
             relationships: {
                 "inline": {
                     "thickness": "weight",
-                    "caption": false
+                    "caption": this.settings.inlineContext ? "context": false,
+                    "title_properties": [
+                        "parsedContext"
+                    ]
                 },
                 [NEOVIS_DEFAULT_CONFIG]: {
                     "thickness": "defaultThicknessProperty",
@@ -94,9 +98,7 @@ export class NeoVisView extends ItemView{
                 });
                 this.hasClickListener = true;
             }
-            console.log("In Completed")
             if (this.rebuildRelations) {
-                console.log("rebuilding rels")
                 // Remove all relations to prevent duplicates
                 // let originalNodes = this.viz.nodes;
                 // this.viz.edges.clear();
@@ -108,7 +110,6 @@ export class NeoVisView extends ItemView{
                 let query = "MATCH (n)-[r]-(m) WHERE n." + PROP_VAULT + "= \"" + this.vault.getName() + "\" AND n.name " + inQuery
                     + " AND  m." + PROP_VAULT + "= \"" + this.vault.getName() + "\" AND m.name " + inQuery +
                     " RETURN r";
-                console.log(query);
                 this.viz.updateWithCypher(query);
                 this.rebuildRelations = false;
             }
@@ -121,10 +122,10 @@ export class NeoVisView extends ItemView{
                     }
                 })
             }
-            console.log(this.viz.nodes);
-            console.log(this.viz.edges);
-
-
+            if (this.settings.debug) {
+                console.log(this.viz.nodes);
+                console.log(this.viz.edges);
+            }
         });
         this.load();
         this.viz.render();
@@ -169,22 +170,6 @@ export class NeoVisView extends ItemView{
     findEdge(id: IdType): Relationship {
         // @ts-ignore
         return this.viz.edges.get(id)?.raw as Relationship;
-    }
-
-    getInQuery(nodes: IdType[]): string {
-        let query = "IN ["
-        let first = true;
-        for (let id of nodes) {
-            // @ts-ignore
-            const title = this.findNode(id).properties["name"] as string;
-            if (!first) {
-                query += ", ";
-            }
-            query += "\"" + title + "\"";
-            first = false;
-        }
-        query += "]"
-        return query;
     }
 
     updateWithCypher(cypher: string) {
@@ -290,14 +275,37 @@ export class NeoVisView extends ItemView{
 
     }
 
+    getInQuery(nodes: IdType[]): string {
+        let query = "IN ["
+        let first = true;
+        for (let id of nodes) {
+            // @ts-ignore
+            const title = this.findNode(id).properties["name"] as string;
+            if (!first) {
+                query += ", ";
+            }
+            query += "\"" + title + "\"";
+            first = false;
+        }
+        query += "]"
+        return query;
+    }
+
     async expandSelection() {
         let selected_nodes = this.network.getSelectedNodes();
         if (selected_nodes.length === 0) {
             return;
         }
-        let query = "MATCH (n)-[r]-(m) WHERE n." + PROP_VAULT + "= \"" + this.vault.getName() + "\" AND n.name "
+        let query = "MATCH (n)-[r]-(m) WHERE n." + PROP_VAULT + "= \"" + this.vault.getName() + "\" AND n.name ";
         query += this.getInQuery(selected_nodes);
-        query += " RETURN r,m"
+        query += " RETURN r,m";
+        selected_nodes.forEach(id => {
+            // @ts-ignore
+            const title = this.findNode(id).properties["name"] as string;
+            if (!this.expandedNodes.includes(title)) {
+                this.expandedNodes.push(title);
+            }
+        });
         this.updateWithCypher(query);
     }
 
@@ -305,6 +313,22 @@ export class NeoVisView extends ItemView{
         if (this.network.getSelectedNodes().length === 0) {
             return;
         }
+        // Update expanded nodes. Make sure to not automatically expand nodes of which a neighbor was hidden.
+        // Otherwise, one would have to keep hiding nodes.
+        this.network.getSelectedNodes().forEach(id => {
+            // @ts-ignore
+            const title = this.findNode(id).properties["name"] as string;
+            if (this.expandedNodes.includes(title)) {
+                this.expandedNodes.remove(title);
+            }
+            this.network.getConnectedEdges(id).forEach(n_id => {
+                // @ts-ignore
+                const n_title = this.findNode(n_id).properties["name"] as string;
+                if (this.expandedNodes.includes(n_title)) {
+                    this.expandedNodes.remove(n_title);
+                }
+            });
+        });
         this.network.deleteSelected();
 
         // This super hacky code is used because neovis.js doesn't like me removing nodes from the graph.
