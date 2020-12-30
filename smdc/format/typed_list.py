@@ -100,7 +100,8 @@ class TypedList(Format):
             # TODO: Save aliases as Relation property
             for wikilink in get_wikilinks_from_line(line):
                 rel = Relationship("inline",
-                                   properties={"context": markdownToHtml(line) if args.convert_markdown else line})
+                                   properties={"context": line,
+                                               "parsedContext": markdownToHtml(line) if args.convert_markdown else ""})
                 if wikilink in relations:
                     relations[wikilink].append(rel)
                 else:

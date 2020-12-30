@@ -35,7 +35,7 @@ def parse_folder(format: Format, args):
         iterate = Path(notes_path).glob("*" + note_extension)
     all_files = list(iterate)
     parsed_notes = {}
-    print("Parsing notes")
+    print("Parsing notes", flush=True)
     for path in tqdm(all_files):
         with open(path, mode='r', encoding='utf-8') as f:
             name = note_name(path, note_extension)
@@ -47,6 +47,7 @@ def parse_folder(format: Format, args):
                 parsed_notes[name] = note
             except Exception as e:
                 print(e)
-                print("Exception raised during parsing " + str(path) + ". Skipping this note! Please report this.")
+                print("Exception raised during parsing " + str(path) + ". Skipping this note! Please report this.", flush=True)
+    print("Finished parsing notes", flush=True)
     return parsed_notes
 

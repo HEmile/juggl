@@ -3,6 +3,7 @@ from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 import time
 from py2neo import Node, Subgraph, Relationship
+from py2neo.data import walk
 from smdc.format.neo4j import node_from_note, add_rels_between_nodes, CAT_DANGLING, CAT_NO_TAGS, create_index, \
     create_dangling, PROP_COMMUNITY, get_community
 from smdc.format.cypher import escape_cypher
@@ -79,7 +80,7 @@ class SMDSEventHandler():
         # Insert up-to-date relations
         rels_to_create = []
         nodes_to_create = []
-        rels_to_remove = []
+        active_rels = list(self.relationships.match([node, None]))
         for trgt, rels in note.out_rels.items():
             trgt_node = self.nodes.match(**{'name': trgt, PROP_VAULT: self.vault_name})
             if len(trgt_node) == 0:
@@ -87,7 +88,6 @@ class SMDSEventHandler():
                 nodes_to_create.append(trgt_node)
             else:
                 trgt_node = trgt_node.first()
-            active_rels = list(self.relationships.match([node, trgt_node]))
             # Possibly refactor this with
             for i, rel in enumerate(rels):
                 properties = {}
@@ -95,10 +95,12 @@ class SMDSEventHandler():
                     properties[property] = escape_cypher(str(value))
                 rel_type = escape_cypher(rel.type)
                 rem_rel = None
+                compare_rel = Relationship(node, rel_type, trgt_node)
                 # Update instead of removing makes sure the relationship has a persistent id
                 for active_rel in active_rels:
-                    print(type(active_rel).__name__)
-                    if type(active_rel).__name__ == rel_type:
+                    walks = list(walk(active_rel))
+                    if type(active_rel).__name__ == rel_type and walks[2] == trgt_node:
+                    # if compare_rel == active_rel:
                         # Maybe this can leave dangling properties? But that'' an edge case. Not sure how to clear properties.
                         active_rel.clear()
                         active_rel.update(properties)
@@ -109,11 +111,19 @@ class SMDSEventHandler():
                     active_rels.remove(rem_rel)
                 else:
                     rels_to_create.append(Relationship(node, rel_type, trgt_node, **properties))
-            rels_to_remove += active_rels
         if rels_to_create or nodes_to_create:
             self.graph.create(Subgraph(nodes=nodes_to_create, relationships=rels_to_create))
-        if len(rels_to_remove) > 0:
-            self.graph.separate(Subgraph(relationships=rels_to_remove))
+        if len(active_rels) > 0:
+            ids = []
+            for active_rel in active_rels:
+                ids.append(active_rel.identity)
+            self.graph.separate(Subgraph(relationships=active_rels))
+            for id in ids:
+                print(f"onSMDRelDeletedEvent/{id}")
+            # for active_rel in active_rels:
+            #     print(dir(active_rel))
+            #     print(active_rel)
+            #     print(f"onSMDRelDeletedEvent/{active_rel.identity}")
 
     def on_created(self):
         def _on_created(event):
@@ -141,7 +151,7 @@ class SMDSEventHandler():
                 self._clear_outgoing(node)
             else:
                 self.graph.delete(node)
-            print("onDeletedEvent", flush=True)
+            print(f"onSMDDeletedEvent/{name}", flush=True)
         return wrapper(_on_deleted)
 
     def on_modified(self):
@@ -150,21 +160,22 @@ class SMDSEventHandler():
                 print("On modified", event.src_path, flush=True)
             note = parse_note(self.input_format, event.src_path, self.args)
             self._process_node_on_graph(note)
-            print("onModifyEvent", flush=True)
+            print(f"onSMDModifyEvent/{note.name}", flush=True)
         return wrapper(_on_modified)
 
     def on_moved(self):
         def _on_moved(event):
             if smdc.DEBUG:
                 print("On moved", event.src_path, event.dest_path, flush=True)
-            node = self.nodes.match(name=note_name(event.src_path)).first()
+            old_name = note_name(event.src_path)
+            node = self.nodes.match(name=old_name).first()
             new_name = note_name(event.dest_path)
             # TODO: What if this name already exists in the vault?
             node['name'] = new_name
             node['obsidian_url'] = obsidian_url(new_name, self.vault_name)
             node[PROP_PATH] = event.dest_path
             self.graph.push(node)
-            print("onModifyEvent", flush=True)
+            print(f"onSMDMovedEvent/{old_name}/{new_name}", flush=True)
         return wrapper(_on_moved)
 
 def stream(graph, tags, communities, args):

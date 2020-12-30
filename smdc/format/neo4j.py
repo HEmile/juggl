@@ -57,7 +57,7 @@ def create_index(graph, tag):
         graph.run(f"CREATE INDEX index_name_vault IF NOT EXISTS for (n:{tag}) ON (n.{prop})")
     except ClientError as e:
         print(e)
-        print(f"Warning: Could not create index for {tag}")
+        print(f"Warning: Could not create index for {tag}", flush=True)
 
 def create_dangling(name:str, vault_name:str, all_communities: [str]) -> Node:
     n = Node(CAT_DANGLING, name=escape_cypher(name), community=all_communities.index(CAT_DANGLING),
@@ -74,10 +74,10 @@ class Neo4j(Format):
         try:
             g = Graph(password=args.password)
         except ClientError as e:
-            print("invalid user credentials")
+            print("invalid user credentials", flush=True)
             raise e
         except ConnectionUnavailable as e:
-            print("no connection to db")
+            print("no connection to db", flush=True)
             raise e
         tx = g.begin()
         if not args.retaindb:
@@ -85,7 +85,7 @@ class Neo4j(Format):
             tx.run(f"MATCH (n) WHERE n.{PROP_VAULT}='{args.vault_name}' DETACH DELETE n")
 
         nodes = {}
-        print("Converting nodes")
+        print("Converting nodes", flush=True)
         all_tags = [CAT_DANGLING, CAT_NO_TAGS]
         all_communities = all_tags if args.community == "tags" else [CAT_DANGLING]
         # First create all nodes in the graph before doing the relationships, so they all exist.
@@ -94,12 +94,12 @@ class Neo4j(Format):
             nodes[name] = node
 
         if nodes:
-            print("Transferring nodes to graph")
+            print("Transferring nodes to graph", flush=True)
             tx.create(Subgraph(nodes=nodes.values()))
 
         rels_to_create = []
         nodes_to_create = []
-        print("Creating relationships")
+        print("Creating relationships", flush=True)
         i = 1
         for name, note in tqdm.tqdm(parsed_notes.items()):
             if not note.out_rels.keys():
@@ -119,10 +119,10 @@ class Neo4j(Format):
             i += 1
         if rels_to_create or nodes_to_create:
             tx.create(Subgraph(nodes=nodes_to_create, relationships=rels_to_create))
-        print("Committing data")
+        print("Committing data", flush=True)
         tx.commit()
 
-        print("Creating index")
+        print("Creating index", flush=True)
         # TODO: Schema inference for auto-indexing?
         for tag in tqdm.tqdm(all_tags):
             create_index(g, tag)
