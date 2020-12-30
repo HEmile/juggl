@@ -15,7 +15,7 @@ to a [Neo4j](https://neo4j.com/) database. Features:
 
 
 ### Installation
-1. Make sure you have [Python 3.6+](https://www.python.org/downloads/) installed
+1. Make sure you have [Python 3.6+](https://www.python.org/downloads/) installed. It needs the system-installed Python. Make sure to add Python to PATH!
 2. Make sure you have [Neo4j desktop](https://neo4j.com/download/) installed
 4. Create a new database in Neo4j desktop and start it. Record the password you use!
 5. In the settings of the plugin, enter the password. Then run the restart command.
