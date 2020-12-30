@@ -1,4 +1,4 @@
-import {NEOVIS_DEFAULT_CONFIG} from "neovis.js";
+import {IEdge, INode, IRelationshipConfig, NEOVIS_DEFAULT_CONFIG} from "neovis.js";
 import NeoVis from 'neovis.js';
 import {INeo4jViewSettings} from "./settings";
 import {EventRef, ItemView, MarkdownView, normalizePath, TFile, Vault, Workspace, WorkspaceLeaf} from "obsidian";
@@ -78,14 +78,13 @@ export class NeoVisView extends ItemView{
         };
         this.viz = new NeoVis(config);
         this.viz.registerOnEvent("completed", (e)=>{
-
             if (!this.hasClickListener) {
                 // @ts-ignore
                 this.network = this.viz["_network"] as Network;
                 // Register on click event
                 this.network.on("click", (event) => {
                     if (event.nodes.length > 0) {
-                        this.onClickNode(this.findNode(event.nodes[0]));
+                        this.onClickNode(this.findNodeRaw(event.nodes[0]));
                     }
                     else if (event.edges.length == 1) {
                         this.onClickEdge(this.findEdge(event.edges[0]));
@@ -93,19 +92,12 @@ export class NeoVisView extends ItemView{
                 });
                 this.network.on("doubleClick", (event) => {
                     if (event.nodes.length > 0) {
-                        this.onDoubleClickNode(this.findNode(event.nodes[0]));
+                        this.onDoubleClickNode(this.findNodeRaw(event.nodes[0]));
                     }
                 });
                 this.hasClickListener = true;
             }
             if (this.rebuildRelations) {
-                // Remove all relations to prevent duplicates
-                // let originalNodes = this.viz.nodes;
-                // this.viz.edges.clear();
-                // this.viz.clearNetwork();
-                // @ts-ignore
-                // let data = {nodes: originalNodes, edges: []} as Data;
-                // this.network.setData(data);
                 let inQuery = this.getInQuery(this.viz.nodes.getIds());
                 let query = "MATCH (n)-[r]-(m) WHERE n." + PROP_VAULT + "= \"" + this.vault.getName() + "\" AND n.name " + inQuery
                     + " AND  m." + PROP_VAULT + "= \"" + this.vault.getName() + "\" AND m.name " + inQuery +
@@ -162,9 +154,13 @@ export class NeoVisView extends ItemView{
         });
     }
 
-    findNode(id: IdType): Node {
+    findNodeRaw(id: IdType): Node {
         // @ts-ignore
         return this.viz.nodes.get(id)?.raw as Node;
+    }
+
+    findNode(id: IdType): INode {
+        return this.viz.nodes.get(id) as INode;
     }
 
     findEdge(id: IdType): Relationship {
@@ -173,6 +169,9 @@ export class NeoVisView extends ItemView{
     }
 
     updateWithCypher(cypher: string) {
+        if (this.settings.debug) {
+            console.log(cypher);
+        }
         this.viz.updateWithCypher(cypher);
         this.rebuildRelations = true;
     }
@@ -225,7 +224,7 @@ export class NeoVisView extends ItemView{
             if (!(edge_sth === undefined)) {
                 edge_sth.setOptions(Object.assign({}, edgeOptions["defaultStyle"], ...specificOptions));
             }
-        })
+        });
     }
 
     async onClickNode(node: Node) {
@@ -254,6 +253,7 @@ export class NeoVisView extends ItemView{
     async onDoubleClickNode(node: Node) {
         // @ts-ignore
         const label = node.properties["name"];
+        this.expandedNodes.push(label);
         await this.updateWithCypher(this.plugin.localNeighborhoodCypher(label));
     }
 
@@ -280,7 +280,7 @@ export class NeoVisView extends ItemView{
         let first = true;
         for (let id of nodes) {
             // @ts-ignore
-            const title = this.findNode(id).properties["name"] as string;
+            const title = this.findNodeRaw(id).properties["name"] as string;
             if (!first) {
                 query += ", ";
             }
@@ -299,14 +299,60 @@ export class NeoVisView extends ItemView{
         let query = "MATCH (n)-[r]-(m) WHERE n." + PROP_VAULT + "= \"" + this.vault.getName() + "\" AND n.name ";
         query += this.getInQuery(selected_nodes);
         query += " RETURN r,m";
+        let expandedNodes = this.expandedNodes;
         selected_nodes.forEach(id => {
             // @ts-ignore
-            const title = this.findNode(id).properties["name"] as string;
-            if (!this.expandedNodes.includes(title)) {
-                this.expandedNodes.push(title);
+            const title = this.findNodeRaw(id).properties["name"] as string;
+            if (!expandedNodes.includes(title)) {
+                expandedNodes.push(title);
             }
         });
         this.updateWithCypher(query);
+    }
+
+    deleteNode(id: IdType) {
+        // @ts-ignore
+        const title = this.findNodeRaw(id).properties["name"] as string;
+        if (this.expandedNodes.includes(title)) {
+            this.expandedNodes.remove(title);
+        }
+        let expandedNodes = this.expandedNodes;
+        this.network.getConnectedNodes(id).forEach((value: any) => {
+            // @ts-ignore
+            const n_title = this.findNodeRaw(value).properties["name"] as string;
+            if (expandedNodes.includes(n_title)) {
+                expandedNodes.remove(n_title);
+            }
+        });
+
+        let edges_to_remove: IEdge[] = [];
+        this.viz.edges.forEach((edge) => {
+            if (edge.from === id || edge.to === id) {
+                edges_to_remove.push(edge);
+            }
+        });
+        edges_to_remove.forEach(edge => {
+            this.viz.edges.remove(edge);
+        });
+
+        this.viz.nodes.remove(id);
+
+        // @ts-ignore
+        let edges = this.viz._edges;
+
+        let keys_to_remove = [];
+        for (let key in edges) {
+            let edge = edges[key];
+            if (edge.to === id || edge.from === id) {
+                keys_to_remove.push(key);
+            }
+        }
+        keys_to_remove.forEach((key) => {
+            delete edges[key];
+        });
+
+        // @ts-ignore
+        delete this.viz._nodes[id];
     }
 
     async hideSelection() {
@@ -316,29 +362,18 @@ export class NeoVisView extends ItemView{
         // Update expanded nodes. Make sure to not automatically expand nodes of which a neighbor was hidden.
         // Otherwise, one would have to keep hiding nodes.
         this.network.getSelectedNodes().forEach(id => {
-            // @ts-ignore
-            const title = this.findNode(id).properties["name"] as string;
-            if (this.expandedNodes.includes(title)) {
-                this.expandedNodes.remove(title);
-            }
-            this.network.getConnectedEdges(id).forEach(n_id => {
-                // @ts-ignore
-                const n_title = this.findNode(n_id).properties["name"] as string;
-                if (this.expandedNodes.includes(n_title)) {
-                    this.expandedNodes.remove(n_title);
-                }
-            });
+            this.deleteNode(id);
         });
-        this.network.deleteSelected();
+        // this.network.deleteSelected();
 
         // This super hacky code is used because neovis.js doesn't like me removing nodes from the graph.
         // Essentially, whenever it'd execute a new query, it'd re-add all hidden nodes!
         // This resets the state of NeoVis so that it only acts as an interface with neo4j instead of also keeping
         // track of the data.
         // @ts-ignore
-        let data = {nodes: this.viz.nodes, edges: this.viz.edges} as Data;
-        this.viz.clearNetwork();
-        this.network.setData(data);
+        // let data = {nodes: this.viz.nodes, edges: this.viz.edges} as Data;
+        // this.viz.clearNetwork();
+        // this.network.setData(data);
         this.updateStyle();
     }
 
