@@ -1,6 +1,7 @@
 ## Neo4j Graph View
 ![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/styled_screenshot.png)
 
+Documentation under construction at https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin. 
 
 Adds a new and much more functional graph view to Obsidian. It does so by connecting
 to a [Neo4j](https://neo4j.com/) database. Features:
