@@ -33,10 +33,10 @@ class SMDSEventHandler():
         self.tags = tags
         self.communities = communities
 
-    # def _clear_outgoing(self, node: Node):
-    #     rels = self.relationships.match([node, None])
-    #     if len(rels) > 0:
-    #         self.graph.separate(Subgraph(relationships=rels))
+    def _clear_outgoing(self, node: Node):
+        rels = self.relationships.match([node, None])
+        if len(rels) > 0:
+            self.graph.separate(Subgraph(relationships=rels))
 
     def _process_node_on_graph(self, note: Note):
         if smdc.DEBUG:
@@ -118,8 +118,7 @@ class SMDSEventHandler():
             for active_rel in active_rels:
                 ids.append(active_rel.identity)
             self.graph.separate(Subgraph(relationships=active_rels))
-            for id in ids:
-                print(f"onSMDRelDeletedEvent/{id}")
+            print("onSMDRelDeletedEvent/" + "/".join(map(str, ids)))
             # for active_rel in active_rels:
             #     print(dir(active_rel))
             #     print(active_rel)
@@ -140,6 +139,7 @@ class SMDSEventHandler():
                 print("On deleted", event.src_path, flush=True)
             name = note_name(event.src_path)
             node = self.nodes.match(name=name).first()
+            node_id = node.identity
             in_rels = self.relationships.match([None, node])
             if len(in_rels) > 0:
                 # If there are still active incoming links, keep the node as a reference
@@ -151,7 +151,7 @@ class SMDSEventHandler():
                 self._clear_outgoing(node)
             else:
                 self.graph.delete(node)
-            print(f"onSMDDeletedEvent/{name}", flush=True)
+            print(f"onSMDDeletedEvent/{node_id}", flush=True)
         return wrapper(_on_deleted)
 
     def on_modified(self):

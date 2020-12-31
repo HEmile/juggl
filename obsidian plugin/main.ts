@@ -15,6 +15,7 @@ import {IncomingMessage, Server, ServerResponse} from "http";
 import {Editor} from "codemirror";
 import {start} from "repl";
 import {Neo4jError} from "neo4j-driver";
+import {IdType} from "vis-network";
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
 const exec_promise = promisify(exec);
@@ -199,7 +200,6 @@ export default class Neo4jViewPlugin extends Plugin {
 					const name = parts[1];
 					leaves.forEach((leaf) =>{
 						let view = leaf.view as NeoVisView;
-						console.log(view);
 						if (parts[0] === "onSMDModifyEvent") {
 							if (view.expandedNodes.includes(name)) {
 								view.updateWithCypher(plugin.localNeighborhoodCypher(name));
@@ -207,9 +207,6 @@ export default class Neo4jViewPlugin extends Plugin {
 							else {
 								view.updateWithCypher(plugin.nodeCypher(name));
 							}
-						}
-						else if (parts[0] === "onSMDDeletedEvent") {
-							//TODO
 						}
 						else if (parts[0] === "onSMDMovedEvent") {
 							let new_name = parts[2];
@@ -221,6 +218,16 @@ export default class Neo4jViewPlugin extends Plugin {
 							else {
 								view.updateWithCypher(plugin.nodeCypher(new_name));
 							}
+						}
+						else if (parts[0] === "onSMDDeletedEvent") {
+							// TODO: Maybe automatically update to dangling link by running an update query.
+							view.deleteNode(parts[1]);
+							// view.updateStyle();
+						}
+						else if (parts[0] === "onSMDRelDeletedEvent") {
+							parts.slice(1).forEach((id: IdType) => {
+								view.deleteEdge(id);
+							})
 						}
 					});
 				}

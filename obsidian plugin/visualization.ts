@@ -311,13 +311,22 @@ export class NeoVisView extends ItemView{
     }
 
     deleteNode(id: IdType) {
+        // console.log(this.viz.nodes);
         // @ts-ignore
-        const title = this.findNodeRaw(id).properties["name"] as string;
+
+        // @ts-ignore
+        let node = this.findNode(id) || this.viz._nodes[id];
+        if (node === undefined) {
+            return;
+        }
+        // @ts-ignore
+        const title = node.raw.properties["name"] as string;
         if (this.expandedNodes.includes(title)) {
             this.expandedNodes.remove(title);
         }
         let expandedNodes = this.expandedNodes;
         this.network.getConnectedNodes(id).forEach((value: any) => {
+            this.findNodeRaw(value);
             // @ts-ignore
             const n_title = this.findNodeRaw(value).properties["name"] as string;
             if (expandedNodes.includes(n_title)) {
@@ -353,6 +362,33 @@ export class NeoVisView extends ItemView{
 
         // @ts-ignore
         delete this.viz._nodes[id];
+    }
+
+    deleteEdge(id: IdType) {
+        // @ts-ignore
+        let edges = this.viz._edges;
+        let edge = edges[id];
+
+        if (edge === undefined) {
+            return;
+        }
+
+        let nodes = [edge.from, edge.to];
+
+        this.viz.edges.remove(edge);
+
+        delete edges[id];
+
+        // TODO: Check if the node deletion is using the right rule
+        // Current rule: The connected nodes are not expanded, and also have no other edges.
+        nodes.forEach(node_id => {
+            let node = this.findNodeRaw(node_id);
+            // @ts-ignore
+            if (!this.expandedNodes.contains(node.properties["name"])
+                && this.network.getConnectedEdges(node_id).length === 0) {
+                this.deleteNode(node_id);
+            }
+        });
     }
 
     async hideSelection() {
