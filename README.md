@@ -16,6 +16,7 @@ to a [Neo4j](https://neo4j.com/) database. Features:
 
 
 ### Installation
+Detailed installation instructions is at https://publish.obsidian.md/semantic-obsidian/Installation+of+Neo4j+Graph+View+Plugin
 1. Make sure you have [Python 3.6+](https://www.python.org/downloads/) installed. It needs the system-installed Python. Make sure to add Python to PATH!
 2. Make sure you have [Neo4j desktop](https://neo4j.com/download/) installed
 4. Create a new database in Neo4j desktop and start it. Record the password you use!
