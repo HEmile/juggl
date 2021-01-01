@@ -2,7 +2,7 @@ from smdc import server_args, convert, parse_note, FORMAT_TYPES, Note, note_name
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 import time
-from py2neo import Node, Subgraph, Relationship
+from py2neo import Node, Subgraph, Relationship, Graph
 from py2neo.data import walk
 from smdc.format.neo4j import node_from_note, add_rels_between_nodes, CAT_DANGLING, CAT_NO_TAGS, create_index, \
     create_dangling, PROP_COMMUNITY, get_community
@@ -21,8 +21,9 @@ def wrapper(fn):
     return _return
 
 
+
 class SMDSEventHandler():
-    def __init__(self, graph, tags: [str], communities: [str], args):
+    def __init__(self, graph: Graph, tags: [str], communities: [str], args):
         self.graph = graph
         self.nodes = graph.nodes
         self.relationships = graph.relationships
@@ -80,7 +81,7 @@ class SMDSEventHandler():
         # Insert up-to-date relations
         rels_to_create = []
         nodes_to_create = []
-        active_rels = list(self.relationships.match([node, None]))
+        not_matched_active_rels = list(map(lambda r: r.identity, self.relationships.match([node, None])))
         for trgt, rels in note.out_rels.items():
             trgt_node = self.nodes.match(**{'name': trgt, PROP_VAULT: self.vault_name})
             if len(trgt_node) == 0:
@@ -94,35 +95,38 @@ class SMDSEventHandler():
                 for property, value in rel.properties.items():
                     properties[property] = escape_cypher(str(value))
                 rel_type = escape_cypher(rel.type)
-                rem_rel = None
-                compare_rel = Relationship(node, rel_type, trgt_node)
+                found_rel = False
+                active_rels = list(filter(lambda r: r.identity in not_matched_active_rels,
+                                          self.relationships.match([node, None])))
                 # Update instead of removing makes sure the relationship has a persistent id
                 for active_rel in active_rels:
                     walks = list(walk(active_rel))
                     if type(active_rel).__name__ == rel_type and walks[2] == trgt_node:
-                    # if compare_rel == active_rel:
                         # Maybe this can leave dangling properties? But that'' an edge case. Not sure how to clear properties.
                         active_rel.clear()
                         active_rel.update(properties)
                         self.graph.push(active_rel)
-                        rem_rel = active_rel
+                        found_rel = True
+                        not_matched_active_rels.remove(active_rel.identity)
                         break
-                if rem_rel is not None:
-                    active_rels.remove(rem_rel)
-                else:
+                if not found_rel:
                     rels_to_create.append(Relationship(node, rel_type, trgt_node, **properties))
+
         if rels_to_create or nodes_to_create:
             self.graph.create(Subgraph(nodes=nodes_to_create, relationships=rels_to_create))
-        if len(active_rels) > 0:
-            ids = []
-            for active_rel in active_rels:
-                ids.append(active_rel.identity)
-            self.graph.separate(Subgraph(relationships=active_rels))
-            print("onSMDRelDeletedEvent/" + "/".join(map(str, ids)))
-            # for active_rel in active_rels:
-            #     print(dir(active_rel))
-            #     print(active_rel)
-            #     print(f"onSMDRelDeletedEvent/{active_rel.identity}")
+        if len(not_matched_active_rels) > 0:
+            rels = list(filter(lambda r: r.identity in not_matched_active_rels,
+                                                              self.relationships.match([node, None])))
+            if len(rels) > 0:
+                self.graph.separate(Subgraph(relationships=rels))
+            print("onSMDRelDeletedEvent/" + "/".join(map(str, not_matched_active_rels)))
+
+    def _print_debug_rel(self, node, relationship):
+        print(len(list(self.relationships.match([node, None]))))
+        l = list(walk(relationship))
+        print(l[0].identity, l[0]["name"])
+        print(l[1])
+        print(l[2].identity, l[2]["name"])
 
     def on_created(self):
         def _on_created(event):
