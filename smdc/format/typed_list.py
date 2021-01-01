@@ -15,7 +15,7 @@ class TypedList(Format):
             if line[j] in breaks:
                 return j
 
-        return j
+        return j + 1
 
     def move_index(self, line, index):
         if index >= len(line):
