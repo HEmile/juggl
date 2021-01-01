@@ -78,12 +78,26 @@ def get_tags_from_line(line) -> [str]:
                     tags.append(tag)
     return tags
 
-def get_wikilinks_from_line(line) -> [str]:
+def parse_wikilink(between_brackets:str, note_title: str) -> str:
+    first_arg = between_brackets.split("|")[0]
+    if len(first_arg) != 0:
+        title = first_arg.split("#")[0]
+        if len(title) == 0:
+            # Wikilinks like [[#header]] refer to itself
+            return note_title
+        else:
+            # Wikilinks like [[title#header]]
+            return title
+    return ""
+
+def get_wikilinks_from_line(line, note_title) -> [str]:
     result = re.findall('\[\[(.*?)\]\]', line)
     if result:
         r = []
         for wikilink in result:
-            r.append(wikilink.split("|")[0])
+            title = parse_wikilink(wikilink, note_title)
+            if title:
+                r.append(title)
         return r
     return []
 

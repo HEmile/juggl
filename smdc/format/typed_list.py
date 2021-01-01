@@ -2,7 +2,8 @@ from smdc.format import Format
 from smdc.note import Note, Relationship
 import io
 import os
-from smdc.format.util import parse_yaml_header, get_tags_from_line, get_wikilinks_from_line, PUNCTUATION, markdownToHtml
+from smdc.format.util import parse_yaml_header, get_tags_from_line, get_wikilinks_from_line, parse_wikilink, \
+    PUNCTUATION, markdownToHtml
 
 
 class TypedList(Format):
@@ -63,7 +64,7 @@ class TypedList(Format):
                                 is_rel = False
                                 break
                             if word[-2:] == "]]":
-                                trgts.append(word[2:-2].split("|")[0])
+                                trgts.append(parse_wikilink(word[2:-2], name))
                             else:
                                 active_trgt = word[2:]
                             continue
@@ -71,7 +72,7 @@ class TypedList(Format):
                             if not active_trgt:
                                 is_rel = False
                                 break
-                            trgts.append((active_trgt + " " +  word[:-2]).split("|")[0])
+                            trgts.append(parse_wikilink(active_trgt + " " + word[:-2], name))
                             active_trgt = None
                             continue
                         if i == 0 and type in ['publishedIn', 'at']:
@@ -98,7 +99,7 @@ class TypedList(Format):
                 if tag not in tags:
                     tags.append(tag)
             # TODO: Save aliases as Relation property
-            for wikilink in get_wikilinks_from_line(line):
+            for wikilink in get_wikilinks_from_line(line, name):
                 rel = Relationship("inline",
                                    properties={"context": line,
                                                "parsedContext": markdownToHtml(line) if args.convert_markdown else ""})
