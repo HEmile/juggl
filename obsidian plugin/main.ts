@@ -84,7 +84,12 @@ export default class Neo4jViewPlugin extends Plugin {
 			id: 'open-vis',
 			name: 'Open local graph of note',
 			callback: () => {
-				this.openLocalGraph();
+				let active_view = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (active_view == null) {
+					return;
+				}
+				let name = active_view.getDisplayText();
+				this.openLocalGraph(name);
 			},
 		});
 
@@ -102,11 +107,16 @@ export default class Neo4jViewPlugin extends Plugin {
 
 		this.addSettingTab(new Neo4jViewSettingTab(this.app, this));
 
-		this.app.workspace.on("file-menu", (menu => {
+		this.app.workspace.on("file-menu", ((menu, file: TFile) => {
 			menu.addItem((item) =>{
 				item.setTitle("Open Neo4j Graph View").setIcon("dot-network")
 					.onClick(evt => {
-					this.openLocalGraph();
+						if (file.extension === "md") {
+							this.openLocalGraph(file.basename);
+						}
+						else {
+							this.openLocalGraph(file.name);
+						}
 				});
 			})
 		}));
@@ -304,16 +314,11 @@ export default class Neo4jViewPlugin extends Plugin {
 		}
 	}
 
-	openLocalGraph() {
+	openLocalGraph(name: string) {
 		if (!this.stream_process) {
 			new Notice("Cannot open local graph as neo4j stream is not active.")
 			return;
 		}
-		let active_view = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (active_view == null) {
-			return;
-		}
-		let name = active_view.getDisplayText();
 
 		const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
 		const query = this.localNeighborhoodCypher(name)

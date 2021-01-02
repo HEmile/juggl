@@ -1,7 +1,7 @@
 import {IEdge, INode, IRelationshipConfig, NEOVIS_DEFAULT_CONFIG} from "neovis.js";
 import NeoVis from 'neovis.js';
 import {INeo4jViewSettings} from "./settings";
-import {EventRef, ItemView, MarkdownView, normalizePath, TFile, Vault, Workspace, WorkspaceLeaf} from "obsidian";
+import {EventRef, ItemView, MarkdownView, Menu, normalizePath, TFile, Vault, Workspace, WorkspaceLeaf} from "obsidian";
 import Neo4jViewPlugin from "./main";
 import {Relationship, Node} from "neo4j-driver";
 import {Data, IdType, Network, NodeOptions} from "vis-network";
@@ -27,6 +27,8 @@ export class NeoVisView extends ItemView{
     rebuildRelations = true;
     selectName: string = undefined;
     expandedNodes: string[] = [];
+    nodes: Record<IdType, INode>;
+    edges: Record<IdType, IEdge>;
 
     constructor(leaf: WorkspaceLeaf, initial_query: string, plugin: Neo4jViewPlugin) {
         super(leaf);
@@ -81,10 +83,14 @@ export class NeoVisView extends ItemView{
             if (!this.hasClickListener) {
                 // @ts-ignore
                 this.network = this.viz["_network"] as Network;
+                // @ts-ignore
+                this.nodes = this.viz._nodes;
+                // @ts-ignore
+                this.edges = this.viz._edges;
                 // Register on click event
                 this.network.on("click", (event) => {
                     if (event.nodes.length > 0) {
-                        this.onClickNode(this.findNodeRaw(event.nodes[0]));
+                        this.onClickNode(this.findNode(event.nodes[0]));
                     }
                     else if (event.edges.length == 1) {
                         this.onClickEdge(this.findEdge(event.edges[0]));
@@ -95,6 +101,51 @@ export class NeoVisView extends ItemView{
                         this.onDoubleClickNode(this.findNodeRaw(event.nodes[0]));
                     }
                 });
+                this.network.on("oncontext", (event) => {
+                    // Thanks Liam for sharing how to do context menus
+                    const fileMenu = new Menu(); // Creates empty file menu
+                    let nodeId = this.network.getNodeAt(event.pointer.DOM);
+                    console.log(event.pointer.DOM);
+                    if (!(nodeId === undefined)) {
+                        let node = this.findNode(nodeId);
+                        let file = this.getFileFromNode(node);
+                        console.log(file);
+                        if (!(file === undefined)) {
+                            // hook for plugins to populate menu with "file-aware" menu items
+                            this.app.workspace.trigger("file-menu", fileMenu, file, "my-context-menu", null);
+                        }
+                    }
+                    // TODO: Add neovis specific interaction here MENUITEMS
+                    let domRect = this.containerEl.getBoundingClientRect();
+
+
+                    fileMenu.addItem((item) =>{
+                        item.setTitle("Expand selection (E)").setIcon("dot-network")
+                            .onClick(evt => {
+                                this.expandSelection();
+                            });
+                    });
+                    fileMenu.addItem((item) =>{
+                        item.setTitle("Hide selection (H)").setIcon("dot-network")
+                            .onClick(evt => {
+                                this.hideSelection();
+                            });
+                    });
+                    fileMenu.addItem((item) =>{
+                        item.setTitle("Invert selection (I)").setIcon("dot-network")
+                            .onClick(evt => {
+                                this.invertSelection();
+                            });
+                    });
+                    fileMenu.addItem((item) =>{
+                        item.setTitle("Select all (A)").setIcon("dot-network")
+                            .onClick(evt => {
+                                this.hideSelection();
+                            });
+                    });
+                    // Actually open the menu
+                    fileMenu.showAtPosition({ x: event.pointer.DOM.x + domRect.left, y: event.pointer.DOM.y + domRect.top });
+                })
                 this.hasClickListener = true;
             }
             if (this.rebuildRelations) {
@@ -115,8 +166,10 @@ export class NeoVisView extends ItemView{
                 })
             }
             if (this.settings.debug) {
-                console.log(this.viz.nodes);
-                console.log(this.viz.edges);
+                // @ts-ignore
+                console.log(this.nodes);
+                // @ts-ignore
+                console.log(this.edges);
             }
         });
         this.load();
@@ -176,19 +229,19 @@ export class NeoVisView extends ItemView{
         this.rebuildRelations = true;
     }
 
+    getFileFromNode(node: INode) {
+        // @ts-ignore
+        let label = node.raw.properties["name"];
+        return this.app.metadataCache.getFirstLinkpathDest(label, '');
+    }
+
     updateStyle() {
         let nodeOptions = JSON.parse(this.settings.nodeSettings);
         this.viz.nodes.forEach((node) => {
             let nodeId = this.network.findNode(node.id);
-            // @ts-ignore
-            let node_sth = this.network.body.nodes[nodeId];
+
             let specificOptions: NodeOptions[] = [];
-            // @ts-ignore
-            let path = node.raw.properties[PROP_PATH];
-            let file = undefined;
-            if (!(path === undefined)) {
-                file = this.plugin.getFileFromAbsolutePath(path) as TFile;
-            }
+            let file = this.getFileFromNode(node);
             if (this.settings.community === "tags") {
                 node.raw.labels.forEach((label) => {
                     if (label in nodeOptions) {
@@ -204,8 +257,7 @@ export class NeoVisView extends ItemView{
                 }
             }
             // Style images
-            if (/(\.png|\.jpg|\.jpeg|\.gif|\.svg)$/.test(node.label)) {
-                file = this.app.metadataCache.getFirstLinkpathDest(node.label, '');
+            if (/(\.png|\.jpg|\.jpeg|\.gif|\.svg)$/.test(node.label) && !(file === undefined)) {
                 specificOptions.push({shape: "image", image: "http://localhost:" +
                         this.settings.imgServerPort +  "/"
                         + encodeURI(file.path)});
@@ -213,6 +265,8 @@ export class NeoVisView extends ItemView{
                     specificOptions.push(nodeOptions["image"]);
                 }
             }
+            // @ts-ignore
+            let node_sth = this.network.body.nodes[nodeId];
             node_sth.setOptions(Object.assign({}, nodeOptions["defaultStyle"], ...specificOptions));
         });
         let edgeOptions = JSON.parse(this.settings.edgeSettings);
@@ -227,20 +281,17 @@ export class NeoVisView extends ItemView{
         });
     }
 
-    async onClickNode(node: Node) {
+    async onClickNode(node: INode) {
+        const file = this.getFileFromNode(node);
         // @ts-ignore
-        // @ts-ignore
-        const label = node.properties["name"];
-        // const file = node.properties[PROP_PATH];
-        const file = this.app.metadataCache.getFirstLinkpathDest(label, '');
-
+        let label = node.raw.properties["name"];
         if (file) {
-            // const tfile = this.plugin.getFileFromAbsolutePath(file) as TFile;
             await this.plugin.openFile(file);
         }
         else {
             // Create dangling file
             // TODO: Add default folder
+            // @ts-ignore
             const filename = label + ".md";
             const createdFile = await this.vault.create(filename, '');
             await this.plugin.openFile(createdFile);
@@ -314,8 +365,7 @@ export class NeoVisView extends ItemView{
         // console.log(this.viz.nodes);
         // @ts-ignore
 
-        // @ts-ignore
-        let node = this.findNode(id) || this.viz._nodes[id];
+        let node = this.findNode(id) || this.nodes[id];
         if (node === undefined) {
             return;
         }
@@ -346,29 +396,23 @@ export class NeoVisView extends ItemView{
 
         this.viz.nodes.remove(id);
 
-        // @ts-ignore
-        let edges = this.viz._edges;
-
         let keys_to_remove = [];
-        for (let key in edges) {
-            let edge = edges[key];
+        for (let key in this.edges) {
+            let edge = this.edges[key];
             if (edge.to === id || edge.from === id) {
                 keys_to_remove.push(key);
             }
         }
         keys_to_remove.forEach((key) => {
-            delete edges[key];
+            // @ts-ignore
+            delete this.edges[key];
         });
 
-        // @ts-ignore
-        delete this.viz._nodes[id];
+        delete this.nodes[id as number];
     }
 
     deleteEdge(id: IdType) {
-        // @ts-ignore
-        let edges = this.viz._edges;
-        let edge = edges[id];
-
+        let edge = this.edges[id];
         if (edge === undefined) {
             return;
         }
@@ -377,7 +421,7 @@ export class NeoVisView extends ItemView{
 
         this.viz.edges.remove(edge);
 
-        delete edges[id];
+        delete this.edges[id];
 
         // TODO: Check if the node deletion is using the right rule
         // Current rule: The connected nodes are not expanded, and also have no other edges.
