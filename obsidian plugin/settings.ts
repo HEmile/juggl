@@ -66,14 +66,14 @@ export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
                 size: 0
             }
         },
+    }),
+    edgeSettings: JSON.stringify({
+        "defaultStyle": DefaultEdgeSettings,
         "inline": {
             font: {
                 multi: "markdown"
             }
         },
-    }),
-    edgeSettings: JSON.stringify({
-        "defaultStyle": DefaultEdgeSettings,
     })
 }
 
