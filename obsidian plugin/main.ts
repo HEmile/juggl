@@ -321,7 +321,7 @@ export default class Neo4jViewPlugin extends Plugin {
 		}
 
 		const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
-		const query = this.localNeighborhoodCypher(name)
+		const query = this.localNeighborhoodCypher(name);
 		const neovisView = new NeoVisView(leaf, query, this);
 		leaf.open(neovisView);
 		neovisView.expandedNodes.push(name);
@@ -366,9 +366,9 @@ export default class Neo4jViewPlugin extends Plugin {
 	}
 
 	localNeighborhoodCypher(label:string): string {
-		return "MATCH (n)-[r]-(m) WHERE n.name=\"" + label +
-			"\" AND n." + PROP_VAULT + "=\"" + this.app.vault.getName() +
-			"\" RETURN n,r,m"
+		return "MATCH (n {name: \"" + label +
+			"\", " + PROP_VAULT + ":\"" + this.app.vault.getName() +
+			"\"}) OPTIONAL MATCH (n)-[r]-(m) RETURN n,r,m"
 	}
 
 	executeQuery() {

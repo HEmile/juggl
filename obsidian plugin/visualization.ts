@@ -144,6 +144,7 @@ export class NeoVisView extends ItemView{
                     let domRect = this.containerEl.getBoundingClientRect();
                     // console.log("DOM", event.pointer.DOM);
                     // console.log("Canvas", event.pointer.canvas);
+                    // console.log("offset", domRect.left, domRect.top)
                     // console.log("DOM offset", { x: event.pointer.DOM.x + domRect.left, y: event.pointer.DOM.y + domRect.top });
                     // console.log("Canvas offset", { x: event.pointer.canvas.x + domRect.left, y: event.pointer.canvas.y + domRect.top });
                     // Actually open the menu
