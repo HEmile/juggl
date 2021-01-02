@@ -13,6 +13,8 @@ export const PROP_VAULT = "SMD_vault"
 export const PROP_PATH = "SMD_path"
 export const PROP_COMMUNITY = "SMD_community"
 
+let VIEW_COUNTER = 0;
+
 export class NeoVisView extends ItemView{
 
     workspace: Workspace;
@@ -41,12 +43,13 @@ export class NeoVisView extends ItemView{
 
     async onOpen() {
         const div = document.createElement("div");
-        div.id = "neovis_id";
+        div.id = "neovis_id" + VIEW_COUNTER;
+        VIEW_COUNTER += 1;
         this.containerEl.children[1].appendChild(div);
         div.setAttr("style", "height: 100%; width:100%");
         // console.log(this.containerEl);
         const config = {
-            container_id: "neovis_id",
+            container_id: div.id,
             server_url: "bolt://localhost:7687",
             server_user: "neo4j",
             server_password: this.settings.password,
@@ -105,20 +108,15 @@ export class NeoVisView extends ItemView{
                     // Thanks Liam for sharing how to do context menus
                     const fileMenu = new Menu(); // Creates empty file menu
                     let nodeId = this.network.getNodeAt(event.pointer.DOM);
-                    console.log(event.pointer.DOM);
+
                     if (!(nodeId === undefined)) {
                         let node = this.findNode(nodeId);
                         let file = this.getFileFromNode(node);
-                        console.log(file);
                         if (!(file === undefined)) {
                             // hook for plugins to populate menu with "file-aware" menu items
                             this.app.workspace.trigger("file-menu", fileMenu, file, "my-context-menu", null);
                         }
                     }
-                    // TODO: Add neovis specific interaction here MENUITEMS
-                    let domRect = this.containerEl.getBoundingClientRect();
-
-
                     fileMenu.addItem((item) =>{
                         item.setTitle("Expand selection (E)").setIcon("dot-network")
                             .onClick(evt => {
@@ -143,6 +141,11 @@ export class NeoVisView extends ItemView{
                                 this.hideSelection();
                             });
                     });
+                    let domRect = this.containerEl.getBoundingClientRect();
+                    // console.log("DOM", event.pointer.DOM);
+                    // console.log("Canvas", event.pointer.canvas);
+                    // console.log("DOM offset", { x: event.pointer.DOM.x + domRect.left, y: event.pointer.DOM.y + domRect.top });
+                    // console.log("Canvas offset", { x: event.pointer.canvas.x + domRect.left, y: event.pointer.canvas.y + domRect.top });
                     // Actually open the menu
                     fileMenu.showAtPosition({ x: event.pointer.DOM.x + domRect.left, y: event.pointer.DOM.y + domRect.top });
                 })
