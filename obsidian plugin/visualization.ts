@@ -271,7 +271,11 @@ export class NeoVisView extends ItemView{
             }
             // @ts-ignore
             let node_sth = this.network.body.nodes[nodeId];
-            node_sth.setOptions(Object.assign({}, nodeOptions["defaultStyle"], ...specificOptions));
+            if (!(node_sth === undefined)) {
+                node_sth.setOptions(Object.assign({}, nodeOptions["defaultStyle"], ...specificOptions));
+            } else if(this.settings.debug) {
+                console.log(node);
+            }
         });
         let edgeOptions = JSON.parse(this.settings.edgeSettings);
         this.viz.edges.forEach((edge) => {
@@ -281,6 +285,8 @@ export class NeoVisView extends ItemView{
             let specificOptions = type in edgeOptions ? [edgeOptions[type]] : [];
             if (!(edge_sth === undefined)) {
                 edge_sth.setOptions(Object.assign({}, edgeOptions["defaultStyle"], ...specificOptions));
+            } else if (this.settings.debug) {
+                console.log(edge);
             }
         });
     }
