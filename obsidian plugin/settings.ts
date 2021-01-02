@@ -85,6 +85,25 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
         let {containerEl} = this;
         containerEl.empty();
 
+        containerEl.createEl('h3');
+        containerEl.createEl('h3', {text: 'Neo4j Graph View'});
+
+        let doc_link = document.createElement("a");
+        doc_link.href = "https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin";
+        doc_link.target = '_blank';
+        doc_link.innerHTML = 'the documentation';
+
+        let discord_link = document.createElement("a");
+        discord_link.href = "https://discord.gg/sAmSGpaPgM";
+        discord_link.target = '_blank';
+        discord_link.innerHTML = 'the Discord server';
+
+        let introPar = document.createElement("p");
+        introPar.innerHTML = "Check out " + doc_link.outerHTML + " for installation help and a getting started guide. <br>" +
+            "Join " + discord_link.outerHTML + " for nice discussion and additional help."
+
+        containerEl.appendChild(introPar);
+
         new Setting(containerEl)
             .setName("Neo4j database password")
             .setDesc("The password of your neo4j graph database. WARNING: This is stored in plaintext in your vault. " +
@@ -169,21 +188,17 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
             "-webkit-box-sizing: border-box; -moz-box-sizing: border-box;  box-sizing: border-box;");
 
         let temp_link = document.createElement("a");
-        temp_link.href = "https://visjs.github.io/vis-network/docs/network/nodes.html";
+        temp_link.href = "https://publish.obsidian.md/semantic-obsidian/Node+styling";
         temp_link.target = '_blank';
         temp_link.innerHTML ='this link';
 
         let par = document.createElement("p");
-        par.innerHTML = "Styling of nodes in .json format. " +
-            "The first key determines what tags or folders to apply this style to. " +
-            "For instance, {\"exampleTag\":{\"color\":\"yellow\"}} would color all notes with #exampleTag yellow. " +
+        par.innerHTML = "Styling of nodes in .json format. <br>" +
             "Use {\"defaultStyle\": {}} for the default styling of nodes. " +
-            "Use {\"image\": {}} to style images. Use {\"SMD_dangling\": {}} to style dangling notes. " +
+            "Use {\"image\": {}} to style images. Use {\"SMD_dangling\": {}} to style dangling notes. <br>" +
             "When color-coding is set to Folders, use the path to the folder for this key. " +
-            "For instance, if you have a folder called \"dailies\", use {\"dailies\": {}}. " +
-            "Use {\"/\" for the root folder. " +
-            "See " +    temp_link.outerHTML + " for all options for styling the nodes. " +
-            "You can style using images in your vault with {\"shape\": \"image\", \"image\": \"http://localhost:3000/path/to/image\"}."
+            "Use {\"/\" for the root folder. <br>" +
+            "See " +    temp_link.outerHTML + " for help with styling nodes. "
 
         containerEl.appendChild(par);
 
@@ -210,16 +225,15 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
             "-webkit-box-sizing: border-box; -moz-box-sizing: border-box;  box-sizing: border-box;");
 
         let temp_link2 = document.createElement("a");
-        temp_link2.href = "https://visjs.github.io/vis-network/docs/network/edges.html";
+        temp_link2.href = "https://publish.obsidian.md/semantic-obsidian/Edge+styling";
         temp_link2.target = '_blank';
         temp_link2.innerHTML = 'this link';
 
         let par2 = document.createElement("p");
-        par2.innerHTML = "Styling of edges in .json format. " +
+        par2.innerHTML = "Styling of edges is done in .json format. <br>" +
             "The first key determines what types of links to apply this style to. " +
-            "For instance, {\"hasTopic\":{\"color\":\"yellow\"}} would color all edge with type \"hasTopic\" yellow. " +
             "Use {\"defaultStyle\": {}} for the default styling of edges, and {\"inline\":{} } for the styling of untyped links. " +
-            "See " + temp_link2.outerHTML + " for all options for styling edges."
+            "See " + temp_link2.outerHTML + " for help with styling edges."
 
         containerEl.appendChild(par2);
 
