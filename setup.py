@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 
 setup(name='semantic-markdown-converter',
-      version='0.5.8',
+      version='0.5.9',
       description='Converts different typed link formats in Markdown into each other and to external formats. Supports Obsidian Neo4j plugin.',
       long_description=long_description,
       long_description_content_type="text/markdown",
@@ -14,7 +14,7 @@ setup(name='semantic-markdown-converter',
       install_requires=['pyyaml', 'tqdm', 'py2neo', 'watchdog>=1.0.2',
                         'markdown', 'mdx-wikilink-plus'],
       entry_points={
-          'console_scripts': ['smdc=smdc.convert:main', 'smds=smdc.server:main']
+          'console_scripts': ['smdc=smdc.convert:main', 'smds=smdc.stream:main']
       },
       classifiers=[
         "Programming Language :: Python :: 3",
