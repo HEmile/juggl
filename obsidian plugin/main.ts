@@ -151,6 +151,13 @@ export default class Neo4jViewPlugin extends Plugin {
 	public async initialize() {
 		console.log('Initializing Neo4j stream');
 		try {
+			let out = await exec_promise("pip3 install --upgrade pip " +
+				"--user ", {timeout: 10000000});
+
+			if (this.settings.debug) {
+				console.log(out.stdout);
+			}
+			console.log(out.stderr);
 			let {stdout, stderr} = await exec_promise("pip3 install --upgrade semantic-markdown-converter " +
 				"--no-warn-script-location " +
 				(DEVELOP_MODE ? "--index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple " : "") +
