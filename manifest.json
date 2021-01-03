@@ -1,7 +1,7 @@
 {
 	"id": "neo4j-graph-view",
 	"name": "Neo4j Graph View",
-	"version": "0.2.4",
+	"version": "0.2.5",
 	"minAppVersion": "0.9.16",
 	"description": "An Obsidian plugin for advanced graph visualization and querying using Neo4j.",
 	"author": "Emile",
