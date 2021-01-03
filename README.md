@@ -23,6 +23,8 @@ Detailed installation instructions is at https://publish.obsidian.md/semantic-ob
 4. Create a new database in Neo4j desktop and start it. Record the password you use!
 5. In the settings of the plugin, enter the password. Then run the restart command.
 
+If installing Python seems daunting, you can wait a couple of weeks. The goal is to port that code to Javascript.
+
 ### Use
 Detailed getting started guide is at https://publish.obsidian.md/semantic-obsidian/Using+the+Neo4j+Graph+View
 
