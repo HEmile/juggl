@@ -2,6 +2,7 @@
 ![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/styled_screenshot.png)
 
 Documentation at https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin. 
+
 Join the new Discord server to discuss the plugin: https://discord.gg/sAmSGpaPgM
 
 Adds a new and much more functional graph view to Obsidian. It does so by connecting
@@ -13,8 +14,9 @@ to a [Neo4j](https://neo4j.com/) database. Features:
 - Typed links using `- linkType [[note 1]], [[note 2|alias]]`
 - Hierarchical layout
 
-![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/obsidian%20neo4j%20plugin.gif)
+A [Roadmap](https://publish.obsidian.md/semantic-obsidian/Roadmap) with planned features is also available.
 
+![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/obsidian%20plugin/resources/obsidian%20neo4j%20plugin.gif)
 
 ### Installation
 Detailed installation instructions is at https://publish.obsidian.md/semantic-obsidian/Installation+of+Neo4j+Graph+View+Plugin
