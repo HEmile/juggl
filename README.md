@@ -1,3 +1,16 @@
+
+<p align="left">
+    <a href="https://github.com/HEmile/semantic-markdown-converter/releases">
+        <img src="https://img.shields.io/github/v/release/HEmile/semantic-markdown-converter"
+            alt="Github latest release"></a>
+   <a href="https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin">
+        <img src="https://img.shields.io/badge/docs-Obsidian-blue"
+            alt="Documentation"></a>
+    <a href="https://discord.gg/sAmSGpaPgM">
+        <img src="https://img.shields.io/discord/794500624163143720?logo=discord"
+            alt="chat on Discord"></a>
+</p>
+
 ## Neo4j Graph View
 ![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/neo4j-graph-view/resources/styled_screenshot.png)
 
