@@ -36,6 +36,8 @@
   "dependencies": {
     "@rollup/plugin-json": "^4.1.0",
     "child_process": "^1.0.2",
+    "cypher-query-builder": "^6.0.4",
+    "neo4j-driver": "^4.2.1",
     "neovis.js": "^1.6.0",
     "open": "^7.3.0",
     "python-shell": "^2.0.3"
