@@ -1,6 +1,6 @@
 import Neo4jViewPlugin from "./main";
 import {
-    getLinkpath,
+    getLinkpath, LinkCache,
     MetadataCache,
     Vault,
     Workspace
@@ -15,6 +15,10 @@ import neo4j from "neo4j-driver";
 
 export const CAT_DANGLING = "SMD_dangling";
 export const CAT_NO_TAGS = "SMD_no_tags";
+export const nameRegex = "[^\\W\\d]\\w*";
+// Match around [[ and ]], and ensure content isn't a wikilnk closure
+// This doesn't explicitly parse aliases.
+export const wikilinkRegex = "\\[\\[([^\\]\\r\\n]+?)\\]\\]";
 
 interface INoteProperties {
     SMD_community: number;
@@ -25,6 +29,17 @@ interface INoteProperties {
     name: string;
     content: string;
     [key: string]: any;
+}
+
+interface ITypedLinkProperties {
+    context: string;
+    [key: string]: any;
+}
+
+interface ITypedLink {
+    properties: ITypedLinkProperties;
+    isInline: boolean;
+    type: string;
 }
 
 interface IVarIndex {
@@ -199,21 +214,41 @@ export class Neo4jStream {
         return [CAT_DANGLING];
     }
 
+    regexEscape(str: string) {
+        return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+    }
+
+    public parseTypedLink(link: LinkCache, line: string): ITypedLink {
+        // Intuition: Start with the typed link prefix. Then a neo4j name (nameRegex).
+        // Then one or more of the wikilink group: wikilink regex separated by optional comma and multiple spaces
+        let regex = new RegExp(
+            `^${this.regexEscape(this.settings.typed_link_prefix)} (${nameRegex}) (${wikilinkRegex},? *)+$`);
+        let match = regex.exec(line);
+        if (!(match === null)) {
+            return {
+                type: match[1],
+                isInline: false,
+                properties: {}
+            } as ITypedLink;
+        }
+        return null;
+    }
+
     public async queryCreateRels(file: TFile, query: Query, queryMetadata: QueryMetadata): Promise<Query>{
         let metadata = this.metadataCache.getFileCache(file);
         let content = (await this.vault.read(file)).split("\n");
         let tags = queryMetadata.tags;
         let srcVar = queryMetadata.nodeVars[file.basename];
-        console.log(content);
         if (metadata) {
             let links = metadata.links;
             links.forEach(link => {
                 console.log(link);
-                let baseName = getLinkpath(link.link);
+                let baseName = getLinkpath(link.link);//
                 // Returns NULL for dangling notes!
                 let trgtFile = this.metadataCache.getFirstLinkpathDest(baseName, file.path);
                 console.log(trgtFile?.basename);
-                if (trgtFile){
+
+                if (trgtFile) {
                     // This is an existing object.
                     baseName = trgtFile.basename;
                 }
@@ -224,7 +259,7 @@ export class Neo4jStream {
                     // This node hasn't been seen before, so we need to create it.
                     // Creates dangling nodes if untyped, otherwise creates attachment nodes
                     queryMetadata.nodeIndex += 1;
-                    trgtVar = "n" + queryMetadata.nodeIndex.toString();
+                    trgtVar = `n${queryMetadata.nodeIndex.toString()}`;
                     queryMetadata.nodeVars[baseName] = trgtVar;
 
                     let danglingTags = this.getDanglingTags(baseName, trgtFile);
@@ -238,7 +273,23 @@ export class Neo4jStream {
                     }
                     query = query.createNode(trgtVar, danglingTags, properties);
                 }
-                query = query.create([node(srcVar), relation("out", ["inline"]), node(trgtVar)]);
+                let line = content[link.position.start.line];
+                let typedLink = this.parseTypedLink(link, line);
+                if (typedLink === null) {
+                    typedLink = {
+                        isInline: true,
+                        type: "inline",
+                        properties: {
+                            context: line
+                        }
+
+                    } as ITypedLink;
+                }
+
+                query = query.create([
+                    node(srcVar),
+                    relation("out", [typedLink.type], typedLink.properties),
+                    node(trgtVar)]);
             });
 
             return query;
