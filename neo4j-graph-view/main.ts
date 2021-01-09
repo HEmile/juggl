@@ -5,17 +5,13 @@ import {
 	WorkspaceLeaf
 } from 'obsidian';
 import {INeo4jViewSettings, Neo4jViewSettingTab, DefaultNeo4jViewSettings} from "./settings";
-import {exec} from 'child_process';
-import {promisify} from "util";
 import {NV_VIEW_TYPE, NeoVisView, MD_VIEW_TYPE, PROP_VAULT} from "./visualization";
-// import 'express';
 import {IncomingMessage, Server, ServerResponse} from "http";
 import {Editor} from "codemirror";
 import {Neo4jError} from "neo4j-driver";
 import {Neo4jStream} from "./stream";
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
-const exec_promise = promisify(exec);
 
 const STATUS_OFFLINE = "Neo4j stream offline";
 
@@ -34,6 +30,7 @@ export default class Neo4jViewPlugin extends Plugin {
 		this.statusBar = this.addStatusBarItem();
 		this.statusBar.setText(STATUS_OFFLINE);
 		this.neo4jStream = new Neo4jStream(this);
+
 
 		// this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.app.workspace.activeLeaf?.getDisplayText(), this))
 

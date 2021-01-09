@@ -1,10 +1,15 @@
 import Neo4jViewPlugin from "./main";
-import {CachedMetadata, FrontMatterCache, MetadataCache, parseFrontMatterAliases, Vault, Workspace} from "obsidian";
+import {
+    getLinkpath,
+    MetadataCache,
+    Vault,
+    Workspace
+} from "obsidian";
 import {INeo4jViewSettings} from "./settings";
 import {
     TAbstractFile, TFile,
 } from 'obsidian';
-import {Query, Builder} from "cypher-query-builder";
+import {Query, Builder, node, relation} from "cypher-query-builder";
 import {Session} from "neo4j-driver";
 import neo4j from "neo4j-driver";
 
@@ -20,6 +25,18 @@ interface INoteProperties {
     name: string;
     content: string;
     [key: string]: any;
+}
+
+interface IVarIndex {
+    [key: string]: string;
+}
+
+interface QueryMetadata {
+    nodeIndex: number;
+    relIndex: number;
+    nodeVars: IVarIndex;
+    relVars: IVarIndex;
+    tags: string[];
 }
 
 export class Neo4jStream {
@@ -61,19 +78,37 @@ export class Neo4jStream {
             .matchNode('n', { SMD_vault: this.vault.getName()})
             .detachDelete("n")]);
         console.log("Iterating md files");
-        let tags: string[] = [CAT_NO_TAGS];
-        let noteQueries: Query[] = [];
+        // let noteQueries: Query[] = [];
         let markdownFiles = this.vault.getMarkdownFiles();
+        let query = new Query();
+        let queryMetadata = {
+            nodeIndex: 0,
+            relIndex: 0,
+            nodeVars: {} as IVarIndex,
+            relVars: {} as IVarIndex,
+            tags: ["image", "audio", "video", "pdf", "file", CAT_NO_TAGS, CAT_DANGLING]
+        } as QueryMetadata;
         for (let i in markdownFiles) {
             let file = markdownFiles[i];
-            noteQueries.push(await this.queryCreateNote(file, tags));
+            queryMetadata.nodeVars[file.basename] = "n" + i;
+            queryMetadata.nodeIndex = parseInt(i);
+            query = await this.queryCreateNote(file, query, queryMetadata);
         }
 
-        console.log("Pushing notes");
-        await this.runQueries(noteQueries);
+        // console.log("Pushing notes");
+        // await this.runQueries([query]);
+
+        for (let i in markdownFiles) {
+            let file = markdownFiles[i];
+            await this.queryCreateRels(file, query, queryMetadata);
+        }
+
+        console.log("Pushing to Neo4j");
+        await this.runQueries([query]);
+
         // TODO: Remove this.
         await this.connection.close();
-    }
+    }//
 
     public async runQueries(queries: Query[]) {
         for (let i in queries) {
@@ -101,8 +136,9 @@ export class Neo4jStream {
         // })
     }
 
-    public async queryCreateNote(file: TFile, tags: string[]): Promise<Query>{
+    public async queryCreateNote(file: TFile, query: Query, queryMetadata: QueryMetadata): Promise<Query>{
         let metadata = this.metadataCache.getFileCache(file);
+        let tags = queryMetadata.tags;
         if (metadata) {
             let frontmatter = metadata.frontmatter;
             let community_tag = metadata.tags ? metadata.tags[0].tag.slice(1) : CAT_NO_TAGS;
@@ -124,13 +160,88 @@ export class Neo4jStream {
                     }
                 });
             }
-            return new Query().createNode("n",
-                metadata.tags ? metadata.tags.map(tag => {
+            return query.createNode(queryMetadata.nodeVars[file.basename],
+                (metadata.tags ? metadata.tags.map(tag => {
                     // Escape the hastag
                     return tag.tag.slice(1);
-                }) : CAT_NO_TAGS,
+                }) : [CAT_NO_TAGS]).concat(
+                    file.parent.path === "/" ? [] : [file.parent.name]
+                ),
                 properties
             );
+        }
+        console.log("FIle without metadata");
+        console.log(file);
+        return null;
+    }
+
+    public getDanglingTags(basename: string, file: TFile): string[] {
+        if (file) {
+            let tags = [];
+            if (["png", "jpg", "jpeg", "gif", "bmp", "svg", "tiff"].includes(file.extension)) {
+                tags.push("image");
+            }
+            else if (["mp3", "webm", "wav", "m4a", "ogg", "3gp", "flac"].includes(file.extension)) {
+                tags.push("audio");
+            }
+            else if (["mp4", "webm", "ogv"].includes(file.extension)) {
+                tags.push("video");
+            }
+            else if (file.extension === "pdf") {
+                tags.push("PDF");
+            }
+            if (!(file.parent.name === "/")) {
+                tags.push(file.parent.name);
+            }
+            tags.push("file");
+            return tags;
+        }
+        return [CAT_DANGLING];
+    }
+
+    public async queryCreateRels(file: TFile, query: Query, queryMetadata: QueryMetadata): Promise<Query>{
+        let metadata = this.metadataCache.getFileCache(file);
+        let content = (await this.vault.read(file)).split("\n");
+        let tags = queryMetadata.tags;
+        let srcVar = queryMetadata.nodeVars[file.basename];
+        console.log(content);
+        if (metadata) {
+            let links = metadata.links;
+            links.forEach(link => {
+                console.log(link);
+                let baseName = getLinkpath(link.link);
+                // Returns NULL for dangling notes!
+                let trgtFile = this.metadataCache.getFirstLinkpathDest(baseName, file.path);
+                console.log(trgtFile?.basename);
+                if (trgtFile){
+                    // This is an existing object.
+                    baseName = trgtFile.basename;
+                }
+                let trgtVar: string;
+                if (baseName in queryMetadata.nodeVars) {
+                    trgtVar = queryMetadata.nodeVars[baseName];
+                } else {
+                    // This node hasn't been seen before, so we need to create it.
+                    // Creates dangling nodes if untyped, otherwise creates attachment nodes
+                    queryMetadata.nodeIndex += 1;
+                    trgtVar = "n" + queryMetadata.nodeIndex.toString();
+                    queryMetadata.nodeVars[baseName] = trgtVar;
+
+                    let danglingTags = this.getDanglingTags(baseName, trgtFile);
+                    let properties = {
+                        SMD_community: tags.indexOf(danglingTags[0]),
+                        SMD_vault: this.vault.getName(),
+                        name: baseName,
+                    } as INoteProperties;
+                    if (trgtFile) {
+                        properties.SMD_path = trgtFile.path;
+                    }
+                    query = query.createNode(trgtVar, danglingTags, properties);
+                }
+                query = query.create([node(srcVar), relation("out", ["inline"]), node(trgtVar)]);
+            });
+
+            return query;
         }
         console.log("FIle without metadata");
         console.log(file);
