@@ -1,7 +1,7 @@
 
 <p align="left">
-    <a href="https://github.com/HEmile/semantic-markdown-converter/releases">
-        <img src="https://img.shields.io/github/v/release/HEmile/semantic-markdown-converter"
+    <a href="https://github.com/HEmile/obsidian-neo4j-graph-view/releases">
+        <img src="https://img.shields.io/github/v/release/HEmile/obsidian-neo4j-graph-view"
             alt="Github latest release" width="100"></a>
    <a href="https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin">
         <img src="https://img.shields.io/badge/docs-Obsidian-blue"
@@ -12,7 +12,7 @@
 </p>
 
 ## Neo4j Graph View
-![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/neo4j-graph-view/resources/styled_screenshot.png)
+![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/styled_screenshot.png)
 
 Documentation at https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin. 
 
@@ -29,7 +29,7 @@ to a [Neo4j](https://neo4j.com/) database. Features:
 
 A [Roadmap](https://publish.obsidian.md/semantic-obsidian/Roadmap) with planned features is also available.
 
-![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/neo4j-graph-view/resources/obsidian%20neo4j%20plugin.gif)
+![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/obsidian%20neo4j%20plugin.gif)
 
 ### Installation
 Detailed installation instructions is at https://publish.obsidian.md/semantic-obsidian/Installation+of+Neo4j+Graph+View+Plugin
@@ -51,7 +51,7 @@ The settings contains several options, such as coloring based on folders and a h
 Create code blocks with language `cypher`. In this code block, create your Cypher query. Then, when the cursor is on this
 code block, use the Obsidian command 'Neo4j Graph View: Execute Cypher query'. Example: 
 
-![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/neo4j-graph-view/resources/cypher_querying.png)
+![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/cypher_querying.png)
 
 
 ### Possible problems
@@ -76,20 +76,20 @@ Graph Apps Store. Using with this plugin active will automatically connect it to
 [Neo4j bloom](https://neo4j.com/product/bloom/) is very powerful graph visualization software. Compared to the embedded
 graph view in Obsidian, it offers much more freedom in customization.
 
-![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/neo4j-graph-view/resources/bloom_screenshot.jpg)
+![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/bloom_screenshot.jpg)
 
   
 ### GraphXR
 [GraphXR](https://www.kineviz.com/) is a 3D graph view, which looks quite gorgeous!
 
-![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/neo4j-graph-view/resources/graphxr.gif)
+![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/graphxr.gif)
 
 
 ### Neo4j Browser
 A query browser that uses the Cypher language to query your vault. Can be used for advanced queries or data anlysis of
 your vault. 
 
-![](https://raw.githubusercontent.com/HEmile/semantic-markdown-converter/main/neo4j-graph-view/resources/browser_screenshot.png)
+![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/browser_screenshot.png)
 
 
 ## Python code: Semantic Markdown to Neo4j
