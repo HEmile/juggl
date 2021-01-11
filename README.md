@@ -1,6 +1,9 @@
 
 <p align="left">
     <a href="https://github.com/HEmile/obsidian-neo4j-graph-view/releases">
+        <img src="https://img.shields.io/github/downloads/HEmile/obsidian-neo4j-graph-view/total.svg"
+            alt="Downloads" width="110"></a> 
+    <a href="https://github.com/HEmile/obsidian-neo4j-graph-view/releases">
         <img src="https://img.shields.io/github/v/release/HEmile/obsidian-neo4j-graph-view"
             alt="Github latest release" width="100"></a>
    <a href="https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin">
@@ -8,7 +11,7 @@
             alt="Documentation" width="100"></a>
     <a href="https://discord.gg/sAmSGpaPgM">
         <img src="https://img.shields.io/discord/794500624163143720?logo=discord"
-            alt="chat on Discord" width="100"></a>
+            alt="chat on Discord" width="120"></a>
 </p>
 
 ## Neo4j Graph View
