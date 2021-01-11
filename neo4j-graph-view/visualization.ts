@@ -31,6 +31,7 @@ export class NeoVisView extends ItemView{
     expandedNodes: string[] = [];
     nodes: Record<IdType, INode>;
     edges: Record<IdType, IEdge>;
+    events: EventRef[];
 
     constructor(leaf: WorkspaceLeaf, initial_query: string, plugin: Neo4jViewPlugin) {
         super(leaf);
@@ -180,7 +181,8 @@ export class NeoVisView extends ItemView{
         this.viz.render();
 
         // Register on file open event
-        this.workspace.on("file-open", (file) => {
+        this.events = [];
+        this.events.push(this.workspace.on("file-open", (file) => {
             if (file && this.settings.auto_add_nodes) {
                 const name = file.basename;
                 //todo: Select node
@@ -192,7 +194,7 @@ export class NeoVisView extends ItemView{
                 }
                 this.selectName = name;
             }
-        });
+        }));
 
         // Register keypress event
         this.containerEl.addEventListener("keydown", (evt) => {
@@ -209,6 +211,13 @@ export class NeoVisView extends ItemView{
                 this.selectAll();
             }
         });
+    }
+
+    protected async onClose(): Promise<void> {
+        this.events.forEach(event => {
+            this.workspace.offref(event);
+        });
+        this.events = [];
     }
 
     findNodeRaw(id: IdType): Node {
