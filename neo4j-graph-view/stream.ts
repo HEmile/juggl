@@ -1,10 +1,10 @@
 import Neo4jViewPlugin from './main';
 import {
-  EventRef,
-  getLinkpath, LinkCache,
-  MetadataCache, Notice,
+  EventRef, Events,
+  getLinkpath, LinkCache, Menu,
+  MetadataCache, Notice, Tasks,
   Vault,
-  Workspace,
+  Workspace, WorkspaceLeaf,
 } from 'obsidian';
 import {INeo4jViewSettings} from './settings';
 import {
@@ -13,6 +13,7 @@ import {
 import {Query, node, relation, NodePattern} from 'cypher-query-builder';
 import {Result, Session} from 'neo4j-driver';
 import neo4j from 'neo4j-driver';
+import * as CodeMirror from 'codemirror';
 
 export const CAT_DANGLING = 'SMD_dangling';
 export const CAT_NO_TAGS = 'SMD_no_tags';
@@ -62,7 +63,7 @@ const emptyQueryMetadata = function() {
   } as QueryMetadata;
 };
 
-export class Neo4jStream {
+export class Neo4jStream extends Events {
     plugin: Neo4jViewPlugin;
     workspace: Workspace;
     settings: INeo4jViewSettings;
@@ -73,6 +74,7 @@ export class Neo4jStream {
     events: EventRef[];
 
     constructor(plugin: Neo4jViewPlugin) {
+      super();
       this.plugin = plugin;
       this.workspace = plugin.app.workspace;
       this.vault = plugin.app.vault;
@@ -380,7 +382,10 @@ export class Neo4jStream {
       // which removes the label Active from variable coupon and properties inactive and new from customer
       console.log('changed metadata');
       console.log(file);
-      console.log(this.metadataCache.getFileCache(file as TFile));
+      if (file instanceof TFile) {
+        console.log(this.metadataCache.getFileCache(file as TFile));
+        this.trigger('modifyNode', file.basename);
+      }
     }
 
     async vaultOnRename(file: TAbstractFile, oldPath: string) {
@@ -392,6 +397,7 @@ export class Neo4jStream {
         const query = new Query().match(this.node('n', oldFile.basename))
             .setValues({name: file.basename});
         await this.executeQueries([query]);
+        this.trigger('renameNode', oldFile.basename, file.basename);
       }
       this.lastFileEvent = 'rename';
       console.log('onRename');
@@ -407,7 +413,6 @@ export class Neo4jStream {
       this.lastFileEvent = 'modify';
       console.log('onModify');
       console.log(file);
-      console.log(this.metadataCache.getFileCache(file as TFile));
     }
 
     async vaultOnDelete(file: TAbstractFile) {
@@ -430,9 +435,11 @@ export class Neo4jStream {
             await this.executeQueries([
               new Query().match(this.node('n', name))
                   .detachDelete('n')]);
+            this.trigger('modifyNode', name);
           } else {
             // If there are any incoming links, change labels to dangling and empty properties
             await this.executeQueries([await this.queryResetNode(file, new Query(), emptyQueryMetadata())]);
+            this.trigger('modifyNode', name);
           }
         });
       }
@@ -453,8 +460,8 @@ export class Neo4jStream {
             .then((result) => {
               if (result.records.length == 0) {
                 // if not exists:
-                this.executeQueries([new Query().createNode('n',
-                    {name: name, SMD_vault: this.vault.getName()})]);
+                this.executeQueries([new Query().create(this.node('n', name))]);
+                this.trigger('createNode', name);
               }
               console.log(result);
             });
@@ -467,5 +474,21 @@ export class Neo4jStream {
       });
       this.events = [];
       await this.connection.close();
+    }
+
+    trigger(name: 'renameNode', oldName: string, newName: string): void;
+    trigger(name: 'deleteNode', param: string): void;
+    trigger(name: 'modifyNode', param: string): void;
+    trigger(name: 'createNode', param: string): void;
+    trigger(name: string, ...data: any[]): void {
+      super.trigger(name, ...data);
+    }
+
+    public on(name: 'renameNode', callback: (oldName: string, newName: string) => any, ctx?: any): EventRef;
+    public on(name: 'deleteNode', callback: (name: string) => any, ctx?: any): EventRef;
+    public on(name: 'modifyNode', callback: (name: string) => any, ctx?: any): EventRef;
+    public on(name: 'createNode', callback: (name: string) => any, ctx?: any): EventRef;
+    on(name: string, callback: (...data: any[]) => any, ctx?: any): EventRef {
+      return super.on(name, callback, ctx);
     }
 }

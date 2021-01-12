@@ -192,6 +192,16 @@ export class NeoVisView extends ItemView {
           this.selectName = name;
         }
       }));
+      // Note: Nothing is implemented for on('createNode'). Is it true nothing should happen?
+      this.events.push(this.plugin.neo4jStream.on('renameNode', (o, n) => {
+        this.onNodeRenamed(o, n);
+      }));
+      this.events.push(this.plugin.neo4jStream.on('modifyNode', (name) => {
+        this.onNodeModify(name);
+      }));
+      this.events.push(this.plugin.neo4jStream.on('deleteNode', (name) => {
+        this.onNodeDeleted(name);
+      }));
 
       // Register keypress event
       this.containerEl.addEventListener('keydown', (evt) => {
@@ -336,6 +346,7 @@ export class NeoVisView extends ItemView {
       // this.workspace.openLinkText()
 
     }
+
 
     public async onNodeModify(name: string) {
       if (this.expandedNodes.includes(name)) {
