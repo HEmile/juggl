@@ -337,6 +337,37 @@ export class NeoVisView extends ItemView {
 
     }
 
+    public async onNodeModify(name: string) {
+      if (this.expandedNodes.includes(name)) {
+        this.updateWithCypher(this.plugin.localNeighborhoodCypher(name));
+      } else {
+        this.updateWithCypher(this.plugin.nodeCypher(name));
+      }
+    }
+
+    public async onNodeRenamed(oldName: string, newName: string) {
+      if (this.expandedNodes.includes(oldName)) {
+        this.updateWithCypher(this.plugin.localNeighborhoodCypher(newName));
+        this.expandedNodes.remove(oldName);
+        this.expandedNodes.push(newName);
+      } else {
+        this.updateWithCypher(this.plugin.nodeCypher(newName));
+      }
+    }
+
+    public async onNodeDeleted(name: string) {
+    // TODO: Maybe automatically update to dangling link by running an update query.
+      this.deleteNode(name);
+    // view.updateStyle();
+    }
+
+    public async onRelsDeleted(rels: [IdType]) {
+      // TODO: Is it even possible to pass rels like this?
+      rels.forEach((id: IdType) => {
+        this.deleteEdge(id);
+      });
+    }
+
     getInQuery(nodes: IdType[]): string {
       let query = 'IN [';
       let first = true;

@@ -10,7 +10,7 @@ import {INeo4jViewSettings} from './settings';
 import {
   TAbstractFile, TFile,
 } from 'obsidian';
-import {Query, node, relation} from 'cypher-query-builder';
+import {Query, node, relation, NodePattern} from 'cypher-query-builder';
 import {Result, Session} from 'neo4j-driver';
 import neo4j from 'neo4j-driver';
 
@@ -44,17 +44,23 @@ interface ITypedLink {
     type: string;
 }
 
-interface IVarIndex {
-    [key: string]: string;
-}
-
 interface QueryMetadata {
     nodeIndex: number;
     relIndex: number;
-    nodeVars: IVarIndex;
-    relVars: IVarIndex;
+    nodeVars: Record<string, string>;
+    relVars: Record<string, string>;
     tags: string[];
 }
+
+const emptyQueryMetadata = function() {
+  return {
+    nodeIndex: 0,
+    relIndex: 0,
+    nodeVars: {},
+    relVars: {},
+    tags: [],
+  } as QueryMetadata;
+};
 
 export class Neo4jStream {
     plugin: Neo4jViewPlugin;
@@ -102,8 +108,8 @@ export class Neo4jStream {
       const queryMetadata = {
         nodeIndex: 0,
         relIndex: 0,
-        nodeVars: {} as IVarIndex,
-        relVars: {} as IVarIndex,
+        nodeVars: {},
+        relVars: {},
         tags: ['image', 'audio', 'video', 'pdf', 'file',
           CAT_NO_TAGS, CAT_DANGLING],
       } as QueryMetadata;
@@ -171,6 +177,10 @@ export class Neo4jStream {
       //         transaction.run(queryO.query, queryO.params);
       //     });
       // })
+    }
+
+    public node(varName: string, name: string): NodePattern {
+      return node(varName, {name: name, SMD_vault: this.vault.getName()});
     }
 
     public async queryCreateNote(file: TFile, query: Query, queryMetadata: QueryMetadata): Promise<Query> {
@@ -334,6 +344,18 @@ export class Neo4jStream {
       return null;
     }
 
+    public async queryResetNode(file: TFile, query: Query, queryMetadata: QueryMetadata): Promise<Query> {
+      // todo: Is the basename the right name?
+      const nodeVar = queryMetadata.nodeVars[file.basename];
+      return this.runQuery(new Query()
+          .match(this.node(nodeVar, file.basename)))
+          .then((record) => {
+            const dict: any = {};
+            dict[nodeVar] = record.records[0];
+            return query.setValues({}).removeLabels(dict);
+          });
+    }
+
     async metadataCacheOnChanged(file: TAbstractFile) {
       // Note: This is NOT called on rename, unless there's a reflexive link to itself.
       // It's always called after the respective other events.
@@ -367,7 +389,7 @@ export class Neo4jStream {
       // should happen before the rename event is resolved... Hopefully it works async
       const oldFile = this.vault.getAbstractFileByPath(oldPath);
       if (file instanceof TFile && oldFile instanceof TFile) {
-        const query = new Query().matchNode('n', {name: oldFile.basename})
+        const query = new Query().match(this.node('n', oldFile.basename))
             .setValues({name: file.basename});
         await this.executeQueries([query]);
       }
@@ -390,21 +412,28 @@ export class Neo4jStream {
 
     async vaultOnDelete(file: TAbstractFile) {
       // After deleting, no metadatacache changed event is fired.
-      // If there are any incoming links, change labels to dangling
-      // Otherwise, detach delete the node
-      // Note: MetadataCache event isn't called for incoming edges
+      // Note: MetadataCache event isn't called either for incoming edges
       this.lastFileEvent = 'delete';
       console.log('onDelete');
       console.log(file);
+
       if (file instanceof TFile) {
         const name = file.basename;
         this.runQuery(new Query().match([
-          node('n', {name: name, SMD_vault: this.vault.getName()}),
+          this.node('n', name),
           relation('in'),
           node('m')]).return('n'),
-        ).then((result) => {
+        ).then(async (result) => {
           console.log(result);
-          // if not result: detach delete.
+          if (result.records.length === 0) {
+            // If there are no incoming links, detach delete the node
+            await this.executeQueries([
+              new Query().match(this.node('n', name))
+                  .detachDelete('n')]);
+          } else {
+            // If there are any incoming links, change labels to dangling and empty properties
+            await this.executeQueries([await this.queryResetNode(file, new Query(), emptyQueryMetadata())]);
+          }
         });
       }
     }

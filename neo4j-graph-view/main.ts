@@ -183,37 +183,6 @@ export default class Neo4jViewPlugin extends Plugin {
       //       const name = parts[1];
       //       leaves.forEach((leaf) =>{
       //           let view = leaf.view as NeoVisView;
-      //           if (parts[0] === "onSMDModifyEvent") {
-      //               if (view.expandedNodes.includes(name)) {
-      //                   view.updateWithCypher(plugin.localNeighborhoodCypher(name));
-      //               }
-      //               else {
-      //                   view.updateWithCypher(plugin.nodeCypher(name));
-      //               }
-      //           }
-      //           else if (parts[0] === "onSMDMovedEvent") {
-      //               let new_name = parts[2];
-      //               if (view.expandedNodes.includes(name)) {
-      //                   view.updateWithCypher(plugin.localNeighborhoodCypher(new_name));
-      //                   view.expandedNodes.remove(name);
-      //                   view.expandedNodes.push(new_name);
-      //               }
-      //               else {
-      //                   view.updateWithCypher(plugin.nodeCypher(new_name));
-      //               }
-      //           }
-      //           else if (parts[0] === "onSMDDeletedEvent") {
-      //               // TODO: Maybe automatically update to dangling link by running an update query.
-      //               view.deleteNode(parts[1]);
-      //               // view.updateStyle();
-      //           }
-      //           else if (parts[0] === "onSMDRelDeletedEvent") {
-      //               parts.slice(1).forEach((id: IdType) => {
-      //                   view.deleteEdge(id);
-      //               })
-      //           }
-      //       });
-      //   }
     }
 
     async httpServer() {
@@ -354,6 +323,7 @@ export default class Neo4jViewPlugin extends Plugin {
         }
       }
     }
+
 
     public async shutdown() {
       new Notice('Stopping Neo4j stream');
