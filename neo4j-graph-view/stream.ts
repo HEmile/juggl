@@ -14,8 +14,7 @@ import {Query, node, relation, NodePattern} from 'cypher-query-builder';
 import {Driver, Result, ResultSummary, Session} from 'neo4j-driver';
 import {SyncQueue} from './sync';
 import neo4j from 'neo4j-driver';
-import * as CodeMirror from 'codemirror';
-import {SetOptions} from 'cypher-query-builder/dist/typings/clauses/set';
+import {basename} from 'path';
 
 export const CAT_DANGLING = 'SMD_dangling';
 export const CAT_NO_TAGS = 'SMD_no_tags';
@@ -205,7 +204,7 @@ export class Neo4jStream extends Events {
           SMD_path: file.path,
           SMD_vault: this.vault.getName(),
           name: file.basename,
-          content: await this.vault.read(file),
+          content: await this.vault.cachedRead(file),
         } as INoteProperties;
         if (frontmatter) {
           Object.keys(frontmatter).forEach((k) => {
@@ -224,10 +223,10 @@ export class Neo4jStream extends Events {
         if (update) {
           return query.set({
             labels: {
-              nodeVar: labels,
+              [nodeVar]: labels,
             },
             values: {
-              nodeVar: properties,
+              [nodeVar]: properties,
             },
           }, {
             merge: false,
@@ -302,7 +301,7 @@ export class Neo4jStream extends Events {
 
     public async queryCreateRels(file: TFile, query: Query, queryMetadata: QueryMetadata): Promise<Query> {
       const metadata = this.metadataCache.getFileCache(file);
-      const content = (await this.vault.read(file)).split('\n');
+      const content = (await this.vault.cachedRead(file)).split('\n');
       const tags = queryMetadata.tags;
       const srcVar = queryMetadata.nodeVars[file.basename];
       if (metadata) {
@@ -411,10 +410,13 @@ export class Neo4jStream extends Events {
         console.log(result);
         const oldLabels = result.records[0].get(0).labels;
 
-        // Remove all labels on node
-        await this.runQuery(new Query().match(this.node(nodeVar, name))
-        // @ts-ignore
-            .removeLabels({n0: Array.from(oldLabels.entries())}), session);
+        if (oldLabels.length > 0) {
+          console.log(oldLabels);
+          // Remove all labels on node
+          await this.runQuery(new Query().match(this.node(nodeVar, name))
+              // @ts-ignore
+              .removeLabels({n0: oldLabels}), session);
+        }
 
         queryMetadata.nodeIndex = 1;
         queryMetadata.nodeVars[name] = nodeVar;
@@ -432,17 +434,18 @@ export class Neo4jStream extends Events {
       // This is called BEFORE metadataCache vault change.
       // So if we just rename the neo4j node, it should be fine when rebuilding relations. But rebuilding relations
       // should happen before the rename event is resolved... Hopefully it works async
-      const oldFile = this.vault.getAbstractFileByPath(oldPath);
-      if (file instanceof TFile && oldFile instanceof TFile) {
-        const query = new Query().match(this.node('n', oldFile.basename))
-            .setValues({name: file.basename}, true);
+      const oldName = basename(oldPath, '.md');
+      if (file instanceof TFile) {
+        const query = new Query().match(this.node('n', oldName))
+            .setValues({n: {name: file.basename}}, true);
         await this.executeQueries([query]);
-        this.trigger('renameNode', oldFile.basename, file.basename);
+        this.trigger('renameNode', oldName, file.basename);
       }
       this.lastFileEvent = 'rename';
       console.log('onRename');
       console.log(file);
       console.log(oldPath);
+      console.log(oldName);
     }
 
     async vaultOnModify(file: TAbstractFile) {
