@@ -168,12 +168,12 @@ export class NeoVisView extends ItemView {
             }
           });
         }
-        if (this.settings.debug) {
-          // @ts-ignore
-          console.log(this.nodes);
-          // @ts-ignore
-          console.log(this.edges);
-        }
+        // if (this.settings.debug) {
+        //   // @ts-ignore
+        //   console.log(this.nodes);
+        //   // @ts-ignore
+        //   console.log(this.edges);
+        // }
       });
       this.load();
       this.viz.render();
@@ -194,7 +194,6 @@ export class NeoVisView extends ItemView {
       }));
       // Note: Nothing is implemented for on('createNode'). Is it true nothing should happen?
       this.events.push(this.plugin.neo4jStream.on('renameNode', (o, n) => {
-        console.log('here!');
         this.onNodeRenamed(o, n);
       }));
       this.events.push(this.plugin.neo4jStream.on('modifyNode', (name) => {

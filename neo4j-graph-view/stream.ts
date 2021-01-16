@@ -34,6 +34,10 @@ class QueryMetadata {
     this.nodeIndex += 1;
     return varName;
   }
+
+  values() {
+    return Object.keys(this.nodeVars).map((k) => this.nodeVars[k]);
+  }
 }
 
 
@@ -291,7 +295,7 @@ export class Neo4jStream extends Events {
       return null;
     }
 
-    public async queryCreateRels(file: TFile, query: Query, queryMetadata: QueryMetadata, merge:boolean=true): Promise<Query> {
+    public async queryCreateRels(file: TFile, query: Query, queryMetadata: QueryMetadata, merge:boolean=false): Promise<Query> {
       const metadata = this.metadataCache.getFileCache(file);
       const content = (await this.vault.cachedRead(file)).split('\n');
       const tags = this.tags;
@@ -314,9 +318,10 @@ export class Neo4jStream extends Events {
           if (baseName in queryMetadata.nodeVars) {
             trgtVar = queryMetadata.nodeVars[baseName];
           } else if (trgtFile && merge) {
-            // When merging, there's likely no var yet.
+            // When merging, there's likely no var created for this note yet.
             trgtVar = queryMetadata.nextNodeVar(baseName);
-            query = query.match(this.node(trgtVar, baseName));
+            query = query.match(this.node(trgtVar, baseName))
+            ;
           } else {
             // This node hasn't been seen before, so we need to create it.
             // Creates dangling nodes if untyped, otherwise creates attachment nodes
@@ -332,7 +337,8 @@ export class Neo4jStream extends Events {
               properties.SMD_path = trgtFile.path;
             }
             if (merge) {
-              query = query.merge(node(trgtVar, danglingTags, properties));
+              query = query.merge(node(trgtVar, danglingTags, properties))
+              ;
             } else {
               query = query.createNode(trgtVar, danglingTags, properties);
             }
@@ -354,11 +360,14 @@ export class Neo4jStream extends Events {
             node(srcVar),
             relation('out', [typedLink.type], typedLink.properties),
             node(trgtVar)]);
+          if (merge) {
+            query.with(queryMetadata.values());
+          }
         });
 
         return query;
       }
-      console.log('FIle without metadata');
+      console.log('File without metadata');
       console.log(file);
       return null;
     }
@@ -396,12 +405,16 @@ export class Neo4jStream extends Events {
         let query = new Query().match(this.node(nodeVar, name));
         // Update node with new info
         query = await this.queryUpdateNote(file, query, queryMetadata);
-        // Delete all outgoing edges:
-        query = query.match([
-          this.node(nodeVar, name),
-          relation('out', 'r')])
-            .delete('r');
         await this.executeQueries([query], session);
+        // Delete all outgoing edges:
+        const dRelQuery = new Query().match([
+          this.node(nodeVar, name),
+          relation('out', 'r'), node('plc')])
+            .delete('r');
+        await this.executeQueries([dRelQuery]);
+        // Recreate relations, taking into account any changes
+        const relQuery = await this.queryCreateRels(file, new Query().match(this.node(nodeVar, name)), queryMetadata, true);
+        await this.executeQueries([relQuery.return(nodeVar)], session);
         this.trigger('modifyNode', name);
       }
       await session.close();
