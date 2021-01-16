@@ -23,6 +23,7 @@ export class SyncQueue {
           console.log('ending callback');
         }
         this.activeCallback = null;
+        console.log('exiting execute');
       }
     }
 }

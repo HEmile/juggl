@@ -21,10 +21,3 @@ interface ITypedLink {
     type: string;
 }
 
-interface QueryMetadata {
-    nodeIndex: number;
-    relIndex: number;
-    nodeVars: Record<string, string>;
-    relVars: Record<string, string>;
-    tags: string[];
-}

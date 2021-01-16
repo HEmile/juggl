@@ -194,6 +194,7 @@ export class NeoVisView extends ItemView {
       }));
       // Note: Nothing is implemented for on('createNode'). Is it true nothing should happen?
       this.events.push(this.plugin.neo4jStream.on('renameNode', (o, n) => {
+        console.log('here!');
         this.onNodeRenamed(o, n);
       }));
       this.events.push(this.plugin.neo4jStream.on('modifyNode', (name) => {

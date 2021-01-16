@@ -24,6 +24,18 @@ export const initialTags = ['image', 'audio', 'video', 'pdf', 'file', CAT_NO_TAG
 // This doesn't explicitly parse aliases.
 export const wikilinkRegex = '\\[\\[([^\\]\\r\\n]+?)\\]\\]';
 
+class QueryMetadata {
+  nodeIndex: number=0;
+  nodeVars: Record<string, string>={};
+
+  nextNodeVar(name: string, prefix:string='n'): string {
+    const varName = `${prefix}${this.nodeIndex.toString()}`;
+    this.nodeVars[name] = varName;
+    this.nodeIndex += 1;
+    return varName;
+  }
+}
+
 
 export class Neo4jStream extends Events {
     plugin: Neo4jViewPlugin;
@@ -47,16 +59,6 @@ export class Neo4jStream extends Events {
       this.tags = [...initialTags];
       this.eventQueue = new SyncQueue(this);
     }
-
-    queryMetadata() {
-      return {
-        nodeIndex: 0,
-        relIndex: 0,
-        nodeVars: {},
-        relVars: {},
-        tags: this.tags,
-      } as QueryMetadata;
-    };
 
     public async start() {
       if (this.driver) {
@@ -83,11 +85,10 @@ export class Neo4jStream extends Events {
       // let noteQueries: Query[] = [];
       const markdownFiles = this.vault.getMarkdownFiles();
       let query = new Query();
-      const queryMetadata = this.queryMetadata();
+      const queryMetadata = new QueryMetadata();
 
-      for (const [i, file] of markdownFiles.entries()) {
-        queryMetadata.nodeVars[file.basename] = 'n' + i.toString();
-        queryMetadata.nodeIndex = i;
+      for (const file of markdownFiles) {
+        queryMetadata.nextNodeVar(file.basename);
         query = await this.queryCreateNote(file, query, queryMetadata);
       }
 
@@ -153,28 +154,19 @@ export class Neo4jStream extends Events {
     }
 
     public async executeQueries(queries: Query[], session: Session|null=null) {
-      for (const i in queries) {
+      for (const query of queries) {
         console.log(this);
         // Note: The await here is important, as a connection cannot run multiple transactions simultaneously.
-        await this.runQuery(queries[i], session).then((value) => {
+        await this.runQuery(query, session).then((value) => {
           if (this.settings.debug) {
             console.log(value);
           }
         }).catch((reason) => {
           console.log('Query failed');
-          console.log(queries[i].buildQueryObject());
+          console.log(query.buildQueryObject());
           console.log(reason);
         });
       }
-      // let promise = this.connection.writeTransaction(async transaction => {
-      //     queries.forEach(query => {
-      //         if (this.settings.debug) {
-      //             console.log(query);
-      //         }
-      //         let queryO = query.buildQueryObject();
-      //         transaction.run(queryO.query, queryO.params);
-      //     });
-      // })
     }
 
     public node(varName: string, name: string): NodePattern {
@@ -191,7 +183,7 @@ export class Neo4jStream extends Events {
 
     async queryCreateOrUpdateNote(file: TFile, query: Query, queryMetadata: QueryMetadata, update:boolean): Promise<Query> {
       const metadata = this.metadataCache.getFileCache(file);
-      const tags = queryMetadata.tags;
+      const tags = this.tags;
       if (metadata) {
         const frontmatter = metadata.frontmatter;
         const communityTag = metadata.tags ? metadata.tags[0].tag.slice(1) : CAT_NO_TAGS;
@@ -299,10 +291,10 @@ export class Neo4jStream extends Events {
       return null;
     }
 
-    public async queryCreateRels(file: TFile, query: Query, queryMetadata: QueryMetadata): Promise<Query> {
+    public async queryCreateRels(file: TFile, query: Query, queryMetadata: QueryMetadata, merge:boolean=true): Promise<Query> {
       const metadata = this.metadataCache.getFileCache(file);
       const content = (await this.vault.cachedRead(file)).split('\n');
-      const tags = queryMetadata.tags;
+      const tags = this.tags;
       const srcVar = queryMetadata.nodeVars[file.basename];
       if (metadata) {
         const links = metadata.links;
@@ -321,12 +313,14 @@ export class Neo4jStream extends Events {
           let trgtVar: string;
           if (baseName in queryMetadata.nodeVars) {
             trgtVar = queryMetadata.nodeVars[baseName];
+          } else if (trgtFile && merge) {
+            // When merging, there's likely no var yet.
+            trgtVar = queryMetadata.nextNodeVar(baseName);
+            query = query.match(this.node(trgtVar, baseName));
           } else {
             // This node hasn't been seen before, so we need to create it.
             // Creates dangling nodes if untyped, otherwise creates attachment nodes
-            queryMetadata.nodeIndex += 1;
-            trgtVar = `n${queryMetadata.nodeIndex.toString()}`;
-            queryMetadata.nodeVars[baseName] = trgtVar;
+            trgtVar = queryMetadata.nextNodeVar(baseName);
 
             const danglingTags = this.getDanglingTags(baseName, trgtFile);
             const properties = {
@@ -337,7 +331,11 @@ export class Neo4jStream extends Events {
             if (trgtFile) {
               properties.SMD_path = trgtFile.path;
             }
-            query = query.createNode(trgtVar, danglingTags, properties);
+            if (merge) {
+              query = query.merge(node(trgtVar, danglingTags, properties));
+            } else {
+              query = query.createNode(trgtVar, danglingTags, properties);
+            }
           }
           const line = content[link.position.start.line];
           let typedLink = this.parseTypedLink(link, line);
@@ -365,44 +363,18 @@ export class Neo4jStream extends Events {
       return null;
     }
 
-    public async queryResetNode(file: TFile, query: Query, queryMetadata: QueryMetadata, session: Session): Promise<Query> {
-      // todo: Is the basename the right name?
-      const nodeVar = queryMetadata.nodeVars[file.basename];
-      const result = await this.runQuery(new Query()
-          .match(this.node(nodeVar, file.basename)).return(nodeVar), session);
-      const dict: any = {};
-      dict[nodeVar] = result.records[0];
-      return query.setValues({}).removeLabels(dict);
-    }
-
     async metadataCacheOnChanged(file: TAbstractFile) {
-      // Note: This is NOT called on rename, unless there's a reflexive link to itself.
       // It's always called after the respective other events.
-      // When a file is created, this is fired with an empty filecache
-      // Called after create event. It shouldn't be needed to check if the node already exists on the server
-      // with metadatacache changed..
+      // Note: This is NOT called on rename, unless there's a reflexive link to itself.
+      // When a file is created, this is fired with an empty filecache. We synchronize the event firing,
+      // so we let the create callback handle the creation of the node.
 
-      // Coding wise: We can change the queryCreateNote to accept an 'SET' (update) option, instead of create.
-      // Then first to a MATCH statement with var n, register n in the nodeVarialbeIndex to the files baseName,
-      // and perform the set. Shouldn't need to change anything else. SET doesn't remove old data, it seems.
-      // There should also first be a clause to clear the properties and labels. However, there doesn't seem to
-      // be a 'properties'  or 'labels'
-      // For this, REMOVE exists:
-      // query.remove({
-      //     labels: {
-      //         coupon: 'Active',
-      //     },
-      //     properties: {
-      //         customer: ['inactive', 'new'],
-      //     },
-      // });
-      // which removes the label Active from variable coupon and properties inactive and new from customer
       console.log('changed metadata');
       console.log(file);
       const session = this.session();
       if (file instanceof TFile) {
         const name = file.basename;
-        const queryMetadata = this.queryMetadata();
+        const queryMetadata = new QueryMetadata();
         const nodeVar = 'n0';
         // Find all labels on node
         const result = await this.runQuery(
@@ -424,6 +396,11 @@ export class Neo4jStream extends Events {
         let query = new Query().match(this.node(nodeVar, name));
         // Update node with new info
         query = await this.queryUpdateNote(file, query, queryMetadata);
+        // Delete all outgoing edges:
+        query = query.match([
+          this.node(nodeVar, name),
+          relation('out', 'r')])
+            .delete('r');
         await this.executeQueries([query], session);
         this.trigger('modifyNode', name);
       }
@@ -434,18 +411,17 @@ export class Neo4jStream extends Events {
       // This is called BEFORE metadataCache vault change.
       // So if we just rename the neo4j node, it should be fine when rebuilding relations. But rebuilding relations
       // should happen before the rename event is resolved... Hopefully it works async
-      const oldName = basename(oldPath, '.md');
+      console.log('onRename');
+
       if (file instanceof TFile) {
+        const oldName = basename(oldPath, '.md');
+        console.log(oldName);
         const query = new Query().match(this.node('n', oldName))
             .setValues({n: {name: file.basename}}, true);
         await this.executeQueries([query]);
         this.trigger('renameNode', oldName, file.basename);
       }
       this.lastFileEvent = 'rename';
-      console.log('onRename');
-      console.log(file);
-      console.log(oldPath);
-      console.log(oldName);
     }
 
     async vaultOnModify(file: TAbstractFile) {
@@ -455,7 +431,6 @@ export class Neo4jStream extends Events {
       // At most, we could update the content property of the node.
       this.lastFileEvent = 'modify';
       console.log('onModify');
-      console.log(file);
     }
 
     async vaultOnDelete(file: TAbstractFile) {
@@ -463,7 +438,6 @@ export class Neo4jStream extends Events {
       // Note: MetadataCache event isn't called either for incoming edges
       this.lastFileEvent = 'delete';
       console.log('onDelete');
-      console.log(file);
 
       const session = this.session();
 
@@ -480,12 +454,24 @@ export class Neo4jStream extends Events {
           await this.executeQueries([
             new Query().match(this.node('n', name))
                 .detachDelete('n')], session);
-          this.trigger('modifyNode', name);
+          this.trigger('deleteNode', name);
         } else {
           // If there are any incoming links, change labels to dangling and empty properties
-          await this.executeQueries([
-            await this.queryResetNode(file, new Query(), this.queryMetadata(), session),
-          ], session);
+          const result = await this.runQuery(new Query()
+              .match(this.node('n', name)).return('n'), session);
+          // return query.setValues({}).removeLabels(dict);
+          let query = new Query().match(this.node('n', name));
+          const oldLabels = result.records[0].get(0).labels;
+          if (oldLabels.length > 0) {
+            query = query.removeLabels({n: oldLabels});
+          }
+          query = query.setLabels({n: CAT_DANGLING})
+              .setValues({
+                SMD_community: this.tags.indexOf(CAT_DANGLING),
+                SMD_vault: this.vault.getName(),
+                name: name,
+              }, false);
+          await this.executeQueries([query], session);
           this.trigger('modifyNode', name);
         }
       }
@@ -499,7 +485,6 @@ export class Neo4jStream extends Events {
       // and let the metadatacache event handle it
       this.lastFileEvent = 'create';
       console.log('onCreate');
-      console.log(file);
       const session = this.session();
       console.log('sess created');
       if (file instanceof TFile) {
@@ -512,7 +497,6 @@ export class Neo4jStream extends Events {
           await this.executeQueries([new Query().create(this.node('n', name))], session);
           this.trigger('createNode', name);
         }
-        console.log('exit onCreate');
       }
     }
 
@@ -530,6 +514,8 @@ export class Neo4jStream extends Events {
     trigger(name: 'modifyNode', param: string): void;
     trigger(name: 'createNode', param: string): void;
     trigger(name: string, ...data: any[]): void {
+      console.log('on trigger');
+      console.log(name, data);
       super.trigger(name, ...data);
     }
 
