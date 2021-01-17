@@ -209,12 +209,17 @@ export class Neo4jStream extends Events {
             }
           });
         }
-        const labels = (metadata.tags ? metadata.tags.map((tag) => {
+        const parentPath = file.parent.name.replace(' ', '_');
+        const fileTag = parentPath === '/' || !new RegExp(nameRegex).test(parentPath) ?
+            [] : [parentPath];
+        const labels = (metadata.tags ? [].concat(...metadata.tags.map((tag) => {
           // Escape the hastag
-          return tag.tag.slice(1);
-        }) : [CAT_NO_TAGS]).concat(
-            file.parent.path === '/' ? [] : [file.parent.name],
-        );
+          return tag.tag.slice(1)
+              // deal with hierarchical tags
+              .split('/');
+        })) : [CAT_NO_TAGS])
+            .concat(fileTag);
+        console.log(labels);
         const nodeVar = queryMetadata.nodeVars[file.basename];
         if (update) {
           return query.set({
