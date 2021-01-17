@@ -14,6 +14,10 @@
       "es5",
       "scripthost",
       "es2015"
+    ],
+    "esModuleInterop": true,
+    "typeRoots": [
+      "./node_modules/@types/"
     ]
   },
   "include": [

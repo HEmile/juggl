@@ -1,7 +1,7 @@
 import {App, Notice, PluginSettingTab, Setting, SplitDirection} from 'obsidian';
 
 import Neo4jViewPlugin from './main';
-import {EdgeOptions, NodeOptions} from 'vis-network';
+// import {EdgeOptions, NodeOptions} from 'vis-network';
 import {NeoVisView, NV_VIEW_TYPE} from './visualization';
 
 export interface INeo4jViewSettings {
@@ -22,7 +22,7 @@ export interface INeo4jViewSettings {
     edgeSettings: string;
 }
 
-export const DefaultNodeSettings: NodeOptions = {
+export const DefaultNodeSettings = {
   size: 9,
   font: {
     size: 12,
@@ -32,7 +32,7 @@ export const DefaultNodeSettings: NodeOptions = {
   widthConstraint: {maximum: 200},
 };
 
-export const DefaultEdgeSettings: EdgeOptions = {
+export const DefaultEdgeSettings = {
   font: {
     size: 12,
     strokeWidth: 2,

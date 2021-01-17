@@ -1,10 +1,10 @@
 import Neo4jViewPlugin from './main';
 import {
   EventRef, Events,
-  getLinkpath, LinkCache, Menu,
-  MetadataCache, Notice, Tasks,
+  getLinkpath, LinkCache,
+  MetadataCache, Notice,
   Vault,
-  Workspace, WorkspaceLeaf,
+  Workspace,
 } from 'obsidian';
 import {INeo4jViewSettings} from './settings';
 import {

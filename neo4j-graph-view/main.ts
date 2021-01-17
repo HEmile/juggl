@@ -12,6 +12,8 @@ import {IncomingMessage, Server, ServerResponse} from 'http';
 import {Editor} from 'codemirror';
 import {Neo4jError} from 'neo4j-driver';
 import {Neo4jStream} from './stream';
+import cytoscape from 'cytoscape';
+
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
 
@@ -26,6 +28,12 @@ export default class Neo4jViewPlugin extends Plugin {
     neo4jStream: Neo4jStream;
 
     async onload(): Promise<void> {
+      const viz = cytoscape();
+      const elesfn = Object.create(Array.prototype);
+      console.log(elesfn);
+      elesfn.remove = function(a:any) {};
+
+      console.log('Loading Neo4j graph view');
       this.path = this.app.vault.getRoot().path;
 
       this.settings = Object.assign(DefaultNeo4jViewSettings, await this.loadData());// (await this.loadData()) || DefaultNeo4jViewSettings;
@@ -143,46 +151,20 @@ export default class Neo4jViewPlugin extends Plugin {
       await this.initialize();
     }
 
-    public initialize() {
+    public async initialize() {
       console.log('Initializing Neo4j stream');
       new Notice('Initializing Neo4j stream.');
       this.statusBar.setText('Initializing Neo4j stream');
       try {
         console.log('Here');
-        this.neo4jStream.start();
+        await this.neo4jStream.start();
       } catch (e) {
         console.log(e);
         console.log('Error during initialization of semantic markdown: \n', e);
         new Notice('Error during initialization of the Neo4j stream. Check the console for crash report.');
       }
 
-      this.httpServer();
-
-      // // this.stream_process.on('message', function (message) {
-      //   // received a message sent from the Python script (a simple "print" statement)
-      //   if (message === 'Stream is active!') {
-      //       console.log(message);
-      //       new Notice("Neo4j stream online!");
-      //       statusbar.setText("Neo4j stream online");
-      //   }
-      //   else if (message === 'invalid user credentials') {
-      //       console.log(message);
-      //       new Notice('Please provide a password in the Neo4j Graph View settings');
-      //       statusbar.setText(STATUS_OFFLINE);
-      //   }
-      //   else if (message === 'no connection to db') {
-      //       console.log(message);
-      //       new Notice("No connection to Neo4j database. Please start Neo4j Database in Neo4j Desktop");
-      //       statusbar.setText(STATUS_OFFLINE);
-      //   }
-      //   else if (/^onSMD/.test(message)) {
-      //       if (settings.debug) {console.log(message)}
-      //       console.log("handling event");
-      //       const parts = message.split("/");
-      //       const leaves = plugin.app.workspace.getLeavesOfType(NV_VIEW_TYPE);
-      //       const name = parts[1];
-      //       leaves.forEach((leaf) =>{
-      //           let view = leaf.view as NeoVisView;
+      await this.httpServer();
     }
 
     async httpServer() {
@@ -327,7 +309,7 @@ export default class Neo4jViewPlugin extends Plugin {
 
     public async shutdown() {
       new Notice('Stopping Neo4j stream');
-      this.neo4jStream.stop();
+      await this.neo4jStream.stop();
       this.statusBar.setText('Neo4j stream offline');
       this.imgServer.close();
       this.imgServer = null;

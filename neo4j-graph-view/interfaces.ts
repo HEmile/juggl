@@ -21,3 +21,6 @@ interface ITypedLink {
     type: string;
 }
 
+interface IDataStore {
+
+}
