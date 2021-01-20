@@ -48,6 +48,31 @@ export class NeoVisView extends ItemView {
 
       console.log(this.containerEl);//
 
+      const cy = cytoscape({
+        container: div,
+        elements: [{
+          group: 'nodes',
+          data: {
+            id: 'n1',
+          },
+        }, {
+          group: 'nodes',
+          data: {
+            id: 'n2',
+          },
+        }, {
+          group: 'edges',
+          data: {
+            id: 'e1',
+            source: 'n1',
+            target: 'n2',
+          },
+        },
+        ],
+      });
+
+      console.log('Imported!');
+
       // const config = {
       //   container_id: div.id,
       //   server_url: 'bolt://localhost:7687',

@@ -12,7 +12,7 @@ import {IncomingMessage, Server, ServerResponse} from 'http';
 import {Editor} from 'codemirror';
 import {Neo4jError} from 'neo4j-driver';
 import {Neo4jStream} from './stream';
-import cytoscape from 'cytoscape';
+// import cytoscape from 'cytoscape';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -28,7 +28,7 @@ export default class Neo4jViewPlugin extends Plugin {
     neo4jStream: Neo4jStream;
 
     async onload(): Promise<void> {
-      const viz = cytoscape();
+      // const viz = cytoscape();
       const elesfn = Object.create(Array.prototype);
       console.log(elesfn);
       elesfn.remove = function(a:any) {};

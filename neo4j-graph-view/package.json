@@ -43,8 +43,8 @@
     "uuid": "^8.3.2"
   },
   "dependencies": {
-    "cytoscape": "^3.17.1",
     "cypher-query-builder": "^6.0.4",
-    "neo4j-driver": "^4.2.1"
+    "cytoscape": "^3.17.1",
+    "neo4j-driver": "^4.2.2"
   }
 }
