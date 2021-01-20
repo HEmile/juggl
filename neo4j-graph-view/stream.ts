@@ -1,5 +1,6 @@
 import Neo4jViewPlugin from './main';
 import {
+  Component,
   EventRef, Events,
   getLinkpath, LinkCache,
   MetadataCache, Notice,
@@ -7,6 +8,7 @@ import {
   Workspace,
 } from 'obsidian';
 import {INeo4jViewSettings} from './settings';
+import {IDataStore, INoteProperties, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {
   TAbstractFile, TFile,
 } from 'obsidian';
@@ -15,6 +17,7 @@ import {Driver, Result, ResultSummary, Session} from 'neo4j-driver';
 import {SyncQueue} from './sync';
 import neo4j from 'neo4j-driver';
 import {basename} from 'path';
+import {DataStoreEvents} from './events';
 
 export const CAT_DANGLING = 'SMD_dangling';
 export const CAT_NO_TAGS = 'SMD_no_tags';
@@ -41,7 +44,7 @@ class QueryMetadata {
 }
 
 
-export class Neo4jStream extends Events {
+export class Neo4jStream extends Component implements IDataStore {
     plugin: Neo4jViewPlugin;
     workspace: Workspace;
     settings: INeo4jViewSettings;
@@ -49,7 +52,7 @@ export class Neo4jStream extends Events {
     metadataCache: MetadataCache;
     driver: Driver;
     lastFileEvent: string;
-    events: EventRef[];
+    events: DataStoreEvents;
     tags: string[];
     eventQueue: SyncQueue;
 
@@ -62,73 +65,112 @@ export class Neo4jStream extends Events {
       this.metadataCache = plugin.app.metadataCache;
       this.tags = [...initialTags];
       this.eventQueue = new SyncQueue(this);
+      this.events = new DataStoreEvents();
     }
 
-    public async start() {
+    getEvents(): DataStoreEvents {
+      return this.events;
+    }
+
+    public async onload() {
+      super.onload();
+      if (this.plugin.app.workspace.layoutReady) {
+        await this.initialize();
+      } else {
+        this.plugin.app.workspace.on('layout-ready', () => {
+          this.initialize();
+        });
+      }
+    }
+
+    public async restart() {
+      await this.shutdown();
+      await this.initialize();
+    }
+
+    public async shutdown() {
       if (this.driver) {
+        new Notice('Stopping Neo4j stream');
         await this.driver.close();
+        this.plugin.statusBar.setText('Neo4j stream offline');
       }
+      this.tags = [...initialTags];
+    }
 
-      this.driver = neo4j.driver('neo4j://localhost',
-          neo4j.auth.basic('neo4j', this.settings.password), {
-            maxTransactionRetryTime: 30000,
-          });
-      const connection = this.session();
-      if (this.settings.debug) {
-        console.log('Removing existing data');
+    public async onunload() {
+      super.onunload();
+      await this.shutdown();
+    }
+
+    public async initialize() {
+      console.log('Initializing Neo4j stream');
+      new Notice('Initializing Neo4j stream.');
+      this.plugin.statusBar.setText('Initializing Neo4j stream');
+      try {
+        this.driver = neo4j.driver('neo4j://localhost',
+            neo4j.auth.basic('neo4j', this.settings.password), {
+              maxTransactionRetryTime: 30000,
+            });
+        const connection = this.session();
+        if (this.settings.debug) {
+          console.log('Removing existing data');
+        }
+
+        // await this.connection.run("MATCH (n) RETURN n LIMIT 10").then(res => {
+        //     console.log(res);
+        // });
+
+        await this.executeQueries([new Query()
+            .matchNode('n', {SMD_vault: this.vault.getName()})
+            .detachDelete('n')]);
+        console.log('Iterating md files');
+        // let noteQueries: Query[] = [];
+        const markdownFiles = this.vault.getMarkdownFiles();
+        let query = new Query();
+        const queryMetadata = new QueryMetadata();
+
+        for (const file of markdownFiles) {
+          queryMetadata.nextNodeVar(file.basename);
+          query = await this.queryCreateNote(file, query, queryMetadata);
+        }
+
+        // console.log("Pushing notes");
+        // await this.runQueries([query]);
+
+        for (const file of markdownFiles) {
+          await this.queryCreateRels(file, query, queryMetadata);
+        }
+
+        console.log('Pushing to Neo4j');
+        await this.executeQueries([query], connection);
+
+        // TODO: Define schema/indexes
+
+        this.registerEvent(
+            this.metadataCache.on('changed', (file) =>
+              this.eventQueue.execute(this.metadataCacheOnChanged, file)));
+        this.registerEvent(
+            this.vault.on('rename', (file, oldPath) =>
+              this.eventQueue.execute(this.vaultOnRename, file, oldPath)));
+        this.registerEvent(
+            this.vault.on('modify', (file) =>
+              this.eventQueue.execute(this.vaultOnModify, file)));
+        this.registerEvent(
+            this.vault.on('delete', (file) =>
+              this.eventQueue.execute(this.vaultOnDelete, file)));
+        this.registerEvent(
+            this.vault.on('create', (file) =>
+              this.eventQueue.execute(this.vaultOnCreate, file)));
+
+        new Notice('Neo4j stream online!');
+        this.plugin.statusBar.setText('Neo4j stream online');
+
+        await connection.close();
+      } catch (e) {
+        console.log(e);
+        new Notice('Error during initialization of the Neo4j stream. Check the console for crash report.');
+        this.plugin.statusBar.setText('Neo4j stream offline');
       }
-
-      // await this.connection.run("MATCH (n) RETURN n LIMIT 10").then(res => {
-      //     console.log(res);
-      // });
-
-      await this.executeQueries([new Query()
-          .matchNode('n', {SMD_vault: this.vault.getName()})
-          .detachDelete('n')]);
-      console.log('Iterating md files');
-      // let noteQueries: Query[] = [];
-      const markdownFiles = this.vault.getMarkdownFiles();
-      let query = new Query();
-      const queryMetadata = new QueryMetadata();
-
-      for (const file of markdownFiles) {
-        queryMetadata.nextNodeVar(file.basename);
-        query = await this.queryCreateNote(file, query, queryMetadata);
-      }
-
-      // console.log("Pushing notes");
-      // await this.runQueries([query]);
-
-      for (const file of markdownFiles) {
-        await this.queryCreateRels(file, query, queryMetadata);
-      }
-
-      console.log('Pushing to Neo4j');
-      await this.executeQueries([query], connection);
-
-      // TODO: Define schema/indexes
-
-      this.events = [];
-      this.events.push(
-          this.metadataCache.on('changed', (file) =>
-            this.eventQueue.execute(this.metadataCacheOnChanged, file)));
-      this.events.push(
-          this.vault.on('rename', (file, oldPath) =>
-            this.eventQueue.execute(this.vaultOnRename, file, oldPath)));
-      this.events.push(
-          this.vault.on('modify', (file) =>
-            this.eventQueue.execute(this.vaultOnModify, file)));
-      this.events.push(
-          this.vault.on('delete', (file) =>
-            this.eventQueue.execute(this.vaultOnDelete, file)));
-      this.events.push(
-          this.vault.on('create', (file) =>
-            this.eventQueue.execute(this.vaultOnCreate, file)));
-
-      new Notice('Neo4j stream online!');
-      this.plugin.statusBar.setText('Neo4j stream online');
-
-      await connection.close();
     }
 
     public session(): Session {
@@ -190,6 +232,7 @@ export class Neo4jStream extends Events {
       const tags = this.tags;
       if (metadata) {
         const frontmatter = metadata.frontmatter;
+        console.log(this.metadataCache);
         const communityTag = metadata.tags ? metadata.tags[0].tag.slice(1) : CAT_NO_TAGS;
         if (!(tags.includes(communityTag))) {
           tags.push(communityTag);
@@ -420,7 +463,7 @@ export class Neo4jStream extends Events {
         // Recreate relations, taking into account any changes
         const relQuery = await this.queryCreateRels(file, new Query().match(this.node(nodeVar, name)), queryMetadata, true);
         await this.executeQueries([relQuery.return(nodeVar)], session);
-        this.trigger('modifyNode', name);
+        this.events.trigger('modifyNode', name);
       }
       await session.close();
     }
@@ -437,7 +480,7 @@ export class Neo4jStream extends Events {
         const query = new Query().match(this.node('n', oldName))
             .setValues({n: {name: file.basename}}, true);
         await this.executeQueries([query]);
-        this.trigger('renameNode', oldName, file.basename);
+        this.events.trigger('renameNode', oldName, file.basename);
       }
       this.lastFileEvent = 'rename';
     }
@@ -472,7 +515,7 @@ export class Neo4jStream extends Events {
           await this.executeQueries([
             new Query().match(this.node('n', name))
                 .detachDelete('n')], session);
-          this.trigger('deleteNode', name);
+          this.events.trigger('deleteNode', name);
         } else {
           // If there are any incoming links, change labels to dangling and empty properties
           const result = await this.runQuery(new Query()
@@ -490,7 +533,7 @@ export class Neo4jStream extends Events {
                 name: name,
               }, false);
           await this.executeQueries([query], session);
-          this.trigger('modifyNode', name);
+          this.events.trigger('modifyNode', name);
         }
       }
       await session.close();
@@ -513,35 +556,8 @@ export class Neo4jStream extends Events {
         if (result.records.length == 0) {
           // if not exists:
           await this.executeQueries([new Query().create(this.node('n', name))], session);
-          this.trigger('createNode', name);
+          this.events.trigger('createNode', name);
         }
       }
-    }
-
-    public async stop() {
-      this.events.forEach((event) => {
-        this.vault.offref(event);
-      });
-      this.events = [];
-      await this.driver.close();
-      this.tags = [...initialTags];
-    }
-
-    trigger(name: 'renameNode', oldName: string, newName: string): void;
-    trigger(name: 'deleteNode', param: string): void;
-    trigger(name: 'modifyNode', param: string): void;
-    trigger(name: 'createNode', param: string): void;
-    trigger(name: string, ...data: any[]): void {
-      console.log('on trigger');
-      console.log(name, data);
-      super.trigger(name, ...data);
-    }
-
-    public on(name: 'renameNode', callback: (oldName: string, newName: string) => any, ctx?: any): EventRef;
-    public on(name: 'deleteNode', callback: (name: string) => any, ctx?: any): EventRef;
-    public on(name: 'modifyNode', callback: (name: string) => any, ctx?: any): EventRef;
-    public on(name: 'createNode', callback: (name: string) => any, ctx?: any): EventRef;
-    on(name: string, callback: (...data: any[]) => any, ctx?: any): EventRef {
-      return super.on(name, callback, ctx);
     }
 }

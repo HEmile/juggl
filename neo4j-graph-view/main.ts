@@ -24,22 +24,18 @@ export default class Neo4jViewPlugin extends Plugin {
     path: string;
     statusBar: HTMLElement;
     neovisView: NeoVisView;
-    imgServer: Server;
     neo4jStream: Neo4jStream;
 
     async onload(): Promise<void> {
-      // const viz = cytoscape();
-      const elesfn = Object.create(Array.prototype);
-      console.log(elesfn);
-      elesfn.remove = function(a:any) {};
-
-      console.log('Loading Neo4j graph view');
+      super.onload();
+      console.log('Loading Neo4j graph view plugin');
       this.path = this.app.vault.getRoot().path;
 
       this.settings = Object.assign(DefaultNeo4jViewSettings, await this.loadData());// (await this.loadData()) || DefaultNeo4jViewSettings;
       this.statusBar = this.addStatusBarItem();
       this.statusBar.setText(STATUS_OFFLINE);
       this.neo4jStream = new Neo4jStream(this);
+      this.addChild(this.neo4jStream);
 
       // this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.app.workspace.activeLeaf?.getDisplayText(), this))
 
@@ -48,7 +44,7 @@ export default class Neo4jViewPlugin extends Plugin {
         name: 'Restart Neo4j stream',
         callback: () => {
           console.log('Restarting stream');
-          this.restart();
+          this.neo4jStream.restart();
         },
       });
 
@@ -56,7 +52,7 @@ export default class Neo4jViewPlugin extends Plugin {
         id: 'stop-stream',
         name: 'Stop Neo4j stream',
         callback: () => {
-          this.shutdown();
+          this.neo4jStream.shutdown();
         },
       });
 
@@ -107,15 +103,7 @@ export default class Neo4jViewPlugin extends Plugin {
 
       this.addSettingTab(new Neo4jViewSettingTab(this.app, this));
 
-      if (this.app.workspace.layoutReady) {
-        await this.initialize();
-      } else {
-        this.app.workspace.on('layout-ready', () => {
-          this.initialize();
-        });
-      }
-
-      this.app.workspace.on('file-menu', (menu, file: TFile) => {
+      this.registerEvent(this.app.workspace.on('file-menu', (menu, file: TFile) => {
         menu.addItem((item) => {
           item.setTitle('Open Neo4j Graph View').setIcon('dot-network')
               .onClick((evt) => {
@@ -126,7 +114,7 @@ export default class Neo4jViewPlugin extends Plugin {
                 }
               });
         });
-      });
+      }));
     }
 
     public getFileFromAbsolutePath(absPath: string): TAbstractFile {
@@ -145,83 +133,6 @@ export default class Neo4jViewPlugin extends Plugin {
       }
     }
 
-    public async restart() {
-      new Notice('Restarting Neo4j stream.');
-      await this.shutdown();
-      await this.initialize();
-    }
-
-    public async initialize() {
-      console.log('Initializing Neo4j stream');
-      new Notice('Initializing Neo4j stream.');
-      this.statusBar.setText('Initializing Neo4j stream');
-      try {
-        console.log('Here');
-        await this.neo4jStream.start();
-      } catch (e) {
-        console.log(e);
-        console.log('Error during initialization of semantic markdown: \n', e);
-        new Notice('Error during initialization of the Neo4j stream. Check the console for crash report.');
-      }
-
-      await this.httpServer();
-    }
-
-    async httpServer() {
-      const path = require('path');
-      const http = require('http');
-      const fs = require('fs');
-
-      const dir = path.join(this.path);
-
-      const mime = {
-        gif: 'image/gif',
-        jpg: 'image/jpeg',
-        png: 'image/png',
-        svg: 'image/svg+xml',
-      };
-      const settings = this.settings;
-      this.imgServer = http.createServer(function(req: IncomingMessage, res: ServerResponse) {
-        const reqpath = req.url.toString().split('?')[0];
-        if (req.method !== 'GET') {
-          res.statusCode = 501;
-          res.setHeader('Content-Type', 'text/plain');
-          return res.end('Method not implemented');
-        }
-        const file = path.join(dir, decodeURI(reqpath.replace(/\/$/, '/index.html')));
-        if (settings.debug) {
-          console.log('entering query');
-          console.log(req);
-          console.log(file);
-        }
-        if (file.indexOf(dir + path.sep) !== 0) {
-          res.statusCode = 403;
-          res.setHeader('Content-Type', 'text/plain');
-          return res.end('Forbidden');
-        }
-        // @ts-ignore
-        const type = mime[path.extname(file).slice(1)];
-        const s = fs.createReadStream(file);
-        s.on('open', function() {
-          res.setHeader('Content-Type', type);
-          s.pipe(res);
-        });
-        s.on('error', function() {
-          res.setHeader('Content-Type', 'text/plain');
-          res.statusCode = 404;
-          res.end('Not found');
-        });
-      });
-      try {
-        const port = this.settings.imgServerPort;
-        this.imgServer.listen(port, function() {
-          console.log('Image server listening on http://localhost:' + port + '/');
-        });
-      } catch (e) {
-        console.log(e);
-        new Notice('Neo4j: Couldn\'t start image server, see console');
-      }
-    }
 
     openLocalGraph(name: string) {
       if (!this.neo4jStream) {
@@ -306,17 +217,8 @@ export default class Neo4jViewPlugin extends Plugin {
       }
     }
 
-
-    public async shutdown() {
-      new Notice('Stopping Neo4j stream');
-      await this.neo4jStream.stop();
-      this.statusBar.setText('Neo4j stream offline');
-      this.imgServer.close();
-      this.imgServer = null;
-    }
-
     async onunload() {
+      super.onunload();
       console.log('Unloading Neo4j Graph View plugin');
-      await this.shutdown();
     }
 }
