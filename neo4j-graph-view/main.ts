@@ -1,4 +1,5 @@
 import {
+  LinkCache,
   MarkdownView,
   Notice,
   Plugin, TAbstractFile, TFile,
@@ -8,16 +9,21 @@ import {
   Neo4jViewSettingTab,
   DefaultNeo4jViewSettings} from './settings';
 import {NeoVisView, MD_VIEW_TYPE, PROP_VAULT} from './visualization';
-import {IncomingMessage, Server, ServerResponse} from 'http';
 import {Editor} from 'codemirror';
 import {Neo4jError} from 'neo4j-driver';
 import {Neo4jStream} from './stream';
-// import cytoscape from 'cytoscape';
+import {ImageServer} from './image-server';
+import {CAT_DANGLING, nameRegex} from './neo4j';
+import {ITypedLink, ITypedLinkProperties} from './interfaces';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
 
 const STATUS_OFFLINE = 'Neo4j stream offline';
+
+// Match around [[ and ]], and ensure content isn't a wikilnk closure
+// This doesn't explicitly parse aliases.
+const wikilinkRegex = '\\[\\[([^\\]\\r\\n]+?)\\]\\]';//
 
 export default class Neo4jViewPlugin extends Plugin {
     settings: INeo4jViewSettings;
@@ -36,6 +42,7 @@ export default class Neo4jViewPlugin extends Plugin {
       this.statusBar.setText(STATUS_OFFLINE);
       this.neo4jStream = new Neo4jStream(this);
       this.addChild(this.neo4jStream);
+      this.addChild(new ImageServer(this));
 
       // this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.app.workspace.activeLeaf?.getDisplayText(), this))
 
@@ -189,6 +196,62 @@ export default class Neo4jViewPlugin extends Plugin {
       return 'MATCH (n {name: "' + label +
             '", ' + PROP_VAULT + ':"' + this.app.vault.getName() +
             '"}) OPTIONAL MATCH (n)-[r]-(m) RETURN n,r,m';
+    }
+
+    public getDanglingTags(basename: string, file: TFile): string[] {
+      if (file) {
+        const tags = [];
+        if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'tiff'].includes(file.extension)) {
+          tags.push('image');
+        } else if (['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac'].includes(file.extension)) {
+          tags.push('audio');
+        } else if (['mp4', 'webm', 'ogv'].includes(file.extension)) {
+          tags.push('video');
+        } else if (file.extension === 'pdf') {
+          tags.push('PDF');
+        }
+        if (!(file.parent.name === '/')) {
+          tags.push(file.parent.name);
+        }
+        tags.push('file');
+        return tags;
+      }
+      return [CAT_DANGLING];
+    }
+
+    regexEscape(str: string) {
+      return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    }
+
+    public parseTypedLink(link: LinkCache, line: string): ITypedLink {
+    // TODO: This is something specific I use, but shouldn't keep being in this repo.
+      const regexPublishedIn = new RegExp(
+          `^${this.regexEscape(this.settings.typedLinkPrefix)} (publishedIn) (\\d\\d\\d\\d) (${wikilinkRegex},? *)+$`);
+      const matchPI = regexPublishedIn.exec(line);
+      if (!(matchPI === null)) {
+        return {
+          type: 'publishedIn',
+          isInline: false,
+          properties: {
+            year: matchPI[2],
+            context: '',
+          } as ITypedLinkProperties,
+        } as ITypedLink;
+      }
+
+      // Intuition: Start with the typed link prefix. Then a neo4j name (nameRegex).
+      // Then one or more of the wikilink group: wikilink regex separated by optional comma and multiple spaces
+      const regex = new RegExp(
+          `^${this.regexEscape(this.settings.typedLinkPrefix)} (${nameRegex}) (${wikilinkRegex},? *)+$`);
+      const match = regex.exec(line);
+      if (!(match === null)) {
+        return {
+          type: match[1],
+          isInline: false,
+          properties: {},
+        } as ITypedLink;
+      }
+      return null;
     }
 
     executeQuery() {
