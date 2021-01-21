@@ -1,23 +1,22 @@
 import Neo4jViewPlugin from './main';
 import {
   Component,
-  EventRef, Events,
-  getLinkpath, LinkCache,
   MetadataCache, Notice,
   Vault,
   Workspace,
 } from 'obsidian';
 import {INeo4jViewSettings} from './settings';
-import {IDataStore, INoteProperties, ITypedLink, ITypedLinkProperties} from './interfaces';
+import {IDataStore} from './interfaces';
 import {
   TAbstractFile, TFile,
 } from 'obsidian';
 import {Query, node, relation, NodePattern} from 'cypher-query-builder';
-import {Driver, Result, ResultSummary, Session} from 'neo4j-driver';
 import {SyncQueue} from './sync';
 import {basename} from 'path';
 import {DataStoreEvents} from './events';
 import {CAT_DANGLING, Neo4jInterface} from './neo4j';
+import {NodeDefinition, EdgeDefinition} from 'cytoscape';
+import {VizId} from './visualization';
 
 
 export class QueryMetadata {
@@ -298,5 +297,17 @@ export class Neo4jStream extends Component implements IDataStore {
           this.events.trigger('createNode', name);
         }
       }
+    }
+
+    connectNodes(allNodes: NodeDefinition[], newNodes: NodeDefinition[]): EdgeDefinition[] {
+      return [];
+    }
+
+    getNeighbourhood(nodeId: VizId): NodeDefinition[] {
+      return [];
+    }
+
+    storeId(): string {
+      return 'core';
     }
 }

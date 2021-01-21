@@ -7,7 +7,7 @@ import {NodePattern, Query, node, relation} from 'cypher-query-builder';
 import {INoteProperties, ITypedLink} from './interfaces';
 import {QueryMetadata} from './stream';
 
-export const CAT_DANGLING = 'SMD_dangling';
+export const CAT_DANGLING = 'dangling';
 export const CAT_NO_TAGS = 'SMD_no_tags';
 export const nameRegex = '[^\\W\\d]\\w*';
 export const initialTags = ['image', 'audio', 'video', 'pdf', 'file', CAT_NO_TAGS, CAT_DANGLING];
@@ -112,7 +112,6 @@ export class Neo4jInterface {
     const metadata = this.metadataCache.getFileCache(file);
     const tags = this.tags;
     if (metadata) {
-      const frontmatter = metadata.frontmatter;
       console.log(this.metadataCache);
       const communityTag = metadata.tags ? metadata.tags[0].tag.slice(1) : CAT_NO_TAGS;
       if (!(tags.includes(communityTag))) {
@@ -126,6 +125,7 @@ export class Neo4jInterface {
         name: file.basename,
         content: await this.vault.cachedRead(file),
       } as INoteProperties;
+      const frontmatter = metadata.frontmatter;
       if (frontmatter) {
         Object.keys(frontmatter).forEach((k) => {
           if (!(k=== 'position')) {
@@ -200,7 +200,7 @@ export class Neo4jInterface {
           // Creates dangling nodes if untyped, otherwise creates attachment nodes
           trgtVar = queryMetadata.nextNodeVar(baseName);
 
-          const danglingTags = this.plugin.getDanglingTags(baseName, trgtFile);
+          const danglingTags = this.plugin.getDanglingTags(trgtFile);
           const properties = {
             SMD_community: tags.indexOf(danglingTags[0]),
             SMD_vault: this.vault.getName(),
@@ -210,8 +210,7 @@ export class Neo4jInterface {
             properties.SMD_path = trgtFile.path;
           }
           if (merge) {
-            query = query.merge(node(trgtVar, danglingTags, properties))
-            ;
+            query = query.merge(node(trgtVar, danglingTags, properties));
           } else {
             query = query.createNode(trgtVar, danglingTags, properties);
           }

@@ -15,6 +15,7 @@ import {Neo4jStream} from './stream';
 import {ImageServer} from './image-server';
 import {CAT_DANGLING, nameRegex} from './neo4j';
 import {ITypedLink, ITypedLinkProperties} from './interfaces';
+import {ObsidianStore} from './obsidian-store';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -148,8 +149,8 @@ export default class Neo4jViewPlugin extends Plugin {
       }
 
       const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
-      const query = this.localNeighborhoodCypher(name);
-      const neovisView = new NeoVisView(leaf, query, this);
+      // const query = this.localNeighborhoodCypher(name);
+      const neovisView = new NeoVisView(leaf, this, name, [new ObsidianStore(this)]);
       leaf.open(neovisView);
       neovisView.expandedNodes.push(name);
     }
@@ -198,7 +199,7 @@ export default class Neo4jViewPlugin extends Plugin {
             '"}) OPTIONAL MATCH (n)-[r]-(m) RETURN n,r,m';
     }
 
-    public getDanglingTags(basename: string, file: TFile): string[] {
+    public getDanglingTags(file: TFile): string[] {
       if (file) {
         const tags = [];
         if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'tiff'].includes(file.extension)) {
@@ -268,8 +269,9 @@ export default class Neo4jViewPlugin extends Plugin {
       if (query.length > 0) {
         const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
         try {
-          const neovisView = new NeoVisView(leaf, query, this);
-          leaf.open(neovisView);
+          // TODO: Pass query.
+          // const neovisView = new NeoVisView((leaf, this, name, [new ObsidianStore(this)]);
+          // leaf.open(neovisView);
         } catch (e) {
           if (e instanceof Neo4jError) {
             new Notice('Invalid cypher query. Check console for more info.');

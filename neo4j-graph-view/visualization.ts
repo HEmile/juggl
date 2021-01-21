@@ -2,6 +2,7 @@ import {INeo4jViewSettings} from './settings';
 import {EventRef, ItemView, Menu, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
 import Neo4jViewPlugin from './main';
 import cytoscape, {Core} from 'cytoscape';
+import {IDataStore} from './interfaces';
 
 export const NV_VIEW_TYPE = 'neovis';
 export const MD_VIEW_TYPE = 'markdown';
@@ -12,14 +13,42 @@ export const PROP_COMMUNITY = 'SMD_community';
 
 let VIEW_COUNTER = 0;
 
+export class VizId {
+    id: string;
+    storeId: string;
+    constructor(id: string, storeId: string) {
+      this.id = id;
+      this.storeId = storeId;
+    }
+
+    toString(): string {
+      return `${this.storeId}:${this.id}`;
+    }
+
+    toId(): string {
+      return this.toString();
+    }
+
+    static fromId(id: string): VizId {
+      const split = id.split(':');
+      const storeId = split[0];
+      const _id = split.slice(1).join(':');
+      return new VizId(storeId, _id);
+    }
+
+    static toId(id: string, storeId: string) : string {
+      return new VizId(id, storeId).toId();
+    }
+}
+
 export class NeoVisView extends ItemView {
     workspace: Workspace;
     listeners: EventRef[];
     settings: INeo4jViewSettings;
-    initialQuery: string;
+    initialNode: string;
     vault: Vault;
     plugin: Neo4jViewPlugin;
-    // viz: Core;
+    viz: Core;
     // network: Network;
     hasClickListener = false;
     rebuildRelations = true;
@@ -28,14 +57,16 @@ export class NeoVisView extends ItemView {
     // nodes: Record<IdType, INode>;
     // edges: Record<IdType, IEdge>;
     events: EventRef[];
+    datastores: IDataStore[];
 
-    constructor(leaf: WorkspaceLeaf, initial_query: string, plugin: Neo4jViewPlugin) {
+    constructor(leaf: WorkspaceLeaf, plugin: Neo4jViewPlugin, initialNode: string, dataStores: IDataStore[]) {
       super(leaf);
       this.settings = plugin.settings;
       this.workspace = this.app.workspace;
-      this.initialQuery = initial_query;
+      this.initialNode = initialNode;
       this.vault = this.app.vault;
       this.plugin = plugin;
+      this.datastores = dataStores;
     }
 
     async onOpen() {
@@ -46,28 +77,25 @@ export class NeoVisView extends ItemView {
       this.containerEl.children[1].appendChild(div);
       div.setAttr('style', 'height: 100%; width:100%');
 
+      const nodes = [].concat(
+          ...this.datastores.map((store) =>
+            store.getNeighbourhood(new VizId( this.initialNode, 'core'))));
+      console.log(nodes);
+      // const edges = [].concat(
+      //     this.datastores.map((store) => store.connectNodes(nodes, nodes)),
+      // );
       console.log(this.containerEl);//
 
-      const cy = cytoscape({
+      this.viz = cytoscape({
         container: div,
-        elements: [{
-          group: 'nodes',
-          data: {
-            id: 'n1',
+        elements: nodes, // .concat(edges),
+        style: [
+          {
+            selector: 'node',
+            style: {
+              'label': 'data(name)',
+            },
           },
-        }, {
-          group: 'nodes',
-          data: {
-            id: 'n2',
-          },
-        }, {
-          group: 'edges',
-          data: {
-            id: 'e1',
-            source: 'n1',
-            target: 'n2',
-          },
-        },
         ],
       });
 
