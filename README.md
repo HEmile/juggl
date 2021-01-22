@@ -30,6 +30,11 @@ to a [Neo4j](https://neo4j.com/) database. Features:
 - Typed links using `- linkType [[note 1]], [[note 2|alias]]`
 - Hierarchical layout
 
+Next up:
+- [x] Remove the need to install Neo4j and Python 
+- [ ] Different and more stable front end
+- [x] Standardize style sheet using CSS instead of JSON
+
 A [Roadmap](https://publish.obsidian.md/semantic-obsidian/Roadmap) with planned features is also available.
 
 ![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/obsidian%20neo4j%20plugin.gif)
