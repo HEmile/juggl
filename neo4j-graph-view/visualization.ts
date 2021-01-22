@@ -1,5 +1,5 @@
 import {INeo4jViewSettings} from './settings';
-import {EventRef, ItemView, Menu, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
+import {EventRef, ItemView, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
 import Neo4jViewPlugin from './main';
 import cytoscape, {Core} from 'cytoscape';
 import {IDataStore} from './interfaces';
@@ -86,17 +86,22 @@ export class NeoVisView extends ItemView {
       // );
       console.log(this.containerEl);//
 
+      const styleSheet = await this.vault.read(this.vault.getAbstractFileByPath('graph.css') as TFile);
+
+
       this.viz = cytoscape({
         container: div,
         elements: nodes, // .concat(edges),
-        style: [
-          {
-            selector: 'node',
-            style: {
-              'label': 'data(name)',
-            },
-          },
-        ],
+        // @ts-ignore
+        style: styleSheet,
+        // style: [
+        //   {
+        //     selector: 'node',
+        //     style: {
+        //       'label': 'data(name)',
+        //     },
+        //   },
+        // ],
       });
 
       console.log('Imported!');

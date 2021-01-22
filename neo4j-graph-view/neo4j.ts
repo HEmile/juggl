@@ -200,7 +200,7 @@ export class Neo4jInterface {
           // Creates dangling nodes if untyped, otherwise creates attachment nodes
           trgtVar = queryMetadata.nextNodeVar(baseName);
 
-          const danglingTags = this.plugin.getDanglingTags(trgtFile);
+          const danglingTags = this.plugin.getDanglingClasses(trgtFile);
           const properties = {
             SMD_community: tags.indexOf(danglingTags[0]),
             SMD_vault: this.vault.getName(),

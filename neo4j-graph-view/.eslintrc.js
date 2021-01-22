@@ -16,4 +16,7 @@ module.exports = {
   ],
   'rules': {
   },
+  'ignorePatterns': [
+    'main.js',
+  ],
 };

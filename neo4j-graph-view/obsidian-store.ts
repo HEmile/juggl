@@ -73,8 +73,8 @@ export class ObsidianStore extends Component implements IDataStore {
       const cache = this.metadata.getFileCache(file);
       const name = file.extension === 'md' ? file.basename : file.name;
       console.log(cache);
-      const classes = this.plugin.getDanglingTags(file)
-          .concat(cache?.tags ? cache.tags.map((t) => t.tag): [])
+      const classes = this.plugin.getDanglingClasses(file)
+          .concat(cache?.tags ? cache.tags.map((t) => `tag-${t.tag.slice(1)}`): [])
           .map((s) => s.replace(' ', '_'))
           .join(' ');
 

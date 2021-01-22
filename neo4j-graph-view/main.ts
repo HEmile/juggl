@@ -199,7 +199,7 @@ export default class Neo4jViewPlugin extends Plugin {
             '"}) OPTIONAL MATCH (n)-[r]-(m) RETURN n,r,m';
     }
 
-    public getDanglingTags(file: TFile): string[] {
+    public getDanglingClasses(file: TFile): string[] {
       if (file) {
         const tags = [];
         if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'tiff'].includes(file.extension)) {
@@ -209,7 +209,7 @@ export default class Neo4jViewPlugin extends Plugin {
         } else if (['mp4', 'webm', 'ogv'].includes(file.extension)) {
           tags.push('video');
         } else if (file.extension === 'pdf') {
-          tags.push('PDF');
+          tags.push('pdf');
         }
         if (!(file.parent.name === '/')) {
           tags.push(file.parent.name);
