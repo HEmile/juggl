@@ -45,6 +45,7 @@
   "dependencies": {
     "cypher-query-builder": "^6.0.4",
     "cytoscape": "^3.17.1",
+    "cytoscape-cose-bilkent": "^4.1.0",
     "neo4j-driver": "^4.2.2"
   }
 }

@@ -1,6 +1,6 @@
 import {Component} from 'obsidian';
 import {DataStoreEvents} from './events';
-import {EdgeDefinition, NodeDefinition} from 'cytoscape';
+import {EdgeDefinition, NodeCollection, NodeDefinition} from 'cytoscape';
 import {VizId} from './visualization';
 
 export interface INoteProperties {
@@ -32,7 +32,7 @@ export interface IDataStore extends Component {
 
     getNeighbourhood(nodeId: VizId): NodeDefinition[];
 
-    connectNodes(allNodes: NodeDefinition[], newNodes: NodeDefinition[]): EdgeDefinition[];
+    connectNodes(allNodes: NodeCollection, newNodes: VizId[]): EdgeDefinition[];
 
     // Prefix of id of nodes from this store
     storeId(): string;

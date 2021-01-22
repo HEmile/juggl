@@ -15,7 +15,7 @@ import {SyncQueue} from './sync';
 import {basename} from 'path';
 import {DataStoreEvents} from './events';
 import {CAT_DANGLING, Neo4jInterface} from './neo4j';
-import {NodeDefinition, EdgeDefinition} from 'cytoscape';
+import {NodeDefinition, EdgeDefinition, NodeCollection} from 'cytoscape';
 import {VizId} from './visualization';
 
 
@@ -299,7 +299,7 @@ export class Neo4jStream extends Component implements IDataStore {
       }
     }
 
-    connectNodes(allNodes: NodeDefinition[], newNodes: NodeDefinition[]): EdgeDefinition[] {
+    connectNodes(allNodes: NodeCollection, newNodes: VizId[]): EdgeDefinition[] {
       return [];
     }
 

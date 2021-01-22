@@ -16,6 +16,8 @@ import {ImageServer} from './image-server';
 import {CAT_DANGLING, nameRegex} from './neo4j';
 import {ITypedLink, ITypedLinkProperties} from './interfaces';
 import {ObsidianStore} from './obsidian-store';
+import coseBilkent from 'cytoscape-cose-bilkent';
+import cytoscape from 'cytoscape';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -36,6 +38,8 @@ export default class Neo4jViewPlugin extends Plugin {
     async onload(): Promise<void> {
       super.onload();
       console.log('Loading Neo4j graph view plugin');
+      cytoscape.use(coseBilkent);
+
       this.path = this.app.vault.getRoot().path;
 
       this.settings = Object.assign(DefaultNeo4jViewSettings, await this.loadData());// (await this.loadData()) || DefaultNeo4jViewSettings;
@@ -214,7 +218,11 @@ export default class Neo4jViewPlugin extends Plugin {
         if (!(file.parent.name === '/')) {
           tags.push(file.parent.name);
         }
-        tags.push('file');
+        if (file.extension === 'md') {
+          tags.push('note');
+        } else {
+          tags.push('file');
+        }
         return tags;
       }
       return [CAT_DANGLING];

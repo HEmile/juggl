@@ -1,7 +1,7 @@
 import {INeo4jViewSettings} from './settings';
 import {EventRef, ItemView, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
 import Neo4jViewPlugin from './main';
-import cytoscape, {Core} from 'cytoscape';
+import cytoscape, {Core, NodeCollection, NodeDefinition, NodeSingular} from 'cytoscape';
 import {IDataStore} from './interfaces';
 
 export const NV_VIEW_TYPE = 'neovis';
@@ -33,7 +33,15 @@ export class VizId {
       const split = id.split(':');
       const storeId = split[0];
       const _id = split.slice(1).join(':');
-      return new VizId(storeId, _id);
+      return new VizId(_id, storeId);
+    }
+
+    static fromNode(node: NodeSingular): VizId {
+      return VizId.fromId(node.id());
+    }
+
+    static fromNodes(nodes: NodeCollection) : VizId[] {
+      return nodes.map((n) => VizId.fromNode(n));
     }
 
     static toId(id: string, storeId: string) : string {
@@ -77,21 +85,16 @@ export class NeoVisView extends ItemView {
       this.containerEl.children[1].appendChild(div);
       div.setAttr('style', 'height: 100%; width:100%');
 
-      const nodes = [].concat(
+      const nodes: NodeDefinition[] = [].concat(
           ...this.datastores.map((store) =>
             store.getNeighbourhood(new VizId( this.initialNode, 'core'))));
       console.log(nodes);
-      // const edges = [].concat(
-      //     this.datastores.map((store) => store.connectNodes(nodes, nodes)),
-      // );
-      console.log(this.containerEl);//
 
       const styleSheet = await this.vault.read(this.vault.getAbstractFileByPath('graph.css') as TFile);
 
-
       this.viz = cytoscape({
         container: div,
-        elements: nodes, // .concat(edges),
+        elements: nodes,
         // @ts-ignore
         style: styleSheet,
         // style: [
@@ -103,6 +106,42 @@ export class NeoVisView extends ItemView {
         //   },
         // ],
       });
+
+      const nodez = this.viz.nodes();
+
+      const edges = [].concat(
+          ...this.datastores.map((store) =>
+            store.connectNodes(nodez, VizId.fromNodes(nodez))));
+
+      console.log(edges);
+      this.viz.add(edges);
+
+
+      this.viz.layout({
+        name: 'cose-bilkent',
+        ready: function() {
+          console.log('ready!');
+        },
+        stop: function() {
+          console.log('stop!');
+        },
+        // @ts-ignore
+        animate: 'end',
+        animationDuration: 1000,
+        refresh: 20,
+        numIter: 5000,
+        // @ts-ignore
+        nodeRepulsion: 7000,
+        // @ts-ignore
+        idealEdgeLength: 80,
+        // @ts-ignore
+        edgeElasticity: 0.45,
+        coolingFactor: 0.99,
+        nodeDimensionsIncludeLabels: true,
+        nestingFactor: 0.1,
+        gravity: 0.25,
+        tile: true,
+      }).run();
 
       console.log('Imported!');
 

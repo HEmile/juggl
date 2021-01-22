@@ -11,7 +11,7 @@ import {
 import {IDataStore} from './interfaces';
 import {DataStoreEvents} from './events';
 import Neo4jViewPlugin from './main';
-import {NodeDefinition, EdgeDefinition, ElementDataDefinition, NodeDataDefinition} from 'cytoscape';
+import {NodeDefinition, EdgeDefinition, ElementDataDefinition, NodeDataDefinition, NodeCollection} from 'cytoscape';
 import {VizId} from './visualization';
 import {node} from 'cypher-query-builder';
 
@@ -32,8 +32,56 @@ export class ObsidianStore extends Component implements IDataStore {
       return this.events;
     }
 
-    connectNodes(allNodes: NodeDefinition[], newNodes: NodeDefinition[]): EdgeDefinition[] {
-      return [];
+    connectNodes(allNodes: NodeCollection, newNodes: VizId[]): EdgeDefinition[] {
+      const edges: EdgeDefinition[] = [];
+      const counter: Record<string, number> = {};
+      for (const id of newNodes) {
+        console.log(id);
+        if (id.storeId === this.storeId()) {
+          const file = this.getFile(id);
+          if (file) {
+            const cache = this.metadata.getFileCache(file);
+            const srcId = id.toId();
+            if (cache) {
+              iterateCacheRefs(cache, (ref) => {
+                const otherId = this.getOtherId(ref, file.path).toId();
+                console.log(allNodes.$id(otherId));
+                if (allNodes.$id(otherId).length > 0) {
+                  const edgeId = `${srcId}->${otherId}`;
+                  if (edgeId in counter) {
+                    counter[edgeId] += +1;
+                  } else {
+                    counter[edgeId] = 1;
+                  }
+
+                  edges.push({
+                    group: 'edges',
+                    data: {
+                      id: `${edgeId}${counter[edgeId]}`,
+                      source: srcId,
+                      target: otherId,
+                    },
+                    classes: srcId === otherId ? 'loop' : '',
+                  });
+                }
+              });
+            }
+          }
+        }
+      }
+      return edges;
+    }
+
+    getOtherId(link: ReferenceCache, sourcePath: string) : VizId {
+      const path = getLinkpath(link.link);
+      const file = this.metadata.getFirstLinkpathDest(path, sourcePath);
+      let name: string;
+      if (file) {
+        name = file.extension === 'md' ? file.basename : file.name;
+      } else {
+        name = path;
+      }
+      return new VizId(name, this.storeId());
     }
 
     getNodeFromLink(link: ReferenceCache, sourcePath: string) : NodeDefinition {
