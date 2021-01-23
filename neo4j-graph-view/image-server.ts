@@ -1,5 +1,5 @@
 import {IncomingMessage, Server, ServerResponse} from 'http';
-import {Component, Notice} from 'obsidian';
+import {Component, FileSystemAdapter, Notice, TFile} from 'obsidian';
 import {INeo4jViewSettings} from './settings';
 import Neo4jViewPlugin from './main';
 
@@ -30,6 +30,7 @@ export class ImageServer extends Component {
         svg: 'image/svg+xml',
       };
       const settings = this.settings;
+      const vault = this.plugin.app.vault;
       this.imgServer = http.createServer(function(req: IncomingMessage, res: ServerResponse) {
         const reqpath = req.url.toString().split('?')[0];
         if (req.method !== 'GET') {
@@ -37,25 +38,31 @@ export class ImageServer extends Component {
           res.setHeader('Content-Type', 'text/plain');
           return res.end('Method not implemented');
         }
-        const file = path.join(dir, decodeURI(reqpath.replace(/\/$/, '/index.html')));
+        let file = path.join(dir, decodeURI(reqpath.replace(/\/$/, '/index.html')));
+        file = (vault.adapter as FileSystemAdapter).getFullPath(file);
+        // console.log(vault.getResourcePath(nFile as TFile));
         if (settings.debug) {
-          console.log('entering query');
+          console.log('entering server query');
           console.log(req);
           console.log(file);
         }
-        if (file.indexOf(dir + path.sep) !== 0) {
-          res.statusCode = 403;
-          res.setHeader('Content-Type', 'text/plain');
-          return res.end('Forbidden');
-        }
+        // if (file.indexOf(dir + path.sep) !== 0) {
+        //   res.statusCode = 403;
+        //   res.setHeader('Content-Type', 'text/plain');
+        //   return res.end('Forbidden');
+        // }
         // @ts-ignore
         const type = mime[path.extname(file).slice(1)];
+        console.log(file);
         const s = fs.createReadStream(file);
         s.on('open', function() {
+          console.log('Here2');
           res.setHeader('Content-Type', type);
+          res.setHeader('Access-Control-Allow-Origin', '*');
           s.pipe(res);
         });
         s.on('error', function() {
+          console.log('Here3');
           res.setHeader('Content-Type', 'text/plain');
           res.statusCode = 404;
           res.end('Not found');

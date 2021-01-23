@@ -59,7 +59,6 @@ export default class Neo4jViewPlugin extends Plugin {
           this.neo4jStream.restart();
         },
       });
-
       this.addCommand({
         id: 'stop-stream',
         name: 'Stop Neo4j stream',
@@ -203,27 +202,36 @@ export default class Neo4jViewPlugin extends Plugin {
             '"}) OPTIONAL MATCH (n)-[r]-(m) RETURN n,r,m';
     }
 
-    public getDanglingClasses(file: TFile): string[] {
+    public getClasses(file: TFile): string[] {
       if (file) {
-        const tags = [];
+        const classes = [];
         if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'tiff'].includes(file.extension)) {
-          tags.push('image');
+          classes.push('image');
         } else if (['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac'].includes(file.extension)) {
-          tags.push('audio');
+          classes.push('audio');
         } else if (['mp4', 'webm', 'ogv'].includes(file.extension)) {
-          tags.push('video');
+          classes.push('video');
         } else if (file.extension === 'pdf') {
-          tags.push('pdf');
+          classes.push('pdf');
         }
         if (!(file.parent.name === '/')) {
-          tags.push(file.parent.name);
+          classes.push(`folder-${file.parent.name
+              .replace(' ', '_')}`);
         }
         if (file.extension === 'md') {
-          tags.push('note');
+          classes.push('note');
+          const cache = this.app.metadataCache.getFileCache(file);
+          if (cache?.frontmatter && 'image' in cache.frontmatter) {
+            classes.push('image');
+          }
+          if (cache?.tags) {
+            classes.push(...cache.tags
+                .map((t) => `tag-${t.tag.slice(1)}`));
+          }
         } else {
-          tags.push('file');
+          classes.push('file');
         }
-        return tags;
+        return classes;
       }
       return [CAT_DANGLING];
     }
