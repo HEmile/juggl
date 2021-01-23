@@ -3,6 +3,7 @@ import {EventRef, ItemView, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from '
 import Neo4jViewPlugin from './main';
 import cytoscape, {Core, NodeCollection, NodeDefinition, NodeSingular} from 'cytoscape';
 import {IDataStore} from './interfaces';
+import {create} from 'domain';
 
 export const NV_VIEW_TYPE = 'neovis';
 export const MD_VIEW_TYPE = 'markdown';
@@ -57,13 +58,9 @@ export class NeoVisView extends ItemView {
     vault: Vault;
     plugin: Neo4jViewPlugin;
     viz: Core;
-    // network: Network;
-    hasClickListener = false;
     rebuildRelations = true;
     selectName: string = undefined;
     expandedNodes: string[] = [];
-    // nodes: Record<IdType, INode>;
-    // edges: Record<IdType, IEdge>;
     events: EventRef[];
     datastores: IDataStore[];
 
@@ -89,21 +86,12 @@ export class NeoVisView extends ItemView {
       for (const store of this.datastores) {
         nodes.push(...await store.getNeighbourhood(new VizId(this.initialNode, 'core')));
       }
-      console.log(nodes);
 
       const styleSheet = await this.vault.read(this.vault.getAbstractFileByPath('graph.css') as TFile);
 
       this.viz = cytoscape({
         container: div,
         elements: nodes,
-        // style: [
-        //   {
-        //     selector: 'node',
-        //     style: {
-        //       'label': 'data(name)',
-        //     },
-        //   },
-        // ],
       });
 
       const nodez = this.viz.nodes();
@@ -112,9 +100,11 @@ export class NeoVisView extends ItemView {
         edges.push(...await store.connectNodes(nodez, VizId.fromNodes(nodez)));
       }
 
-      console.log(edges);
+      if (this.settings.debug) {
+        console.log(nodes);
+        console.log(edges);
+      }
       this.viz.add(edges);
-
 
       nodez.forEach((node) => {
         node.data('degree', node.degree(true));
@@ -148,110 +138,81 @@ export class NeoVisView extends ItemView {
         tile: true,
       }).run();
 
-      console.log('Imported!');
+      console.log('Visualization ready');
 
-      // const config = {
-      //   container_id: div.id,
-      //   server_url: 'bolt://localhost:7687',
-      //   server_user: 'neo4j',
-      //   server_password: this.settings.password,
-      //   arrows: this.settings.showArrows,
-      //   hierarchical: this.settings.hierarchical,
-      // };
-      // labels: {
-      //   [NEOVIS_DEFAULT_CONFIG]: {
-      //     'caption': 'name',
-      //     // "size": this.settings.node_size,
-      //     'community': PROP_COMMUNITY,
-      //     'title_properties': [
-      //       'aliases',
-      //       'content',
-      //     ],
-      //   },
-      // },
-      // relationships: {
-      //   'inline': {
-      //     'thickness': 'weight',
-      //     'caption': this.settings.inlineContext ? 'context': false,
-      //     'title_properties': [
-      //       'parsedContext',
-      //     ],
-      //   },
-      //   [NEOVIS_DEFAULT_CONFIG]: {
-      //     'thickness': 'defaultThicknessProperty',
-      //     'caption': true,
-      //   },
-      // },
-      //   initial_cypher: this.initialQuery,
-      // };
-      // this.viz = new NeoVis(config);
-      // this.viz.registerOnEvent('completed', (e)=>{
-      //   if (!this.hasClickListener) {
-      //     // @ts-ignore
-      //     this.network = this.viz['_network'] as Network;
-      //     // @ts-ignore
-      //     this.nodes = this.viz._nodes;
-      //     // @ts-ignore
-      //     this.edges = this.viz._edges;
-      //     // Register on click event
-      //     this.network.on('click', (event) => {
-      //       if (event.nodes.length > 0) {
-      //         this.onClickNode(this.findNode(event.nodes[0]));
-      //       } else if (event.edges.length == 1) {
-      //         this.onClickEdge(this.findEdge(event.edges[0]));
-      //       }
-      //     });
+      this.viz.on('tap', 'node', async (e) => {
+        const id = VizId.fromNode(e.target);
+        if (!(id.storeId === 'core')) {
+          return;
+        }
+        const file = this.app.metadataCache.getFirstLinkpathDest(id.id, '');
+        if (file) {
+          await this.plugin.openFile(file);
+        } else {
+          // Create dangling file
+          // TODO: Add default folder
+          const filename = id.id + '.md';
+          const createdFile = await this.vault.create(filename, '');
+          await this.plugin.openFile(createdFile);
+        }
+      });
+      this.viz.on('tap', 'edge', async (e) => {
+        // TODO: Move to correct spot in the file.
+      });
+      this.viz.on('cxttap', (e) =>{
+        // Thanks Liam for sharing how to do context menus
+        const fileMenu = new Menu(); // Creates empty file menu
+        if (!(e.target === this.viz) && e.target.group() === 'nodes') {
+          const id = VizId.fromNode(e.target);
+          if (!(id.storeId === 'core')) {
+            return;
+          }
+          const file = this.app.metadataCache.getFirstLinkpathDest(id.id, '');
+          if (!(file === undefined)) {
+            // hook for plugins to populate menu with "file-aware" menu items
+            this.app.workspace.trigger('file-menu', fileMenu, file, 'my-context-menu', null);
+          }
+        }
+        fileMenu.addItem((item) =>{
+          item.setTitle('Expand selection (E)').setIcon('dot-network')
+              .onClick((evt) => {
+                // this.expandSelection();
+              });
+        });
+        fileMenu.addItem((item) =>{
+          item.setTitle('Hide selection (H)').setIcon('dot-network')
+              .onClick((evt) => {
+                // this.hideSelection();
+              });
+        });
+        fileMenu.addItem((item) =>{
+          item.setTitle('Invert selection (I)').setIcon('dot-network')
+              .onClick((evt) => {
+                // this.invertSelection();
+              });
+        });
+        fileMenu.addItem((item) =>{
+          item.setTitle('Select all (A)').setIcon('dot-network')
+              .onClick((evt) => {
+                // this.hideSelection();
+              });
+        });
+        // const domRect = this.containerEl.getBoundingClientRect();
+        // console.log("DOM", event.pointer.DOM);
+        // console.log("Canvas", event.pointer.canvas);
+        // console.log("offset", domRect.left, domRect.top)
+        // console.log("DOM offset", { x: event.pointer.DOM.x + domRect.left, y: event.pointer.DOM.y + domRect.top });
+        // console.log("Canvas offset", { x: event.pointer.canvas.x + domRect.left, y: event.pointer.canvas.y + domRect.top });
+        // Actually open the menu
+        fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
+      });
+
       //     this.network.on('doubleClick', (event) => {
       //       if (event.nodes.length > 0) {
       //         this.onDoubleClickNode(this.findNodeRaw(event.nodes[0]));
       //       }
       //     });
       //     this.network.on('oncontext', (event) => {
-      //       // Thanks Liam for sharing how to do context menus
-      //       const fileMenu = new Menu(); // Creates empty file menu
-      //       const nodeId = this.network.getNodeAt(event.pointer.DOM);
-      //
-      //       if (!(nodeId === undefined)) {
-      //         const node = this.findNode(nodeId);
-      //         const file = this.getFileFromNode(node);
-      //         if (!(file === undefined)) {
-      //           // hook for plugins to populate menu with "file-aware" menu items
-      //           this.app.workspace.trigger('file-menu', fileMenu, file, 'my-context-menu', null);
-      //         }
-      //       }
-      //       fileMenu.addItem((item) =>{
-      //         item.setTitle('Expand selection (E)').setIcon('dot-network')
-      //             .onClick((evt) => {
-      //               this.expandSelection();
-      //             });
-      //       });
-      //       fileMenu.addItem((item) =>{
-      //         item.setTitle('Hide selection (H)').setIcon('dot-network')
-      //             .onClick((evt) => {
-      //               this.hideSelection();
-      //             });
-      //       });
-      //       fileMenu.addItem((item) =>{
-      //         item.setTitle('Invert selection (I)').setIcon('dot-network')
-      //             .onClick((evt) => {
-      //               this.invertSelection();
-      //             });
-      //       });
-      //       fileMenu.addItem((item) =>{
-      //         item.setTitle('Select all (A)').setIcon('dot-network')
-      //             .onClick((evt) => {
-      //               this.hideSelection();
-      //             });
-      //       });
-      //       const domRect = this.containerEl.getBoundingClientRect();
-      //       // console.log("DOM", event.pointer.DOM);
-      //       // console.log("Canvas", event.pointer.canvas);
-      //       // console.log("offset", domRect.left, domRect.top)
-      //       // console.log("DOM offset", { x: event.pointer.DOM.x + domRect.left, y: event.pointer.DOM.y + domRect.top });
-      //       // console.log("Canvas offset", { x: event.pointer.canvas.x + domRect.left, y: event.pointer.canvas.y + domRect.top });
-      //       // Actually open the menu
-      //       fileMenu.showAtPosition({x: event.pointer.DOM.x + domRect.left, y: event.pointer.DOM.y + domRect.top});
-      //     });
       //     this.hasClickListener = true;
       //   }
       //   if (this.rebuildRelations) {
