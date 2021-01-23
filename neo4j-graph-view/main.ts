@@ -2,7 +2,7 @@ import {
   LinkCache,
   MarkdownView,
   Notice,
-  Plugin, TAbstractFile, TFile,
+  Plugin, ReferenceCache, TAbstractFile, TFile,
 } from 'obsidian';
 import {
   INeo4jViewSettings,
@@ -240,18 +240,19 @@ export default class Neo4jViewPlugin extends Plugin {
       return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     }
 
-    public parseTypedLink(link: LinkCache, line: string): ITypedLink {
+    public parseTypedLink(link: ReferenceCache, line: string): ITypedLink {
     // TODO: This is something specific I use, but shouldn't keep being in this repo.
       const regexPublishedIn = new RegExp(
           `^${this.regexEscape(this.settings.typedLinkPrefix)} (publishedIn) (\\d\\d\\d\\d) (${wikilinkRegex},? *)+$`);
       const matchPI = regexPublishedIn.exec(line);
       if (!(matchPI === null)) {
         return {
-          type: 'publishedIn',
+          class: 'type-publishedIn',
           isInline: false,
           properties: {
             year: matchPI[2],
             context: '',
+            type: 'publishedIn',
           } as ITypedLinkProperties,
         } as ITypedLink;
       }
@@ -263,9 +264,11 @@ export default class Neo4jViewPlugin extends Plugin {
       const match = regex.exec(line);
       if (!(match === null)) {
         return {
-          type: match[1],
+          class: `type-${match[1]}`,
           isInline: false,
-          properties: {},
+          properties: {
+            type: match[1],
+          },
         } as ITypedLink;
       }
       return null;

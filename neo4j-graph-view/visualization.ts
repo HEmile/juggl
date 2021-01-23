@@ -85,9 +85,10 @@ export class NeoVisView extends ItemView {
       this.containerEl.children[1].appendChild(div);
       div.setAttr('style', 'height: 100%; width:100%');
 
-      const nodes: NodeDefinition[] = [].concat(
-          ...this.datastores.map((store) =>
-            store.getNeighbourhood(new VizId( this.initialNode, 'core'))));
+      const nodes: NodeDefinition[] = [];
+      for (const store of this.datastores) {
+        nodes.push(...await store.getNeighbourhood(new VizId(this.initialNode, 'core')));
+      }
       console.log(nodes);
 
       const styleSheet = await this.vault.read(this.vault.getAbstractFileByPath('graph.css') as TFile);
@@ -95,8 +96,6 @@ export class NeoVisView extends ItemView {
       this.viz = cytoscape({
         container: div,
         elements: nodes,
-        // @ts-ignore
-        style: styleSheet,
         // style: [
         //   {
         //     selector: 'node',
@@ -108,14 +107,20 @@ export class NeoVisView extends ItemView {
       });
 
       const nodez = this.viz.nodes();
-
-      const edges = [].concat(
-          ...this.datastores.map((store) =>
-            store.connectNodes(nodez, VizId.fromNodes(nodez))));
+      const edges = [];
+      for (const store of this.datastores) {
+        edges.push(...await store.connectNodes(nodez, VizId.fromNodes(nodez)));
+      }
 
       console.log(edges);
       this.viz.add(edges);
 
+
+      nodez.forEach((node) => {
+        node.data('degree', node.degree(true));
+      });
+
+      this.viz.style(styleSheet);
 
       this.viz.layout({
         name: 'cose-bilkent',

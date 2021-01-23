@@ -220,7 +220,7 @@ export class Neo4jInterface {
         if (typedLink === null) {
           typedLink = {
             isInline: true,
-            type: 'inline',
+            class: 'inline',
             properties: {
               context: line,
             },
@@ -230,7 +230,7 @@ export class Neo4jInterface {
 
         query = query.create([
           node(srcVar),
-          relation('out', [typedLink.type], typedLink.properties),
+          relation('out', [typedLink.class], typedLink.properties),
           node(trgtVar)]);
         if (merge) {
           query.with(queryMetadata.values());

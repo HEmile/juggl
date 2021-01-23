@@ -11,7 +11,14 @@ import {
 import {IDataStore} from './interfaces';
 import {DataStoreEvents} from './events';
 import Neo4jViewPlugin from './main';
-import {NodeDefinition, EdgeDefinition, ElementDataDefinition, NodeDataDefinition, NodeCollection} from 'cytoscape';
+import {
+  NodeDefinition,
+  EdgeDefinition,
+  ElementDataDefinition,
+  NodeDataDefinition,
+  NodeCollection,
+  EdgeDataDefinition,
+} from 'cytoscape';
 import {VizId} from './visualization';
 import {node} from 'cypher-query-builder';
 
@@ -32,7 +39,7 @@ export class ObsidianStore extends Component implements IDataStore {
       return this.events;
     }
 
-    connectNodes(allNodes: NodeCollection, newNodes: VizId[]): EdgeDefinition[] {
+    async connectNodes(allNodes: NodeCollection, newNodes: VizId[]): Promise<EdgeDefinition[]> {
       const edges: EdgeDefinition[] = [];
       const counter: Record<string, number> = {};
       for (const id of newNodes) {
@@ -43,6 +50,8 @@ export class ObsidianStore extends Component implements IDataStore {
             const cache = this.metadata.getFileCache(file);
             const srcId = id.toId();
             if (cache) {
+              const content = (await this.vault.cachedRead(file)).split('\n');
+
               iterateCacheRefs(cache, (ref) => {
                 const otherId = this.getOtherId(ref, file.path).toId();
                 console.log(allNodes.$id(otherId));
@@ -54,14 +63,26 @@ export class ObsidianStore extends Component implements IDataStore {
                     counter[edgeId] = 1;
                   }
 
+                  let data = {
+                    id: `${edgeId}${counter[edgeId]}`,
+                    source: srcId,
+                    target: otherId,
+                  } as EdgeDataDefinition;
+                  let classes = srcId === otherId ? 'loop' : '';
+
+                  const line = content[ref.position.start.line];
+                  data.context = line;
+                  const typedLink = this.plugin.parseTypedLink(ref, line);
+                  if (typedLink === null) {
+                    classes = `${classes} inline`;
+                  } else {
+                    data = {...typedLink.properties, ...data};
+                    classes = `${classes} ${typedLink.class}`;
+                  }
                   edges.push({
                     group: 'edges',
-                    data: {
-                      id: `${edgeId}${counter[edgeId]}`,
-                      source: srcId,
-                      target: otherId,
-                    },
-                    classes: srcId === otherId ? 'loop' : '',
+                    data: data,
+                    classes: classes,
                   });
                 }
               });
@@ -155,7 +176,7 @@ export class ObsidianStore extends Component implements IDataStore {
       };
     }
 
-    getNeighbourhood(nodeId: VizId): NodeDefinition[] {
+    async getNeighbourhood(nodeId: VizId): Promise<NodeDefinition[]> {
       const file = this.getFile(nodeId);
       const cache = this.metadata.getFileCache(file);
       if (cache === null) {

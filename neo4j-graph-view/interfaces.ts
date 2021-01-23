@@ -17,22 +17,23 @@ export interface INoteProperties {
 
 export interface ITypedLinkProperties {
     context: string;
+    type: string;
     [key: string]: any;
 }
 
 export interface ITypedLink {
     properties: ITypedLinkProperties;
     isInline: boolean;
-    type: string;
+    class: string;
 }
 
 export interface IDataStore extends Component {
 
     getEvents(): DataStoreEvents;
 
-    getNeighbourhood(nodeId: VizId): NodeDefinition[];
+    getNeighbourhood(nodeId: VizId): Promise<NodeDefinition[]>;
 
-    connectNodes(allNodes: NodeCollection, newNodes: VizId[]): EdgeDefinition[];
+    connectNodes(allNodes: NodeCollection, newNodes: VizId[]): Promise<EdgeDefinition[]>;
 
     // Prefix of id of nodes from this store
     storeId(): string;

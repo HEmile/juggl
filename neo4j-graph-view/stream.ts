@@ -299,11 +299,11 @@ export class Neo4jStream extends Component implements IDataStore {
       }
     }
 
-    connectNodes(allNodes: NodeCollection, newNodes: VizId[]): EdgeDefinition[] {
+    async connectNodes(allNodes: NodeCollection, newNodes: VizId[]): Promise<EdgeDefinition[]> {
       return [];
     }
 
-    getNeighbourhood(nodeId: VizId): NodeDefinition[] {
+    async getNeighbourhood(nodeId: VizId): Promise<NodeDefinition[]> {
       return [];
     }
 
