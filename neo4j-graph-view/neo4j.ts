@@ -1,5 +1,5 @@
 import {Driver, Result, ResultSummary, Session} from 'neo4j-driver';
-import {INeo4jViewSettings} from './settings';
+import {IAdvancedGraphSettings} from './settings';
 import {getLinkpath, MetadataCache, Notice, TFile, Vault} from 'obsidian';
 import Neo4jViewPlugin from './main';
 import neo4j from 'neo4j-driver';
@@ -14,7 +14,7 @@ export const initialTags = ['image', 'audio', 'video', 'pdf', 'file', CAT_NO_TAG
 
 export class Neo4jInterface {
   driver: Driver;
-  settings: INeo4jViewSettings;
+  settings: IAdvancedGraphSettings;
   plugin: Neo4jViewPlugin;
   metadataCache: MetadataCache;
   vault: Vault;

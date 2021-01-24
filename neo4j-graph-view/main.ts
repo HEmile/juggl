@@ -2,13 +2,13 @@ import {
   LinkCache,
   MarkdownView,
   Notice,
-  Plugin, ReferenceCache, TAbstractFile, TFile,
+  Plugin, ReferenceCache, TAbstractFile, TFile, Vault,
 } from 'obsidian';
 import {
-  INeo4jViewSettings,
+  IAdvancedGraphSettings,
   Neo4jViewSettingTab,
   DefaultNeo4jViewSettings} from './settings';
-import {NeoVisView, MD_VIEW_TYPE, PROP_VAULT} from './visualization';
+import {AdvancedGraphView, MD_VIEW_TYPE, PROP_VAULT} from './visualization';
 import {Editor} from 'codemirror';
 import {Neo4jError} from 'neo4j-driver';
 import {Neo4jStream} from './stream';
@@ -29,18 +29,20 @@ const STATUS_OFFLINE = 'Neo4j stream offline';
 const wikilinkRegex = '\\[\\[([^\\]\\r\\n]+?)\\]\\]';//
 
 export default class Neo4jViewPlugin extends Plugin {
-    settings: INeo4jViewSettings;
+    settings: IAdvancedGraphSettings;
     path: string;
     statusBar: HTMLElement;
-    neovisView: NeoVisView;
+    neovisView: AdvancedGraphView;
     neo4jStream: Neo4jStream;
+    vault: Vault;
 
     async onload(): Promise<void> {
       super.onload();
       console.log('Loading Neo4j graph view plugin');
       cytoscape.use(coseBilkent);
 
-      this.path = this.app.vault.getRoot().path;
+      this.vault = this.app.vault;
+      this.path = this.vault.getRoot().path;
 
       this.settings = Object.assign(DefaultNeo4jViewSettings, await this.loadData());// (await this.loadData()) || DefaultNeo4jViewSettings;
       this.statusBar = this.addStatusBarItem();
@@ -153,7 +155,7 @@ export default class Neo4jViewPlugin extends Plugin {
 
       const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
       // const query = this.localNeighborhoodCypher(name);
-      const neovisView = new NeoVisView(leaf, this, name, [new ObsidianStore(this)]);
+      const neovisView = new AdvancedGraphView(leaf, this, name, [new ObsidianStore(this)]);
       leaf.open(neovisView);
       neovisView.expandedNodes.push(name);
     }

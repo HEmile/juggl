@@ -1,16 +1,15 @@
-import {INeo4jViewSettings} from './settings';
-import {EventRef, ItemView, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
-import Neo4jViewPlugin from './main';
+import {IAdvancedGraphSettings} from './settings';
+import {EventRef, Events, ItemView, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
+import AdvancedGraphPlugin from './main';
 import cytoscape, {Core, NodeCollection, NodeDefinition, NodeSingular} from 'cytoscape';
 import {IDataStore} from './interfaces';
-import {create} from 'domain';
+import {GraphStyleSheet} from './stylesheet';
 
-export const NV_VIEW_TYPE = 'neovis';
+export const AG_VIEW_TYPE = 'advanced_graph_view';
 export const MD_VIEW_TYPE = 'markdown';
 
 export const PROP_VAULT = 'SMD_vault';
 export const PROP_PATH = 'SMD_path';
-export const PROP_COMMUNITY = 'SMD_community';
 
 let VIEW_COUNTER = 0;
 
@@ -50,21 +49,20 @@ export class VizId {
     }
 }
 
-export class NeoVisView extends ItemView {
+export class AdvancedGraphView extends ItemView {
     workspace: Workspace;
-    listeners: EventRef[];
-    settings: INeo4jViewSettings;
+    settings: IAdvancedGraphSettings;
     initialNode: string;
     vault: Vault;
-    plugin: Neo4jViewPlugin;
+    plugin: AdvancedGraphPlugin;
     viz: Core;
     rebuildRelations = true;
     selectName: string = undefined;
     expandedNodes: string[] = [];
-    events: EventRef[];
+    events: Events;
     datastores: IDataStore[];
 
-    constructor(leaf: WorkspaceLeaf, plugin: Neo4jViewPlugin, initialNode: string, dataStores: IDataStore[]) {
+    constructor(leaf: WorkspaceLeaf, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[]) {
       super(leaf);
       this.settings = plugin.settings;
       this.workspace = this.app.workspace;
@@ -72,6 +70,7 @@ export class NeoVisView extends ItemView {
       this.vault = this.app.vault;
       this.plugin = plugin;
       this.datastores = dataStores;
+      this.events = new Events();
     }
 
     async onOpen() {
@@ -87,7 +86,6 @@ export class NeoVisView extends ItemView {
         nodes.push(...await store.getNeighbourhood(new VizId(this.initialNode, 'core')));
       }
 
-      const styleSheet = await this.vault.read(this.vault.getAbstractFileByPath('graph.css') as TFile);
 
       this.viz = cytoscape({
         container: div,
@@ -110,6 +108,7 @@ export class NeoVisView extends ItemView {
         node.data('degree', node.degree(true));
       });
 
+      const styleSheet = await this.createStylesheet();
       this.viz.style(styleSheet);
 
       this.viz.layout({
@@ -281,11 +280,13 @@ export class NeoVisView extends ItemView {
       // });
     }
 
+    async createStylesheet(): Promise<string> {
+      const sheet = new GraphStyleSheet(this);
+      this.trigger('stylesheet', sheet);
+      return await sheet.getStylesheet();
+    }
+
     protected async onClose(): Promise<void> {
-      this.events.forEach((event) => {
-        this.workspace.offref(event);
-      });
-      this.events = [];
     }
 
     updateWithCypher(cypher: string) {
@@ -563,29 +564,47 @@ export class NeoVisView extends ItemView {
       // this.invertSelection();
     }
 
-    async checkAndUpdate() {
-      try {
-        if (await this.checkActiveLeaf()) {
-          await this.update();
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
+    // async checkAndUpdate() {
+    //   try {
+    //     if (await this.checkActiveLeaf()) {
+    //       await this.update();
+    //     }
+    //   } catch (error) {
+    //     console.error(error);
+    //   }
+    // }
 
     async update() {
       this.load();
     }
-
-    async checkActiveLeaf() {
-      return false;
-    }
+    //
+    // async checkActiveLeaf() {
+    //   return false;
+    // }
 
     getDisplayText(): string {
-      return 'Neo4j Graph';
+      return 'Advanced Graph';
     }
 
     getViewType(): string {
-      return NV_VIEW_TYPE;
+      return AG_VIEW_TYPE;
+    }
+
+    on(name:'stylesheet', callback: (sheet: GraphStyleSheet) => any): EventRef;
+    on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
+      return this.events.on(name, callback, ctx);
+    }
+    off(name: string, callback: (...data: any) => any): void {
+      this.events.off(name, callback);
+    }
+    offref(ref: EventRef): void {
+      this.events.offref(ref);
+    }
+    trigger(name:'stylesheet', sheet: GraphStyleSheet): void;
+    trigger(name: string, ...data: any[]): void {
+      this.events.trigger(name, ...data);
+    }
+    tryTrigger(evt: EventRef, args: any[]): void {
+      this.events.tryTrigger(evt, args);
     }
 }

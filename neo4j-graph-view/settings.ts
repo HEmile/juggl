@@ -2,9 +2,9 @@ import {App, Notice, PluginSettingTab, Setting, SplitDirection} from 'obsidian';
 
 import Neo4jViewPlugin from './main';
 // import {EdgeOptions, NodeOptions} from 'vis-network';
-import {NeoVisView, NV_VIEW_TYPE} from './visualization';
+import {AdvancedGraphView, AG_VIEW_TYPE} from './visualization';
 
-export interface INeo4jViewSettings {
+export interface IAdvancedGraphSettings {
     indexContent: boolean;
     autoExpand: boolean;
     autoAddNodes: boolean;
@@ -40,7 +40,7 @@ export const DefaultEdgeSettings = {
   width: 0.5,
 };
 
-export const DefaultNeo4jViewSettings: INeo4jViewSettings = {
+export const DefaultNeo4jViewSettings: IAdvancedGraphSettings = {
   autoAddNodes: true,
   autoExpand: false,
   hierarchical: false,
@@ -178,9 +178,9 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
       input.onchange = (ev) => {
         this.plugin.settings.nodeSettings = input.value;
         this.plugin.saveData(this.plugin.settings);
-        const leaves = this.plugin.app.workspace.getLeavesOfType(NV_VIEW_TYPE);
+        const leaves = this.plugin.app.workspace.getLeavesOfType(AG_VIEW_TYPE);
         leaves.forEach((leaf) =>{
-          (leaf.view as NeoVisView).updateStyle();
+          (leaf.view as AdvancedGraphView).updateStyle();
         });
       };
       input.setAttr('style', 'height: 300px; width: 100%; ' +
@@ -215,9 +215,9 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
       input2.onchange = (ev) => {
         this.plugin.settings.edgeSettings = input2.value;
         this.plugin.saveData(this.plugin.settings);
-        const leaves = this.plugin.app.workspace.getLeavesOfType(NV_VIEW_TYPE);
+        const leaves = this.plugin.app.workspace.getLeavesOfType(AG_VIEW_TYPE);
         leaves.forEach((leaf) =>{
-          (leaf.view as NeoVisView).updateStyle();
+          (leaf.view as AdvancedGraphView).updateStyle();
         });
       };
       input2.setAttr('style', 'height: 300px; width: 100%; ' +

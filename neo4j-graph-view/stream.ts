@@ -5,7 +5,7 @@ import {
   Vault,
   Workspace,
 } from 'obsidian';
-import {INeo4jViewSettings} from './settings';
+import {IAdvancedGraphSettings} from './settings';
 import {IDataStore} from './interfaces';
 import {
   TAbstractFile, TFile,
@@ -39,7 +39,7 @@ export class QueryMetadata {
 export class Neo4jStream extends Component implements IDataStore {
     plugin: Neo4jViewPlugin;
     workspace: Workspace;
-    settings: INeo4jViewSettings;
+    settings: IAdvancedGraphSettings;
     vault: Vault;
     metadataCache: MetadataCache;
     lastFileEvent: string;

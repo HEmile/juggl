@@ -1,10 +1,10 @@
 import {IncomingMessage, Server, ServerResponse} from 'http';
 import {Component, FileSystemAdapter, Notice, TFile} from 'obsidian';
-import {INeo4jViewSettings} from './settings';
+import {IAdvancedGraphSettings} from './settings';
 import Neo4jViewPlugin from './main';
 
 export class ImageServer extends Component {
-    settings: INeo4jViewSettings;
+    settings: IAdvancedGraphSettings;
     plugin: Neo4jViewPlugin;
     imgServer: Server;
 
