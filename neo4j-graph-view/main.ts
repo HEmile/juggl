@@ -216,9 +216,11 @@ export default class Neo4jViewPlugin extends Plugin {
         } else if (file.extension === 'pdf') {
           classes.push('pdf');
         }
-        if (!(file.parent.name === '/')) {
+        if (!(file.parent.name === '/' || file.parent.name === '')) {
           classes.push(`folder-${file.parent.name
               .replace(' ', '_')}`);
+        } else {
+          classes.push('root');
         }
         if (file.extension === 'md') {
           classes.push('note');
@@ -227,8 +229,19 @@ export default class Neo4jViewPlugin extends Plugin {
             classes.push('image');
           }
           if (cache?.tags) {
-            classes.push(...cache.tags
-                .map((t) => `tag-${t.tag.slice(1)}`));
+            classes.push(...[].concat(...cache.tags
+                .map((t) => {
+                  const tag = t.tag.slice(1);
+                  const hSplit = tag.split('/');
+                  const tags = [];
+                  for (const i in hSplit) {
+                    const hTag = hSplit.slice(0, parseInt(i) + 1).join('-');
+                    tags.push(`tag-${hTag}`);
+                  }
+                  console.log(tags);
+                  return tags;
+                })));
+            console.log(classes);
           }
         } else {
           classes.push('file');
