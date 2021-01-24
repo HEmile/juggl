@@ -1,6 +1,6 @@
 import {
   LinkCache,
-  MarkdownView,
+  MarkdownView, MetadataCache,
   Notice,
   Plugin, ReferenceCache, TAbstractFile, TFile, Vault,
 } from 'obsidian';
@@ -35,6 +35,7 @@ export default class Neo4jViewPlugin extends Plugin {
     neovisView: AdvancedGraphView;
     neo4jStream: Neo4jStream;
     vault: Vault;
+    metadata: MetadataCache
 
     async onload(): Promise<void> {
       super.onload();
@@ -42,6 +43,7 @@ export default class Neo4jViewPlugin extends Plugin {
       cytoscape.use(coseBilkent);
 
       this.vault = this.app.vault;
+      this.metadata = this.app.metadataCache;
       this.path = this.vault.getRoot().path;
 
       this.settings = Object.assign(DefaultNeo4jViewSettings, await this.loadData());// (await this.loadData()) || DefaultNeo4jViewSettings;
@@ -238,7 +240,6 @@ export default class Neo4jViewPlugin extends Plugin {
                     const hTag = hSplit.slice(0, parseInt(i) + 1).join('-');
                     tags.push(`tag-${hTag}`);
                   }
-                  console.log(tags);
                   return tags;
                 })));
             console.log(classes);
