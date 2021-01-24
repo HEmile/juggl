@@ -59,12 +59,33 @@ edge:selected {
   line-color: #6A8695;
 }
 
-.loop {
+:loop {
   width: 0.1;
 }
 
 edge[type] {
   label: data(type);
+}
+
+node.active-file,
+node.hover {
+    font-weight: bold;
+    border-width: 1;
+    border-color: #1b6299;
+}
+edge.hover,
+edge.connected-active-file,
+edge.connected-hover {
+    line-width: 1;
+    line-color: #1b6299;  
+    target-arrow-color: #1b6299;
+}
+edge.hover {
+    font-weight: bold;
+}
+.inactive-file,
+.unhover {
+    opacity: 0.3;
 }
 `;
 
@@ -150,7 +171,7 @@ export class GraphStyleSheet {
         '#F27D88',
         '#6967A9',
         '#D26F9D',
-        '#1B6299',
+        '#1b6299',
       ], [
         '#FFC75F',
         '#4C9A52',

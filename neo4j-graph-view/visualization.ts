@@ -1,7 +1,15 @@
 import {IAdvancedGraphSettings} from './settings';
 import {EventRef, Events, ItemView, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
 import AdvancedGraphPlugin from './main';
-import cytoscape, {Core, NodeCollection, NodeDefinition, NodeSingular} from 'cytoscape';
+import cytoscape, {
+  Core,
+  EdgeDefinition,
+  EdgeSingular,
+  ElementDefinition, Layouts,
+  NodeCollection,
+  NodeDefinition,
+  NodeSingular,
+} from 'cytoscape';
 import {IDataStore} from './interfaces';
 import {GraphStyleSheet} from './stylesheet';
 
@@ -10,6 +18,32 @@ export const MD_VIEW_TYPE = 'markdown';
 
 export const PROP_VAULT = 'SMD_vault';
 export const PROP_PATH = 'SMD_path';
+
+export const DEF_LAYOUT = {
+  name: 'cose-bilkent',
+  ready: function() {
+    console.log('ready!');
+  },
+  stop: function() {
+    console.log('stop!');
+  },
+  // @ts-ignore
+  animate: 'end',
+  animationDuration: 1000,
+  refresh: 20,
+  numIter: 5000,
+  // @ts-ignore
+  nodeRepulsion: 7000,
+  // @ts-ignore
+  idealEdgeLength: 80,
+  // @ts-ignore
+  edgeElasticity: 0.45,
+  coolingFactor: 0.99,
+  nodeDimensionsIncludeLabels: true,
+  nestingFactor: 0.1,
+  gravity: 0.25,
+  tile: true,
+};
 
 let VIEW_COUNTER = 0;
 
@@ -93,10 +127,7 @@ export class AdvancedGraphView extends ItemView {
       });
 
       const nodez = this.viz.nodes();
-      const edges = [];
-      for (const store of this.datastores) {
-        edges.push(...await store.connectNodes(nodez, VizId.fromNodes(nodez)));
-      }
+      const edges = await this.buildEdges(nodez);
 
       if (this.settings.debug) {
         console.log(nodes);
@@ -111,31 +142,7 @@ export class AdvancedGraphView extends ItemView {
       const styleSheet = await this.createStylesheet();
       this.viz.style(styleSheet);
 
-      this.viz.layout({
-        name: 'cose-bilkent',
-        ready: function() {
-          console.log('ready!');
-        },
-        stop: function() {
-          console.log('stop!');
-        },
-        // @ts-ignore
-        animate: 'end',
-        animationDuration: 1000,
-        refresh: 20,
-        numIter: 5000,
-        // @ts-ignore
-        nodeRepulsion: 7000,
-        // @ts-ignore
-        idealEdgeLength: 80,
-        // @ts-ignore
-        edgeElasticity: 0.45,
-        coolingFactor: 0.99,
-        nodeDimensionsIncludeLabels: true,
-        nestingFactor: 0.1,
-        gravity: 0.25,
-        tile: true,
-      }).run();
+      this.viz.layout(DEF_LAYOUT).run();
 
       console.log('Visualization ready');
 
@@ -157,6 +164,36 @@ export class AdvancedGraphView extends ItemView {
       });
       this.viz.on('tap', 'edge', async (e) => {
         // TODO: Move to correct spot in the file.
+      });
+      this.viz.on('mouseover', 'node', (e) => {
+        console.log('mouseover');
+        const node = e.target as NodeSingular;
+        e.cy.nodes().addClass('unhover');
+        e.cy.edges().addClass('unhover');
+        node.addClass('hover');
+        node.connectedEdges()
+            .addClass('connected-hover')
+            .removeClass('unhover')
+            .connectedNodes()
+            .addClass('connected-hover')
+            .removeClass('unhover');
+      });
+      this.viz.on('mouseover', 'edge', (e) => {
+        const edge = e.target as EdgeSingular;
+        e.cy.nodes().addClass('unhover');
+        e.cy.edges().addClass('unhover');
+        edge.addClass('hover')
+            .removeClass('unhover');
+        edge.connectedNodes()
+            .addClass('connected-hover')
+            .removeClass('unhover');
+      });
+      this.viz.on('mouseout', (e) => {
+        if (e.target === e.cy) {
+          return;
+        }
+        e.cy.nodes().removeClass(['hover', 'unhover', 'connected-hover']);
+        e.cy.edges().removeClass(['hover', 'unhover', 'connected-hover']);
       });
       this.viz.on('cxttap', (e) =>{
         // Thanks Liam for sharing how to do context menus
@@ -196,24 +233,58 @@ export class AdvancedGraphView extends ItemView {
                 // this.hideSelection();
               });
         });
-        // const domRect = this.containerEl.getBoundingClientRect();
-        // console.log("DOM", event.pointer.DOM);
-        // console.log("Canvas", event.pointer.canvas);
-        // console.log("offset", domRect.left, domRect.top)
-        // console.log("DOM offset", { x: event.pointer.DOM.x + domRect.left, y: event.pointer.DOM.y + domRect.top });
-        // console.log("Canvas offset", { x: event.pointer.canvas.x + domRect.left, y: event.pointer.canvas.y + domRect.top });
-        // Actually open the menu
         fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
       });
+
+      // Register on file open event
+      this.registerEvent(this.workspace.on('file-open', async (file) => {
+        console.log('file-open', file);
+        if (file && this.settings.autoAddNodes) {
+          const name = file.basename;
+          const id = new VizId(name, 'core');
+          console.log(this.viz.$id(id.toId()));
+          console.log(this.viz.$id(id.toId()).length === 0);
+          let node;
+          if (this.viz.$id(id.toId()).length === 0) {
+            for (const dataStore of this.datastores) {
+              if (dataStore.storeId() === 'core') {
+                node = await dataStore.get(id);
+                this.viz.startBatch();
+                console.log(node);
+                this.viz.add(node);
+                const edges = await this.buildEdges(this.viz.$id(id.toId()));
+                console.log(edges);
+                this.viz.add(edges);
+                this.onGraphChanged(false);
+                this.viz.endBatch();
+                break;
+              }
+            }
+          }
+          node = this.viz.$id(id.toId()) as NodeSingular;
+          this.viz.nodes().addClass('inactive-file');
+          this.viz.edges().addClass('inactive-file');
+          node.addClass('active-file')
+              .removeClass('inactive-file');
+          node.connectedEdges()
+              .addClass('connected-active-file')
+              .removeClass('inactive-file')
+              .connectedNodes()
+              .addClass('connected-active-file')
+              .removeClass('inactive-file');
+
+          this.viz.one('tap', (e) => {
+            e.cy.nodes().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
+            e.cy.edges().removeClass(['connected-active-file', 'inactive-file']);
+          });
+        }
+      }));
 
       //     this.network.on('doubleClick', (event) => {
       //       if (event.nodes.length > 0) {
       //         this.onDoubleClickNode(this.findNodeRaw(event.nodes[0]));
       //       }
       //     });
-      //     this.network.on('oncontext', (event) => {
-      //     this.hasClickListener = true;
-      //   }
       //   if (this.rebuildRelations) {
       //     const inQuery = this.getInQuery(this.viz.nodes.getIds());
       //     const query = 'MATCH (n)-[r]-(m) WHERE n.' + PROP_VAULT + '= "' + this.vault.getName() + '" AND n.name ' + inQuery +
@@ -231,30 +302,7 @@ export class AdvancedGraphView extends ItemView {
       //       }
       //     });
       //   }
-      //   // if (this.settings.debug) {
-      //   //   // @ts-ignore
-      //   //   console.log(this.nodes);
-      //   //   // @ts-ignore
-      //   //   console.log(this.edges);
-      //   // }
-      // });
-      // this.load();
-      // this.viz.render();
-      //
-      // // Register on file open event
-      // this.events = [];
-      // this.events.push(this.workspace.on('file-open', (file) => {
-      //   if (file && this.settings.autoAddNodes) {
-      //     const name = file.basename;
-      //     // todo: Select node
-      //     if (this.settings.autoExpand) {
-      //       this.updateWithCypher(this.plugin.localNeighborhoodCypher(name));
-      //     } else {
-      //       this.updateWithCypher(this.plugin.nodeCypher(name));
-      //     }
-      //     this.selectName = name;
-      //   }
-      // }));
+
       // // Note: Nothing is implemented for on('createNode'). Is it true nothing should happen?
       // this.events.push(this.plugin.neo4jStream.on('renameNode', (o, n) => {
       //   this.onNodeRenamed(o, n);
@@ -278,6 +326,14 @@ export class AdvancedGraphView extends ItemView {
       //     this.selectAll();
       //   }
       // });
+    }
+
+    async buildEdges(newNodes: NodeCollection) {
+      const edges = [];
+      for (const store of this.datastores) {
+        edges.push(...await store.connectNodes(this.viz.nodes(), VizId.fromNodes(newNodes)));
+      }
+      return edges;
     }
 
     async createStylesheet(): Promise<string> {
@@ -335,7 +391,6 @@ export class AdvancedGraphView extends ItemView {
       //     console.log(node);
       //   }
       // });
-      const edgeOptions = JSON.parse(this.settings.edgeSettings);
     //   this.viz.edges.forEach((edge) => {
     //     // @ts-ignore
     //     const edgeSth = this.network.body.edges[edge.id];
@@ -557,6 +612,36 @@ export class AdvancedGraphView extends ItemView {
     //   }}).map((item) => item.id);
     //   this.network.setSelection({nodes: inversion, edges: []});
     // }
+
+    mergeToGraph(elements: ElementDefinition[]) {
+      this.viz.startBatch();
+      const addElements: ElementDefinition[] = [];
+      elements.forEach((n) => {
+        if (this.viz.$id(n.data.id).length === 0) {
+          const gElement = this.viz.$id(n.data.id);
+          gElement.classes(n.classes);
+          gElement.data(n.data);
+        } else {
+          addElements.push(n);
+        }
+      });
+      this.viz.add(addElements);
+      this.onGraphChanged(false);
+      this.viz.endBatch();
+    }
+
+    onGraphChanged(batch:boolean=true) {
+      if (batch) {
+        this.viz.startBatch();
+      }
+      this.viz.nodes().forEach((node) => {
+        node.data('degree', node.degree(false));
+      });
+      if (batch) {
+        this.viz.endBatch();
+      }
+      this.viz.layout(DEF_LAYOUT).run();
+    }
 
 
     selectAll() {

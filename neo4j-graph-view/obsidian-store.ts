@@ -68,7 +68,7 @@ export class ObsidianStore extends Component implements IDataStore {
                     source: srcId,
                     target: otherId,
                   } as EdgeDataDefinition;
-                  let classes = srcId === otherId ? 'loop' : '';
+                  let classes = '';
 
                   const line = content[ref.position.start.line];
                   data.context = line;
@@ -192,5 +192,15 @@ export class ObsidianStore extends Component implements IDataStore {
 
     storeId(): string {
       return 'core';
+    }
+
+    get(nodeId: VizId): Promise<NodeDefinition> {
+      const file = this.getFile(nodeId);
+      const cache = this.metadata.getFileCache(file);
+      if (cache === null) {
+        console.log('returning empty');
+        return null;
+      }
+      return Promise.resolve(this.nodeFromFile(file));
     }
 }

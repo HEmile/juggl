@@ -31,6 +31,8 @@ export interface IDataStore extends Component {
 
     getEvents(): DataStoreEvents;
 
+    get(nodeId: VizId): Promise<NodeDefinition>;
+
     getNeighbourhood(nodeId: VizId): Promise<NodeDefinition[]>;
 
     connectNodes(allNodes: NodeCollection, newNodes: VizId[]): Promise<EdgeDefinition[]>;
