@@ -44,7 +44,7 @@ export default class Neo4jViewPlugin extends Plugin {
       console.log('Loading Neo4j graph view plugin');
       navigator(cytoscape);
       cytoscape.use(coseBilkent);
-      cytoscape.use(popper);
+      cytoscape.use(popper);//
       // TODO: Make this optional?
       // cytoscape.use(navigator);
 

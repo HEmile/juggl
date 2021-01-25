@@ -63,3 +63,7 @@ div.cy-navigator {
 .advanced-graph-hover {
     opacity: 0.8;
 }
+
+.advanced-graph-preview-edge {
+    height: 100px !important;
+}

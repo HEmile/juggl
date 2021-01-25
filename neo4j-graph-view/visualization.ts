@@ -205,11 +205,11 @@ export class AdvancedGraphView extends ItemView {
           const file = this.plugin.metadata.getFirstLinkpathDest(id.id, '');
           if (file && file.extension === 'md') {
             const content = await view.vault.cachedRead(file);
-            await this.popover(content, file.path, e.target);
+            await this.popover(content, file.path, e.target, 'advanced-graph-preview-node');
           }
         }
       });
-      this.viz.on('mouseover', 'edge', (e) => {
+      this.viz.on('mouseover', 'edge', async (e) => {
         const edge = e.target as EdgeSingular;
         e.cy.elements()
             .difference(edge.connectedNodes().union(edge))
@@ -217,6 +217,11 @@ export class AdvancedGraphView extends ItemView {
         edge.addClass('hover')
             .connectedNodes()
             .addClass('connected-hover');
+        if ('context' in edge.data() && e.originalEvent.metaKey) {
+          // TODO resolve SourcePath, can be done using the source file.
+          // @ts-ignore
+          await this.popover(edge.data()['context'], '', edge, 'advanced-graph-preview-edge');
+        }
       });
       this.viz.on('mouseout', (e) => {
         if (e.target === e.cy) {
@@ -383,12 +388,12 @@ export class AdvancedGraphView extends ItemView {
       //
     }
 
-    async popover(mdContent: string, sourcePath: string, target: Singular) {
+    async popover(mdContent: string, sourcePath: string, target: Singular, styleClass: string) {
       console.log('here');
       const newDiv = document.createElement('div');
       newDiv.addClasses(['popover', 'hover-popover', 'is-loaded', 'advanced-graph-hover']);
       const mdEmbedDiv = document.createElement('div');
-      mdEmbedDiv.addClasses(['markdown-embed']);
+      mdEmbedDiv.addClasses(['markdown-embed', styleClass]);
       newDiv.appendChild(mdEmbedDiv);
       const mdEmbedContentDiv = document.createElement('div');
       mdEmbedContentDiv.addClasses(['markdown-embed-content']);
