@@ -22,6 +22,7 @@ export default {
     copy({
       targets: [
         {src: 'main.js', dest: '../../semantic-obsidian/Semantic Obsidian/.obsidian/plugins/neo4j-graph-view'},
+        {src: 'styles.css', dest: '../../semantic-obsidian/Semantic Obsidian/.obsidian/plugins/neo4j-graph-view'},
       ],
       hook: 'writeBundle',
     }),

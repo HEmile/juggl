@@ -18,6 +18,7 @@ import {ITypedLink, ITypedLinkProperties} from './interfaces';
 import {ObsidianStore} from './obsidian-store';
 import coseBilkent from 'cytoscape-cose-bilkent';
 import cytoscape from 'cytoscape';
+import navigator from 'cytoscape-navigator';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -40,7 +41,10 @@ export default class Neo4jViewPlugin extends Plugin {
     async onload(): Promise<void> {
       super.onload();
       console.log('Loading Neo4j graph view plugin');
+      navigator(cytoscape);
       cytoscape.use(coseBilkent);
+      // TODO: Make this optional?
+      // cytoscape.use(navigator);
 
       this.vault = this.app.vault;
       this.metadata = this.app.metadataCache;

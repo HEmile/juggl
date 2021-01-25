@@ -129,7 +129,21 @@ export class AdvancedGraphView extends ItemView {
         elements: nodes,
         minZoom: 8e-1,
         maxZoom: 1.3e1,
-        wheelSensitivity: 0.6,
+      });
+
+      const navDiv = document.createElement('div');
+      navDiv.id = 'cynav' + VIEW_COUNTER;
+      div.children[0].appendChild(navDiv);
+      navDiv.addClass('cy-navigator');
+      // @ts-ignore
+      const nav = this.viz.navigator({//
+        container: '#cynav' + VIEW_COUNTER,
+        viewLiveFramerate: 0, // set false to update graph pan only on drag end; set 0 to do it instantly; set a number (frames per second) to update not more than N times per second
+        thumbnailEventFramerate: 10, // max thumbnail's updates per second triggered by graph updates
+        thumbnailLiveFramerate: false, // max thumbnail's updates per second. Set false to disable
+        dblClickDelay: 200, // milliseconds
+        removeCustomContainer: true, // destroy the container specified by user on plugin destroy
+        rerenderDelay: 100, // ms to throttle rerender updates to the panzoom for performance
       });
 
       const nodez = this.viz.nodes();
@@ -174,32 +188,29 @@ export class AdvancedGraphView extends ItemView {
       this.viz.on('mouseover', 'node', (e) => {
         console.log('mouseover');
         const node = e.target as NodeSingular;
-        e.cy.nodes().addClass('unhover');
-        e.cy.edges().addClass('unhover');
-        node.addClass('hover');
-        node.connectedEdges()
+        e.cy.elements()
+            .difference(node.closedNeighborhood())
+            .addClass('unhover');
+        node.addClass('hover')
+            .connectedEdges()
             .addClass('connected-hover')
-            .removeClass('unhover')
             .connectedNodes()
-            .addClass('connected-hover')
-            .removeClass('unhover');
+            .addClass('connected-hover');
       });
       this.viz.on('mouseover', 'edge', (e) => {
         const edge = e.target as EdgeSingular;
-        e.cy.nodes().addClass('unhover');
-        e.cy.edges().addClass('unhover');
+        e.cy.elements()
+            .difference(edge.connectedNodes().union(edge))
+            .addClass('unhover');
         edge.addClass('hover')
-            .removeClass('unhover');
-        edge.connectedNodes()
-            .addClass('connected-hover')
-            .removeClass('unhover');
+            .connectedNodes()
+            .addClass('connected-hover');
       });
       this.viz.on('mouseout', (e) => {
         if (e.target === e.cy) {
           return;
         }
-        e.cy.nodes().removeClass(['hover', 'unhover', 'connected-hover']);
-        e.cy.edges().removeClass(['hover', 'unhover', 'connected-hover']);
+        e.cy.elements().removeClass(['hover', 'unhover', 'connected-hover']);
       });
       this.viz.on('cxttap', (e) =>{
         // Thanks Liam for sharing how to do context menus
@@ -253,10 +264,8 @@ export class AdvancedGraphView extends ItemView {
               if (dataStore.storeId() === 'core') {
                 const node = await dataStore.get(id);
                 this.viz.startBatch();
-                console.log(node);
                 this.viz.add(node);
                 const edges = await this.buildEdges(this.viz.$id(id.toId()));
-                console.log(edges);
                 this.viz.add(edges);
                 this.onGraphChanged(false);
                 this.viz.endBatch();
@@ -264,7 +273,7 @@ export class AdvancedGraphView extends ItemView {
                   const node = e.cy.$id(id.toId());
                   e.cy.animate({
                     fit: {
-                      eles: node.connectedEdges().connectedNodes().union(node),
+                      eles: node.closedNeighborhood(),
                       padding: 0,
                     },
                     duration: 500,
@@ -277,16 +286,15 @@ export class AdvancedGraphView extends ItemView {
             }
           }
           const node = this.viz.$id(id.toId()) as NodeSingular;
-          this.viz.nodes().addClass('inactive-file');
-          this.viz.edges().addClass('inactive-file');
-          node.addClass('active-file')
-              .removeClass('inactive-file');
+          this.viz.elements()
+              .removeClass(['connected-active-file', 'active-file', 'inactive-file'])
+              .difference(node.closedNeighborhood())
+              .addClass('inactive-file');
+          node.addClass('active-file');
           const neighbourhood = node.connectedEdges()
               .addClass('connected-active-file')
-              .removeClass('inactive-file')
               .connectedNodes()
               .addClass('connected-active-file')
-              .removeClass('inactive-file')
               .union(node);
           if (!newNode) {
             // If not a new node, start animating immediately
@@ -301,8 +309,7 @@ export class AdvancedGraphView extends ItemView {
           }
           // this.viz.fit(neighbourhood);
           this.viz.one('tap', (e) => {
-            e.cy.nodes().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
-            e.cy.edges().removeClass(['connected-active-file', 'inactive-file']);
+            e.cy.elements().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
           });
         }
       }));
@@ -324,7 +331,7 @@ export class AdvancedGraphView extends ItemView {
               .absoluteComplement()
               .select();
         } else if (evt.key === 'a') {
-          this.viz.$('').select();
+          this.viz.elements().select();
         }
       }, true);
 
