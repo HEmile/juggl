@@ -50,7 +50,7 @@ export const DefaultNeo4jViewSettings: IAdvancedGraphSettings = {
   password: '',
   showArrows: true,
   inlineContext: false,
-  splitDirection: 'horizontal',
+  splitDirection: 'vertical',
   typedLinkPrefix: '-',
   imgServerPort: 3837,
   debug: false,

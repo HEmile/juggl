@@ -98,6 +98,8 @@ export class AdvancedGraphView extends ItemView {
 
     constructor(leaf: WorkspaceLeaf, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[]) {
       super(leaf);
+      // TODO: Maybe make this configurable
+      leaf.setPinned(true);
       this.settings = plugin.settings;
       this.workspace = this.app.workspace;
       this.initialNode = initialNode;
@@ -124,6 +126,8 @@ export class AdvancedGraphView extends ItemView {
       this.viz = cytoscape({
         container: div,
         elements: nodes,
+        minZoom: 5e-1,
+        maxZoom: 2e1,
       });
 
       const nodez = this.viz.nodes();
@@ -238,17 +242,14 @@ export class AdvancedGraphView extends ItemView {
 
       // Register on file open event
       this.registerEvent(this.workspace.on('file-open', async (file) => {
-        console.log('file-open', file);
         if (file && this.settings.autoAddNodes) {
           const name = file.basename;
           const id = new VizId(name, 'core');
-          console.log(this.viz.$id(id.toId()));
-          console.log(this.viz.$id(id.toId()).length === 0);
-          let node;
+          let newNode = false;
           if (this.viz.$id(id.toId()).length === 0) {
             for (const dataStore of this.datastores) {
               if (dataStore.storeId() === 'core') {
-                node = await dataStore.get(id);
+                const node = await dataStore.get(id);
                 this.viz.startBatch();
                 console.log(node);
                 this.viz.add(node);
@@ -257,22 +258,46 @@ export class AdvancedGraphView extends ItemView {
                 this.viz.add(edges);
                 this.onGraphChanged(false);
                 this.viz.endBatch();
+                this.viz.one('layoutstop', (e) => {
+                  const node = e.cy.$id(id.toId());
+                  e.cy.animate({
+                    fit: {
+                      eles: node.connectedEdges().connectedNodes().union(node),
+                      padding: 0,
+                    },
+                    duration: 500,
+                    queue: false,
+                  });
+                });
+                newNode = true;
                 break;
               }
             }
           }
-          node = this.viz.$id(id.toId()) as NodeSingular;
+          const node = this.viz.$id(id.toId()) as NodeSingular;
           this.viz.nodes().addClass('inactive-file');
           this.viz.edges().addClass('inactive-file');
           node.addClass('active-file')
               .removeClass('inactive-file');
-          node.connectedEdges()
+          const neighbourhood = node.connectedEdges()
               .addClass('connected-active-file')
               .removeClass('inactive-file')
               .connectedNodes()
               .addClass('connected-active-file')
-              .removeClass('inactive-file');
-
+              .removeClass('inactive-file')
+              .union(node);
+          if (!newNode) {
+            // If not a new node, start animating immediately
+            this.viz.animate({
+              fit: {
+                eles: neighbourhood,
+                padding: 0,
+              },
+              duration: 500,
+              queue: false,
+            });
+          }
+          // this.viz.fit(neighbourhood);
           this.viz.one('tap', (e) => {
             e.cy.nodes().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
             e.cy.edges().removeClass(['connected-active-file', 'inactive-file']);
@@ -630,7 +655,7 @@ export class AdvancedGraphView extends ItemView {
       this.viz.endBatch();
     }
 
-    onGraphChanged(batch:boolean=true) {
+    onGraphChanged(batch:boolean=true): Layouts {
       if (batch) {
         this.viz.startBatch();
       }
@@ -640,7 +665,7 @@ export class AdvancedGraphView extends ItemView {
       if (batch) {
         this.viz.endBatch();
       }
-      this.viz.layout(DEF_LAYOUT).run();
+      return this.viz.layout(DEF_LAYOUT).run();
     }
 
 
