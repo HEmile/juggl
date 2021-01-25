@@ -116,6 +116,7 @@ export class AdvancedGraphView extends ItemView {
       VIEW_COUNTER += 1;
       this.containerEl.children[1].appendChild(div);
       div.setAttr('style', 'height: 100%; width:100%');
+      div.setAttr('tabindex', '0');
 
       const nodes: NodeDefinition[] = [];
       for (const store of this.datastores) {
@@ -126,8 +127,9 @@ export class AdvancedGraphView extends ItemView {
       this.viz = cytoscape({
         container: div,
         elements: nodes,
-        minZoom: 5e-1,
-        maxZoom: 2e1,
+        minZoom: 8e-1,
+        maxZoom: 1.3e1,
+        wheelSensitivity: 0.6,
       });
 
       const nodez = this.viz.nodes();
@@ -305,6 +307,27 @@ export class AdvancedGraphView extends ItemView {
         }
       }));
 
+      // // Register keypress event
+      // Note: Registered on window because it wouldn't fire on the div...
+      window.addEventListener('keydown', (evt) => {
+        if (!(this.workspace.activeLeaf === this.leaf)) {
+          return;
+        }
+        console.log(evt);
+        if (evt.key === 'e') {
+          // this.expandSelection();
+        } else if (evt.key === 'h' || evt.key === 'Backspace') {
+          // this.hideSelection();
+        } else if (evt.key === 'i') {
+          this.viz.$(':selected')
+              .unselect()
+              .absoluteComplement()
+              .select();
+        } else if (evt.key === 'a') {
+          this.viz.$('').select();
+        }
+      }, true);
+
       //     this.network.on('doubleClick', (event) => {
       //       if (event.nodes.length > 0) {
       //         this.onDoubleClickNode(this.findNodeRaw(event.nodes[0]));
@@ -339,18 +362,6 @@ export class AdvancedGraphView extends ItemView {
       //   this.onNodeDeleted(name);
       // }));
       //
-      // // Register keypress event
-      // this.containerEl.addEventListener('keydown', (evt) => {
-      //   if (evt.key === 'e') {
-      //     this.expandSelection();
-      //   } else if (evt.key === 'h' || evt.key === 'Backspace') {
-      //     this.hideSelection();
-      //   } else if (evt.key === 'i') {
-      //     this.invertSelection();
-      //   } else if (evt.key === 'a') {
-      //     this.selectAll();
-      //   }
-      // });
     }
 
     async buildEdges(newNodes: NodeCollection) {
