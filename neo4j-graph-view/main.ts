@@ -19,6 +19,7 @@ import {ObsidianStore} from './obsidian-store';
 import coseBilkent from 'cytoscape-cose-bilkent';
 import cytoscape from 'cytoscape';
 import navigator from 'cytoscape-navigator';
+import popper from 'cytoscape-popper';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -43,6 +44,7 @@ export default class Neo4jViewPlugin extends Plugin {
       console.log('Loading Neo4j graph view plugin');
       navigator(cytoscape);
       cytoscape.use(coseBilkent);
+      cytoscape.use(popper);
       // TODO: Make this optional?
       // cytoscape.use(navigator);
 

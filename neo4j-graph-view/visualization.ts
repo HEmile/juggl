@@ -1,5 +1,5 @@
 import {IAdvancedGraphSettings} from './settings';
-import {EventRef, Events, ItemView, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
+import {EventRef, Events, ItemView, MarkdownRenderer, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
 import AdvancedGraphPlugin from './main';
 import cytoscape, {
   Core,
@@ -8,7 +8,7 @@ import cytoscape, {
   ElementDefinition, Layouts,
   NodeCollection,
   NodeDefinition,
-  NodeSingular,
+  NodeSingular, Singular,
 } from 'cytoscape';
 import {IDataStore} from './interfaces';
 import {GraphStyleSheet} from './stylesheet';
@@ -168,6 +168,8 @@ export class AdvancedGraphView extends ItemView {
 
       console.log('Visualization ready');
 
+      const view = this;
+
       this.viz.on('tap', 'node', async (e) => {
         const id = VizId.fromNode(e.target);
         if (!(id.storeId === 'core')) {
@@ -187,8 +189,7 @@ export class AdvancedGraphView extends ItemView {
       this.viz.on('tap', 'edge', async (e) => {
         // TODO: Move to correct spot in the file.
       });
-      this.viz.on('mouseover', 'node', (e) => {
-        console.log('mouseover');
+      this.viz.on('mouseover', 'node', async (e) => {
         const node = e.target as NodeSingular;
         e.cy.elements()
             .difference(node.closedNeighborhood())
@@ -198,6 +199,15 @@ export class AdvancedGraphView extends ItemView {
             .addClass('connected-hover')
             .connectedNodes()
             .addClass('connected-hover');
+
+        const id = VizId.fromNode(e.target);
+        if (id.storeId === 'core') {
+          const file = this.plugin.metadata.getFirstLinkpathDest(id.id, '');
+          if (file && file.extension === 'md') {
+            const content = await view.vault.cachedRead(file);
+            await this.popover(content, file.path, e.target);
+          }
+        }
       });
       this.viz.on('mouseover', 'edge', (e) => {
         const edge = e.target as EdgeSingular;
@@ -371,6 +381,60 @@ export class AdvancedGraphView extends ItemView {
       //   this.onNodeDeleted(name);
       // }));
       //
+    }
+
+    async popover(mdContent: string, sourcePath: string, target: Singular) {
+      console.log('here');
+      const newDiv = document.createElement('div');
+      newDiv.addClasses(['popover', 'hover-popover', 'is-loaded', 'advanced-graph-hover']);
+      const mdEmbedDiv = document.createElement('div');
+      mdEmbedDiv.addClasses(['markdown-embed']);
+      newDiv.appendChild(mdEmbedDiv);
+      const mdEmbedContentDiv = document.createElement('div');
+      mdEmbedContentDiv.addClasses(['markdown-embed-content']);
+      mdEmbedDiv.appendChild(mdEmbedContentDiv);
+      const mdPreviewView = document.createElement('div');
+      mdPreviewView.addClasses(['markdown-preview-view']);
+      mdEmbedContentDiv.appendChild(mdPreviewView);
+      const mdPreviewSection = document.createElement('div');
+      mdPreviewSection.addClasses(['markdown-preview-sizer', 'markdown-preview-section']);
+      mdPreviewView.appendChild(mdPreviewSection);
+
+
+      await MarkdownRenderer.renderMarkdown(mdContent, mdPreviewSection, sourcePath, null );
+
+      document.body.appendChild(newDiv);
+      // @ts-ignore
+      const popper = target.popper({
+        content: () => {
+          return newDiv;
+        },
+        popper: {
+          placement: 'top',
+        }, // my popper options here
+      });
+      const updatePopper = function() {
+        popper.update();
+      };
+      target.on('position', updatePopper);
+      this.viz.on('pan zoom resize', updatePopper);
+      newDiv.addEventListener('mouseenter', (e) => {
+        newDiv.addClass('popover-hovered');
+      });
+      newDiv.addEventListener('mouseleave', (e) => {
+        popper.destroy();
+        newDiv.remove();
+      });
+      this.viz.one('mouseout', (e) => {
+        setTimeout(function() {
+          console.log('h1');
+          if (!newDiv.hasClass('popover-hovered')) {
+            popper.destroy();
+            newDiv.remove();
+          }
+          console.log('h2');
+        }, 300);
+      });
     }
 
     async buildEdges(newNodes: NodeCollection) {
