@@ -5,40 +5,19 @@ import Neo4jViewPlugin from './main';
 import {AdvancedGraphView, AG_VIEW_TYPE} from './visualization';
 
 export interface IAdvancedGraphSettings {
-    indexContent: boolean;
+    indexContent: boolean; // neo4j
     autoExpand: boolean;
     autoAddNodes: boolean;
-    community: string;
     hierarchical: boolean;
+    navigator: boolean;
     convertMarkdown: boolean;
-    showArrows: boolean;
-    inlineContext: boolean;
-    password: string;
+    password: string; // neo4j
     typedLinkPrefix: string;
     splitDirection: SplitDirection; // 'horizontal';
     imgServerPort: number;
     debug: boolean;
-    nodeSettings: string;
-    edgeSettings: string;
 }
 
-export const DefaultNodeSettings = {
-  size: 9,
-  font: {
-    size: 12,
-    strokeWidth: 1,
-  },
-  borderWidth: 0,
-  widthConstraint: {maximum: 200},
-};
-
-export const DefaultEdgeSettings = {
-  font: {
-    size: 12,
-    strokeWidth: 2,
-  },
-  width: 0.5,
-};
 
 export const DefaultNeo4jViewSettings: IAdvancedGraphSettings = {
   autoAddNodes: true,
@@ -46,30 +25,12 @@ export const DefaultNeo4jViewSettings: IAdvancedGraphSettings = {
   hierarchical: false,
   indexContent: false,
   convertMarkdown: true,
-  community: 'tags',
+  navigator: true,
   password: '',
-  showArrows: true,
-  inlineContext: false,
   splitDirection: 'vertical',
   typedLinkPrefix: '-',
   imgServerPort: 3837,
   debug: false,
-  nodeSettings: JSON.stringify({
-    'defaultStyle': DefaultNodeSettings,
-    'exampleTag': {
-      size: 20,
-      color: 'yellow',
-    },
-    'image': {
-      size: 40,
-      font: {
-        size: 0,
-      },
-    },
-  }),
-  edgeSettings: JSON.stringify({
-    'defaultStyle': DefaultEdgeSettings,
-  }),
 };
 
 
@@ -117,21 +78,17 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
           });
 
       containerEl.createEl('h3');
-      containerEl.createEl('h3', {text: 'Appearance'});
-
+      containerEl.createEl('h3', {text: 'Extensions'});
       new Setting(containerEl)
-          .setName('Color-coding')
-          .setDesc('What property to choose for coloring the nodes in the graph. Requires a server restart.')
-          .addDropdown((dropdown) => dropdown
-              .addOption('tags', 'Tags')
-              .addOption('folders', 'Folders')
-              .addOption('none', 'No color-coding')
-              .setValue(this.plugin.settings.community)
-              .onChange((value) => {
-                this.plugin.settings.community = value;
-                this.plugin.saveData(this.plugin.settings);
-              }));
-
+          .setName('Use navigator')
+          .setDesc('Use the navigator overview in the bottom-right corner. Disabling could improve performance.')
+          .addToggle((toggle) => {
+            toggle.setValue(this.plugin.settings.navigator)
+                .onChange((newValue) => {
+                  this.plugin.settings.navigator = newValue;
+                  this.plugin.saveData(this.plugin.settings);
+                });
+          });
 
       new Setting(containerEl)
           .setName('Hierarchical layout')
@@ -143,98 +100,6 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
-
-      new Setting(containerEl)
-          .setName('Show arrows')
-          .setDesc('Show arrows on edges.')
-          .addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.showArrows)
-                .onChange((newValue) => {
-                  this.plugin.settings.showArrows = newValue;
-                  this.plugin.saveData(this.plugin.settings);
-                });
-          });
-      new Setting(containerEl)
-          .setName('Show context on inline links')
-          .setDesc('Shows the paragraph where an inline link is in on the edge.')
-          .addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.inlineContext)
-                .onChange((newValue) => {
-                  this.plugin.settings.inlineContext = newValue;
-                  this.plugin.saveData(this.plugin.settings);
-                });
-          });
-      containerEl.createEl('h4');
-      containerEl.createEl('h4', {text: 'Node Styling'});
-
-      const div = document.createElement('div');
-      div.className = 'neovis_setting';
-      this.containerEl.children[this.containerEl.children.length - 1].appendChild(div);
-      div.setAttr('style', 'height: 100%; width:100%');
-
-      const input = div.createEl('textarea');
-      input.placeholder = JSON.stringify(DefaultNodeSettings);
-      input.value = this.plugin.settings.nodeSettings;
-      input.onchange = (ev) => {
-        this.plugin.settings.nodeSettings = input.value;
-        this.plugin.saveData(this.plugin.settings);
-        const leaves = this.plugin.app.workspace.getLeavesOfType(AG_VIEW_TYPE);
-        leaves.forEach((leaf) =>{
-          (leaf.view as AdvancedGraphView).updateStyle();
-        });
-      };
-      input.setAttr('style', 'height: 300px; width: 100%; ' +
-            '-webkit-box-sizing: border-box; -moz-box-sizing: border-box;  box-sizing: border-box;');
-
-      const temp_link = document.createElement('a');
-      temp_link.href = 'https://publish.obsidian.md/semantic-obsidian/Node+styling';
-      temp_link.target = '_blank';
-      temp_link.innerHTML ='this link';
-
-      const par = document.createElement('p');
-      par.innerHTML = 'Styling of nodes in .json format. <br>' +
-            'Use {"defaultStyle": {}} for the default styling of nodes. ' +
-            'Use {"image": {}} to style images. Use {"SMD_dangling": {}} to style dangling notes. <br>' +
-            'When color-coding is set to Folders, use the path to the folder for this key. ' +
-            'Use {"/" for the root folder. <br>' +
-            'See ' + temp_link.outerHTML + ' for help with styling nodes. ';
-
-      containerEl.appendChild(par);
-
-      containerEl.createEl('h4');
-      containerEl.createEl('h4', {text: 'Edge Styling'});
-
-      const div2 = document.createElement('div');
-      div2.className = 'neovis_setting2';
-      this.containerEl.children[this.containerEl.children.length - 1].appendChild(div2);
-      div2.setAttr('style', 'height: 100%; width:100%');
-
-      const input2 = div2.createEl('textarea');
-      input2.placeholder = JSON.stringify(DefaultEdgeSettings);
-      input2.value = this.plugin.settings.edgeSettings;
-      input2.onchange = (ev) => {
-        this.plugin.settings.edgeSettings = input2.value;
-        this.plugin.saveData(this.plugin.settings);
-        const leaves = this.plugin.app.workspace.getLeavesOfType(AG_VIEW_TYPE);
-        leaves.forEach((leaf) =>{
-          (leaf.view as AdvancedGraphView).updateStyle();
-        });
-      };
-      input2.setAttr('style', 'height: 300px; width: 100%; ' +
-            '-webkit-box-sizing: border-box; -moz-box-sizing: border-box;  box-sizing: border-box;');
-
-      const temp_link2 = document.createElement('a');
-      temp_link2.href = 'https://publish.obsidian.md/semantic-obsidian/Edge+styling';
-      temp_link2.target = '_blank';
-      temp_link2.innerHTML = 'this link';
-
-      const par2 = document.createElement('p');
-      par2.innerHTML = 'Styling of edges is done in .json format. <br>' +
-            'The first key determines what types of links to apply this style to. ' +
-            'Use {"defaultStyle": {}} for the default styling of edges, and {"inline":{} } for the styling of untyped links. ' +
-            'See ' + temp_link2.outerHTML + ' for help with styling edges.';
-
-      containerEl.appendChild(par2);
 
 
       containerEl.createEl('h3');

@@ -131,20 +131,22 @@ export class AdvancedGraphView extends ItemView {
         maxZoom: 1.3e1,
       });
 
-      const navDiv = document.createElement('div');
-      navDiv.id = 'cynav' + VIEW_COUNTER;
-      div.children[0].appendChild(navDiv);
-      navDiv.addClass('cy-navigator');
-      // @ts-ignore
-      const nav = this.viz.navigator({//
-        container: '#cynav' + VIEW_COUNTER,
-        viewLiveFramerate: 0, // set false to update graph pan only on drag end; set 0 to do it instantly; set a number (frames per second) to update not more than N times per second
-        thumbnailEventFramerate: 10, // max thumbnail's updates per second triggered by graph updates
-        thumbnailLiveFramerate: false, // max thumbnail's updates per second. Set false to disable
-        dblClickDelay: 200, // milliseconds
-        removeCustomContainer: true, // destroy the container specified by user on plugin destroy
-        rerenderDelay: 100, // ms to throttle rerender updates to the panzoom for performance
-      });
+      if (this.settings.navigator) {
+        const navDiv = document.createElement('div');
+        navDiv.id = 'cynav' + VIEW_COUNTER;
+        div.children[0].appendChild(navDiv);
+        navDiv.addClass('cy-navigator');
+        // @ts-ignore
+        this.viz.navigator({//
+          container: '#cynav' + VIEW_COUNTER,
+          viewLiveFramerate: 0, // set false to update graph pan only on drag end; set 0 to do it instantly; set a number (frames per second) to update not more than N times per second
+          thumbnailEventFramerate: 10, // max thumbnail's updates per second triggered by graph updates
+          thumbnailLiveFramerate: false, // max thumbnail's updates per second. Set false to disable
+          dblClickDelay: 200, // milliseconds
+          removeCustomContainer: true, // destroy the container specified by user on plugin destroy
+          rerenderDelay: 100, // ms to throttle rerender updates to the panzoom for performance
+        });
+      }
 
       const nodez = this.viz.nodes();
       const edges = await this.buildEdges(nodez);

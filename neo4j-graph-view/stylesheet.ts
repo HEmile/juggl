@@ -49,8 +49,10 @@ edge {
   target-arrow-fill: filled;
   target-arrow-color: #E6E6E6;
   arrow-scale: 0.5;
-  curve-style: bezier;
   font-size: 6;
+  curve-style: unbundled-bezier;
+  control-point-distance: 23;
+  control-point-weight: 0.6;
 }
 
 edge:selected {
