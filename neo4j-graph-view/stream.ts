@@ -310,4 +310,8 @@ export class Neo4jStream extends Component implements IDataStore {
     storeId(): string {
       return 'core';
     }
+
+    get(nodeId: VizId): Promise<cytoscape.NodeDefinition> {
+      return Promise.resolve(undefined);
+    }
 }

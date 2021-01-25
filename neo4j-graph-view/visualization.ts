@@ -399,56 +399,6 @@ export class AdvancedGraphView extends ItemView {
     }
 
 
-    updateStyle() {
-      const nodeOptions = JSON.parse(this.settings.nodeSettings);
-      // this.viz.nodes.forEach((node) => {
-      //   const nodeId = this.network.findNode(node.id);
-      //
-      //   const specificOptions: NodeOptions[] = [];
-      //   const file = this.getFileFromNode(node);
-      //   if (this.settings.community === 'tags') {
-      //     node.raw.labels.forEach((label) => {
-      //       if (label in nodeOptions) {
-      //         specificOptions.push(nodeOptions[label]);
-      //       }
-      //     });
-      //   } else if (this.settings.community === 'folders' && !(file === undefined)) {
-      //     // @ts-ignore
-      //     const path = file.parent.path;
-      //     if (path in nodeOptions) {
-      //       specificOptions.push(nodeOptions[path]);
-      //     }
-      //   }
-      //   // Style images
-      //   if (/(\.png|\.jpg|\.jpeg|\.gif|\.svg)$/.test(node.label) && !(file === undefined)) {
-      //     specificOptions.push({shape: 'image', image: 'http://localhost:' +
-      //                   this.settings.imgServerPort + '/' +
-      //                   encodeURI(file.path)});
-      //     if ('image' in nodeOptions) {
-      //       specificOptions.push(nodeOptions['image']);
-      //     }
-      //   }
-      //   // @ts-ignore
-      //   const nodeSth = this.network.body.nodes[nodeId];
-      //   if (!(nodeSth === undefined)) {
-      //     nodeSth.setOptions(Object.assign({}, nodeOptions['defaultStyle'], ...specificOptions));
-      //   } else if (this.settings.debug) {
-      //     console.log(node);
-      //   }
-      // });
-    //   this.viz.edges.forEach((edge) => {
-    //     // @ts-ignore
-    //     const edgeSth = this.network.body.edges[edge.id];
-    //     const type = edge.raw.type;
-    //     const specificOptions = type in edgeOptions ? [edgeOptions[type]] : [];
-    //     if (!(edgeSth === undefined)) {
-    //       edgeSth.setOptions(Object.assign({}, edgeOptions['defaultStyle'], ...specificOptions));
-    //     } else if (this.settings.debug) {
-    //       console.log(edge);
-    //     }
-    //   });
-    }
-
     // async onClickNode(node: INode) {
     //   const file = this.getFileFromNode(node);
     //   // @ts-ignore
