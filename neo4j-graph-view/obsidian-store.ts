@@ -21,6 +21,7 @@ import {
 } from 'cytoscape';
 import {VizId} from './visualization';
 import {node} from 'cypher-query-builder';
+import * as Url from 'url';
 
 export class ObsidianStore extends Component implements IDataStore {
     plugin: Neo4jViewPlugin;
@@ -153,7 +154,18 @@ export class ObsidianStore extends Component implements IDataStore {
       if (frontmatter) {
         Object.keys(frontmatter).forEach((k) => {
           if (!(k === 'position')) {
-            data[k] = frontmatter[k];
+            if (k === 'image') {
+              const imageField = frontmatter[k];
+              try {
+                // Check if url. throws error otherwise
+                new URL(imageField);
+                data[k] = imageField;
+              } catch {
+                data[k] = `http://localhost:${this.plugin.settings.imgServerPort}/${encodeURI(imageField)}`;
+              }
+            } else {
+              data[k] = frontmatter[k];
+            }
           }
         });
       }
