@@ -292,13 +292,19 @@ export class AdvancedGraphView extends ItemView {
         fileMenu.addItem((item) =>{
           item.setTitle('Invert selection (I)').setIcon('dot-network')
               .onClick((evt) => {
-                // this.invertSelection();
+                this.invertSelection();
               });
         });
         fileMenu.addItem((item) =>{
           item.setTitle('Select all (A)').setIcon('dot-network')
               .onClick((evt) => {
-                // this.hideSelection();
+                this.viz.elements().select();
+              });
+        });
+        fileMenu.addItem((item) =>{
+          item.setTitle('Select neighbors (N)').setIcon('dot-network')
+              .onClick((evt) => {
+                this.selectNeighbourhood();
               });
         });
         fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
@@ -382,12 +388,11 @@ export class AdvancedGraphView extends ItemView {
         } else if (evt.key === 'h' || evt.key === 'Backspace') {
           // this.hideSelection();
         } else if (evt.key === 'i') {
-          this.viz.$(':selected')
-              .unselect()
-              .absoluteComplement()
-              .select();
+          this.invertSelection();
         } else if (evt.key === 'a') {
           this.viz.elements().select();
+        } else if (evt.key === 'n') {
+          this.selectNeighbourhood();
         }
       }, true);
 
@@ -553,22 +558,19 @@ export class AdvancedGraphView extends ItemView {
     //   await this.updateWithCypher(this.plugin.localNeighborhoodCypher(label));
     // }
 
-    async onClickEdge(edge: Object) {
-      // @ts-ignore
-      // if (!edge.raw) {
-      //     return;
-      // }
-      // // @ts-ignore
-      // const rel = edge.raw as Relationship;
-      // console.log(edge);
-      // // @ts-ignore
-      // const file = rel.properties["context"];
-      // const node = this.viz.nodes.get(rel.start.high);
-      // const label = node.label;
+    invertSelection() {
+      this.viz.$(':selected')
+          .unselect()
+          .absoluteComplement()
+          .select();
+    }
 
-      // TODO: Figure out how to open a node at the context point
-      // this.workspace.openLinkText()
-
+    selectNeighbourhood() {
+      // TODO: This keeps self-loops selected.
+      this.viz.nodes(':selected')
+          .unselect()
+          .openNeighborhood()
+          .select();
     }
 
 
