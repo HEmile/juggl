@@ -78,7 +78,7 @@ node.hover {
 edge.hover,
 edge.connected-active-file,
 edge.connected-hover {
-    line-width: 1;
+    width: 1;
     line-color: #1b6299;  
     target-arrow-color: #1b6299;
 }

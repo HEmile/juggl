@@ -12,6 +12,7 @@ import cytoscape, {
 } from 'cytoscape';
 import {IDataStore} from './interfaces';
 import {GraphStyleSheet} from './stylesheet';
+import Timeout = NodeJS.Timeout;
 
 export const AG_VIEW_TYPE = 'advanced_graph_view';
 export const MD_VIEW_TYPE = 'markdown';
@@ -97,6 +98,7 @@ export class AdvancedGraphView extends ItemView {
     events: Events;
     datastores: IDataStore[];
     activeLayout: Layouts;
+    hoverTimeout: Record<string, Timeout> = {};
 
     constructor(leaf: WorkspaceLeaf, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[]) {
       super(leaf);
@@ -208,9 +210,39 @@ export class AdvancedGraphView extends ItemView {
           const file = this.plugin.metadata.getFirstLinkpathDest(id.id, '');
           if (file && file.extension === 'md') {
             const content = await view.vault.cachedRead(file);
-            await this.popover(content, file.path, e.target, 'advanced-graph-preview-node');
+            this.hoverTimeout[e.target.id()] = setTimeout(async () =>
+              await this.popover(content, file.path, e.target, 'advanced-graph-preview-node'),
+            500);
           }
         }
+      });
+      this.viz.on('mouseover', 'edge', async (e) => {
+        const edge = e.target as EdgeSingular;
+        e.cy.elements()
+            .difference(edge.connectedNodes().union(edge))
+            .addClass('unhover');
+        edge.addClass('hover')
+            .connectedNodes()
+            .addClass('connected-hover');
+        if ('context' in edge.data()) {// && e.originalEvent.metaKey) {
+          // TODO resolve SourcePath, can be done using the source file.
+          this.hoverTimeout[e.target.id()] = setTimeout(async () =>
+          // @ts-ignore
+            await this.popover(edge.data()['context'], '', edge, 'advanced-graph-preview-edge'),
+          500);
+        }
+      });
+      this.viz.on('mouseout', (e) => {
+        if (e.target === e.cy) {
+          return;
+        }
+        const id = e.target.id();
+        if (id in this.hoverTimeout) {
+          clearTimeout(this.hoverTimeout[id]);
+          this.hoverTimeout[id] = undefined;
+        }
+
+        e.cy.elements().removeClass(['hover', 'unhover', 'connected-hover']);
       });
       this.viz.on('drag', (e) => {
         if (this.activeLayout) {
@@ -238,26 +270,7 @@ export class AdvancedGraphView extends ItemView {
         node.lock();
       });
 
-      this.viz.on('mouseover', 'edge', async (e) => {
-        const edge = e.target as EdgeSingular;
-        e.cy.elements()
-            .difference(edge.connectedNodes().union(edge))
-            .addClass('unhover');
-        edge.addClass('hover')
-            .connectedNodes()
-            .addClass('connected-hover');
-        if ('context' in edge.data() && e.originalEvent.metaKey) {
-          // TODO resolve SourcePath, can be done using the source file.
-          // @ts-ignore
-          await this.popover(edge.data()['context'], '', edge, 'advanced-graph-preview-edge');
-        }
-      });
-      this.viz.on('mouseout', (e) => {
-        if (e.target === e.cy) {
-          return;
-        }
-        e.cy.elements().removeClass(['hover', 'unhover', 'connected-hover']);
-      });
+
       this.viz.on('cxttap', (e) =>{
         // Thanks Liam for sharing how to do context menus
         const fileMenu = new Menu(); // Creates empty file menu
