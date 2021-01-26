@@ -21,6 +21,7 @@ import cytoscape from 'cytoscape';
 import navigator from 'cytoscape-navigator';
 import popper from 'cytoscape-popper';
 import cola from 'cytoscape-cola';
+import dblclick from 'cytoscape-dblclick';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -47,6 +48,7 @@ export default class Neo4jViewPlugin extends Plugin {
       cytoscape.use(coseBilkent);
       cytoscape.use(popper);
       cytoscape.use(cola);
+      cytoscape.use( dblclick );
 
       this.vault = this.app.vault;
       this.metadata = this.app.metadataCache;
@@ -55,8 +57,8 @@ export default class Neo4jViewPlugin extends Plugin {
       this.settings = Object.assign(DefaultNeo4jViewSettings, await this.loadData());// (await this.loadData()) || DefaultNeo4jViewSettings;
       this.statusBar = this.addStatusBarItem();
       this.statusBar.setText(STATUS_OFFLINE);
-      this.neo4jStream = new Neo4jStream(this);
-      this.addChild(this.neo4jStream);
+      // this.neo4jStream = new Neo4jStream(this);
+      // this.addChild(this.neo4jStream);
       this.addChild(new ImageServer(this));
 
       // this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.app.workspace.activeLeaf?.getDisplayText(), this))
@@ -156,11 +158,6 @@ export default class Neo4jViewPlugin extends Plugin {
 
 
     openLocalGraph(name: string) {
-      if (!this.neo4jStream) {
-        new Notice('Cannot open local graph as neo4j stream is not active.');
-        return;
-      }
-
       const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
       // const query = this.localNeighborhoodCypher(name);
       const neovisView = new AdvancedGraphView(leaf, this, name, [new ObsidianStore(this)]);
@@ -248,7 +245,6 @@ export default class Neo4jViewPlugin extends Plugin {
                   }
                   return tags;
                 })));
-            console.log(classes);
           }
         } else {
           classes.push('file');

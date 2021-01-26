@@ -303,7 +303,7 @@ export class Neo4jStream extends Component implements IDataStore {
       return [];
     }
 
-    async getNeighbourhood(nodeId: VizId): Promise<NodeDefinition[]> {
+    async getNeighbourhood(nodeId: VizId[]): Promise<NodeDefinition[]> {
       return [];
     }
 

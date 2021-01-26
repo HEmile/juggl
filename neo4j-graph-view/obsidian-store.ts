@@ -44,7 +44,6 @@ export class ObsidianStore extends Component implements IDataStore {
       const edges: EdgeDefinition[] = [];
       const counter: Record<string, number> = {};
       for (const id of newNodes) {
-        console.log(id);
         if (id.storeId === this.storeId()) {
           const file = this.getFile(id);
           if (file) {
@@ -55,7 +54,6 @@ export class ObsidianStore extends Component implements IDataStore {
 
               iterateCacheRefs(cache, (ref) => {
                 const otherId = this.getOtherId(ref, file.path).toId();
-                console.log(allNodes.$id(otherId));
                 if (allNodes.$id(otherId).length > 0) {
                   const edgeId = `${srcId}->${otherId}`;
                   if (edgeId in counter) {
@@ -122,7 +120,6 @@ export class ObsidianStore extends Component implements IDataStore {
 
     getBacklinks(nodeId: VizId): NodeDefinition[] {
       // Could be an expensive operation... No cached backlinks implementation is available in the Obsidian API though.
-      console.log('getting backlinks');
       if (nodeId.storeId === 'core') {
         const path = this.getFile(nodeId).path;
         // @ts-ignore
@@ -142,7 +139,6 @@ export class ObsidianStore extends Component implements IDataStore {
     nodeFromFile(file: TFile) : NodeDefinition {
       const cache = this.metadata.getFileCache(file);
       const name = file.extension === 'md' ? file.basename : file.name;
-      console.log(cache);
       const classes = this.plugin.getClasses(file).join(' ');
 
       const data = {
@@ -188,18 +184,24 @@ export class ObsidianStore extends Component implements IDataStore {
       };
     }
 
-    async getNeighbourhood(nodeId: VizId): Promise<NodeDefinition[]> {
-      const file = this.getFile(nodeId);
-      const cache = this.metadata.getFileCache(file);
-      if (cache === null) {
-        console.log('returning empty');
-        return [];
+    async getNeighbourhood(nodeIds: VizId[]): Promise<NodeDefinition[]> {
+      const nodes: NodeDefinition[] = [];
+      for (const nodeId of nodeIds) {
+        if (nodeId.storeId === this.storeId()) {
+          const file = this.getFile(nodeId);
+          const cache = this.metadata.getFileCache(file);
+          if (cache === null) {
+            console.log('returning empty');
+            return [];
+          }
+          nodes.push(this.nodeFromFile(file));
+          iterateCacheRefs(cache, (ref) => {
+            nodes.push(this.getNodeFromLink(ref, file.path));
+          });
+          nodes.push(...this.getBacklinks(nodeId));
+        }
       }
-      const nodes = [this.nodeFromFile(file)];
-      iterateCacheRefs(cache, (ref) => {
-        nodes.push(this.getNodeFromLink(ref, file.path));
-      });
-      return nodes.concat(this.getBacklinks(nodeId));
+      return nodes;
     }
 
     storeId(): string {

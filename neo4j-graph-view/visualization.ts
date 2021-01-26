@@ -114,7 +114,6 @@ export class AdvancedGraphView extends ItemView {
     }
 
     async onOpen() {
-      console.log('stuff before the crash');
       const div = document.createElement('div');
       div.id = 'cy' + VIEW_COUNTER;
       VIEW_COUNTER += 1;
@@ -122,11 +121,7 @@ export class AdvancedGraphView extends ItemView {
       div.setAttr('style', 'height: 100%; width:100%');
       div.setAttr('tabindex', '0');
 
-      const nodes: NodeDefinition[] = [];
-      for (const store of this.datastores) {
-        nodes.push(...await store.getNeighbourhood(new VizId(this.initialNode, 'core')));
-      }
-
+      const nodes = await this.neighbourhood([new VizId(this.initialNode, 'core')]);
 
       this.viz = cytoscape({
         container: div,
@@ -134,6 +129,7 @@ export class AdvancedGraphView extends ItemView {
         minZoom: 8e-1,
         maxZoom: 1.3e1,
       });
+      this.viz.dblclick();
 
       if (this.settings.navigator) {
         const navDiv = document.createElement('div');
@@ -153,7 +149,9 @@ export class AdvancedGraphView extends ItemView {
       }
 
       const nodez = this.viz.nodes();
+      console.log(nodez);
       const edges = await this.buildEdges(nodez);
+      console.log(edges);
 
       if (this.settings.debug) {
         console.log(nodes);
@@ -193,6 +191,21 @@ export class AdvancedGraphView extends ItemView {
       this.viz.on('tap', 'edge', async (e) => {
 
         // TODO: Move to correct spot in the file.
+      });
+      this.viz.on('dblclick', 'node', async (e) => {
+        console.log('double click');
+        const node: NodeSingular = e.target;
+        const neighbourhood = await this.neighbourhood([VizId.fromNode(node)]);
+        console.log(neighbourhood);
+        this.mergeToGraph(neighbourhood);
+        const nodes = this.viz.collection();
+        neighbourhood.forEach((n) => {
+          nodes.merge(this.viz.$id(n.data.id) as NodeSingular);
+        });
+        const edges = await this.buildEdges(nodes);
+        console.log(edges);
+        this.mergeToGraph(edges);
+        this.restartLayout();
       });
       this.viz.on('mouseover', 'node', async (e) => {
         const node = e.target as NodeSingular;
@@ -249,13 +262,6 @@ export class AdvancedGraphView extends ItemView {
           this.activeLayout.stop();
         }
       });
-      this.viz.on('add remove', (e) => {
-        if (this.activeLayout) {
-          this.activeLayout.stop();
-        }
-        console.log('starting layout');
-        this.activeLayout = this.viz.layout(this.colaLayout()).start();
-      });
       this.viz.on('dragfree', (e) => {
         if (this.activeLayout) {
           this.activeLayout.stop();
@@ -269,8 +275,6 @@ export class AdvancedGraphView extends ItemView {
         });
         node.lock();
       });
-
-
       this.viz.on('cxttap', (e) =>{
         // Thanks Liam for sharing how to do context menus
         const fileMenu = new Menu(); // Creates empty file menu
@@ -329,15 +333,15 @@ export class AdvancedGraphView extends ItemView {
                 this.onGraphChanged(false);
                 this.viz.endBatch();
                 const vizNode = this.viz.$id(id.toId());
-                this.viz.fit(this.viz.elements());
                 // const animation = this.viz.animate({
                 //   fit: {
-                //     eles: vizNode.closedNeighborhood(),
+                //     eles: this.viz.elements(),
                 //     padding: 0,
                 //   },
-                //   duration: 5000,
+                //   duration: 1000,
                 //   queue: false,
                 // });
+                this.restartLayout();
                 this.viz.one('layoutready', (e)=> {
                   console.log('Layout ready');
                   e.cy.one('layoutstop', (e) => {
@@ -497,8 +501,16 @@ export class AdvancedGraphView extends ItemView {
       });
     }
 
-    async buildEdges(newNodes: NodeCollection) {
-      const edges = [];
+    async neighbourhood(toExpand: VizId[]) : Promise<NodeDefinition[]> {
+      const nodes: NodeDefinition[] = [];
+      for (const store of this.datastores) {
+        nodes.push(...await store.getNeighbourhood(toExpand));
+      }
+      return nodes;
+    }
+
+    async buildEdges(newNodes: NodeCollection): Promise<EdgeDefinition[]> {
+      const edges: EdgeDefinition[] = [];
       for (const store of this.datastores) {
         edges.push(...await store.connectNodes(this.viz.nodes(), VizId.fromNodes(newNodes)));
       }
@@ -777,21 +789,36 @@ export class AdvancedGraphView extends ItemView {
       };
     }
 
-    mergeToGraph(elements: ElementDefinition[]) {
-      this.viz.startBatch();
+    restartLayout() {
+      if (this.activeLayout) {
+        this.activeLayout.stop();
+      }
+      console.log('starting layout');
+      this.activeLayout = this.viz.layout(this.colaLayout()).start();
+    }
+
+    mergeToGraph(elements: ElementDefinition[], batch=true) {
+      if (batch) {
+        this.viz.startBatch();
+      }
       const addElements: ElementDefinition[] = [];
       elements.forEach((n) => {
         if (this.viz.$id(n.data.id).length === 0) {
+          addElements.push(n);
+          console.log('adding', n);
+        } else {
           const gElement = this.viz.$id(n.data.id);
           gElement.classes(n.classes);
           gElement.data(n.data);
-        } else {
-          addElements.push(n);
+          console.log('already in', n);
         }
       });
       this.viz.add(addElements);
       this.onGraphChanged(false);
-      this.viz.endBatch();
+      if (batch) {
+        console.log('committing batch');
+        this.viz.endBatch();
+      }
     }
 
     onGraphChanged(batch:boolean=true) {

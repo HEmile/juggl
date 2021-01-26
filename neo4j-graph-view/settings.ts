@@ -10,7 +10,6 @@ export interface IAdvancedGraphSettings {
     autoAddNodes: boolean;
     hierarchical: boolean;
     navigator: boolean;
-    convertMarkdown: boolean;
     password: string; // neo4j
     typedLinkPrefix: string;
     splitDirection: SplitDirection; // 'horizontal';
@@ -24,7 +23,6 @@ export const DefaultNeo4jViewSettings: IAdvancedGraphSettings = {
   autoExpand: false,
   hierarchical: false,
   indexContent: false,
-  convertMarkdown: true,
   navigator: true,
   password: '',
   splitDirection: 'vertical',
@@ -123,18 +121,6 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
             toggle.setValue(this.plugin.settings.autoAddNodes)
                 .onChange((new_value) => {
                   this.plugin.settings.autoAddNodes = new_value;
-                  this.plugin.saveData(this.plugin.settings);
-                });
-          });
-
-      new Setting(containerEl)
-          .setName('Convert Markdown')
-          .setDesc('If true, the server will convert the content of notes to HTML. This can slow the server. ' +
-                'Turn it off to increase server performance at the cost of not having proper previews on hovering in the graph. ')
-          .addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.convertMarkdown)
-                .onChange((new_value) => {
-                  this.plugin.settings.convertMarkdown = new_value;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
