@@ -5,7 +5,7 @@ import cytoscape, {
   Core,
   EdgeDefinition,
   EdgeSingular,
-  ElementDefinition, Layouts,
+  ElementDefinition, LayoutOptions, Layouts,
   NodeCollection,
   NodeDefinition,
   NodeSingular, Singular,
@@ -19,7 +19,7 @@ export const MD_VIEW_TYPE = 'markdown';
 export const PROP_VAULT = 'SMD_vault';
 export const PROP_PATH = 'SMD_path';
 
-export const DEF_LAYOUT = {
+export const COSE_LAYOUT = {
   name: 'cose-bilkent',
   ready: function() {
     console.log('ready!');
@@ -44,6 +44,7 @@ export const DEF_LAYOUT = {
   gravity: 0.25,
   tile: true,
 };
+
 
 let VIEW_COUNTER = 0;
 
@@ -95,6 +96,7 @@ export class AdvancedGraphView extends ItemView {
     expandedNodes: string[] = [];
     events: Events;
     datastores: IDataStore[];
+    activeLayout: Layouts;
 
     constructor(leaf: WorkspaceLeaf, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[]) {
       super(leaf);
@@ -164,7 +166,7 @@ export class AdvancedGraphView extends ItemView {
       const styleSheet = await this.createStylesheet();
       this.viz.style(styleSheet);
 
-      this.viz.layout(DEF_LAYOUT).run();
+      this.activeLayout = this.viz.layout(this.colaLayout()).start();
 
       console.log('Visualization ready');
 
@@ -187,6 +189,7 @@ export class AdvancedGraphView extends ItemView {
         }
       });
       this.viz.on('tap', 'edge', async (e) => {
+
         // TODO: Move to correct spot in the file.
       });
       this.viz.on('mouseover', 'node', async (e) => {
@@ -209,6 +212,32 @@ export class AdvancedGraphView extends ItemView {
           }
         }
       });
+      this.viz.on('drag', (e) => {
+        if (this.activeLayout) {
+          this.activeLayout.stop();
+        }
+      });
+      this.viz.on('add remove', (e) => {
+        if (this.activeLayout) {
+          this.activeLayout.stop();
+        }
+        console.log('starting layout');
+        this.activeLayout = this.viz.layout(this.colaLayout()).start();
+      });
+      this.viz.on('dragfree', (e) => {
+        if (this.activeLayout) {
+          this.activeLayout.stop();
+        }
+        // this.activeLayout = this.viz.layout(this.colaLayout()).start();
+        this.activeLayout.start();
+        const node = e.target;
+        this.activeLayout.one('layoutstop', (e)=> {
+          console.log('here');
+          node.unlock();
+        });
+        node.lock();
+      });
+
       this.viz.on('mouseover', 'edge', async (e) => {
         const edge = e.target as EdgeSingular;
         e.cy.elements()
@@ -286,15 +315,28 @@ export class AdvancedGraphView extends ItemView {
                 this.viz.add(edges);
                 this.onGraphChanged(false);
                 this.viz.endBatch();
-                this.viz.one('layoutstop', (e) => {
-                  const node = e.cy.$id(id.toId());
-                  e.cy.animate({
-                    fit: {
-                      eles: node.closedNeighborhood(),
-                      padding: 0,
-                    },
-                    duration: 500,
-                    queue: false,
+                const vizNode = this.viz.$id(id.toId());
+                this.viz.fit(this.viz.elements());
+                // const animation = this.viz.animate({
+                //   fit: {
+                //     eles: vizNode.closedNeighborhood(),
+                //     padding: 0,
+                //   },
+                //   duration: 5000,
+                //   queue: false,
+                // });
+                this.viz.one('layoutready', (e)=> {
+                  console.log('Layout ready');
+                  e.cy.one('layoutstop', (e) => {
+                    // animation.stop();
+                    e.cy.animate({
+                      fit: {
+                        eles: vizNode.closedNeighborhood(),
+                        padding: 0,
+                      },
+                      duration: 500,
+                      queue: false,
+                    });
                   });
                 });
                 newNode = true;
@@ -677,6 +719,51 @@ export class AdvancedGraphView extends ItemView {
     //   this.network.setSelection({nodes: inversion, edges: []});
     // }
 
+    colaLayout(): LayoutOptions {
+      const viz = this;
+      return {
+        name: 'cola',
+        // @ts-ignore
+        animate: true, // whether to show the layout as it's running
+        refresh: 1, // number of ticks per frame; higher is faster but more jerky
+        maxSimulationTime: 4000, // max length in ms to run the layout
+        ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
+        fit: false, // on every layout reposition of nodes, fit the viewport
+        padding: 30, // padding around the simulation
+        nodeDimensionsIncludeLabels: true, // whether labels should be included in determining the space used by a node
+        // layout event callbacks
+        ready: function() {
+          console.log('ready!');
+        }, // on layoutready
+        stop: function() {
+          console.log('stop');
+          // viz.activeLayout = null;
+        }, // on layoutstop
+        // positioning options
+        randomize: false, // use random node positions at beginning of layout
+        avoidOverlap: true, // if true, prevents overlap of node bounding boxes
+        handleDisconnected: true, // if true, avoids disconnected components from overlapping
+        convergenceThreshold: 0.01, // when the alpha value (system energy) falls below this value, the layout stops
+        nodeSpacing: function( node: NodeSingular ) {
+          return 10;
+        }, // extra spacing around nodes
+        // flow: undefined, // use DAG/tree flow layout if specified, e.g. { axis: 'y', minSeparation: 30 }
+        // alignment: undefined, // relative alignment constraints on nodes, e.g. {vertical: [[{node: node1, offset: 0}, {node: node2, offset: 5}]], horizontal: [[{node: node3}, {node: node4}], [{node: node5}, {node: node6}]]}
+        // gapInequalities: undefined, // list of inequality constraints for the gap between the nodes, e.g. [{"axis":"y", "left":node1, "right":node2, "gap":25}]
+        //
+        // // different methods of specifying edge length
+        // // each can be a constant numerical value or a function like `function( edge ){ return 2; }`
+        // edgeLength: undefined, // sets edge length directly in simulation
+        // edgeSymDiffLength: undefined, // symmetric diff edge length in simulation
+        // edgeJaccardLength: undefined, // jaccard edge length in simulation
+        //
+        // // iterations of cola algorithm; uses default values on undefined
+        // unconstrIter: undefined, // unconstrained initial layout iterations
+        // userConstIter: undefined, // initial layout iterations with user-specified constraints
+        // allConstIter: undefined, // initial layout iterations with all constraints including non-overlap
+      };
+    }
+
     mergeToGraph(elements: ElementDefinition[]) {
       this.viz.startBatch();
       const addElements: ElementDefinition[] = [];
@@ -694,7 +781,7 @@ export class AdvancedGraphView extends ItemView {
       this.viz.endBatch();
     }
 
-    onGraphChanged(batch:boolean=true): Layouts {
+    onGraphChanged(batch:boolean=true) {
       if (batch) {
         this.viz.startBatch();
       }
@@ -704,7 +791,6 @@ export class AdvancedGraphView extends ItemView {
       if (batch) {
         this.viz.endBatch();
       }
-      return this.viz.layout(DEF_LAYOUT).run();
     }
 
 

@@ -46,6 +46,7 @@
   "dependencies": {
     "cypher-query-builder": "^6.0.4",
     "cytoscape": "^3.17.1",
+    "cytoscape-cola": "^2.4.0",
     "cytoscape-cose-bilkent": "^4.1.0",
     "cytoscape-navigator": "^2.0.1",
     "cytoscape-popper": "^2.0.0",
