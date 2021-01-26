@@ -2,6 +2,7 @@ import {IAdvancedGraphSettings} from './settings';
 import {EventRef, Events, ItemView, MarkdownRenderer, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
 import AdvancedGraphPlugin from './main';
 import cytoscape, {
+  Collection,
   Core,
   EdgeDefinition,
   EdgeSingular,
@@ -99,6 +100,7 @@ export class AdvancedGraphView extends ItemView {
     datastores: IDataStore[];
     activeLayout: Layouts;
     hoverTimeout: Record<string, Timeout> = {};
+    pinned: NodeCollection;
 
     constructor(leaf: WorkspaceLeaf, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[]) {
       super(leaf);
@@ -149,9 +151,7 @@ export class AdvancedGraphView extends ItemView {
       }
 
       const nodez = this.viz.nodes();
-      console.log(nodez);
       const edges = await this.buildEdges(nodez);
-      console.log(edges);
 
       if (this.settings.debug) {
         console.log(nodes);
@@ -173,6 +173,7 @@ export class AdvancedGraphView extends ItemView {
       const view = this;
 
       this.viz.on('tap', 'node', async (e) => {
+        console.log('tap');
         const id = VizId.fromNode(e.target);
         if (!(id.storeId === 'core')) {
           return;
@@ -196,6 +197,7 @@ export class AdvancedGraphView extends ItemView {
         await this.expand(e.target as NodeSingular);
       });
       this.viz.on('mouseover', 'node', async (e) => {
+        e.target.unlock();
         const node = e.target as NodeSingular;
         e.cy.elements()
             .difference(node.closedNeighborhood())
@@ -242,10 +244,13 @@ export class AdvancedGraphView extends ItemView {
           clearTimeout(this.hoverTimeout[id]);
           this.hoverTimeout[id] = undefined;
         }
-
         e.cy.elements().removeClass(['hover', 'unhover', 'connected-hover']);
+        if (this.pinned?.contains(e.target)) {
+          e.target.lock();
+        }
       });
-      this.viz.on('drag', (e) => {
+      this.viz.on('grab', (e) => {
+        console.log('grab');
         if (this.activeLayout) {
           this.activeLayout.stop();
         }
@@ -258,8 +263,9 @@ export class AdvancedGraphView extends ItemView {
         this.activeLayout.start();
         const node = e.target;
         this.activeLayout.one('layoutstop', (e)=> {
-          console.log('here');
-          node.unlock();
+          if (!view.pinned || !view.pinned.contains(node)) {
+            node.unlock();
+          }
         });
         node.lock();
       });
@@ -277,36 +283,60 @@ export class AdvancedGraphView extends ItemView {
             this.app.workspace.trigger('file-menu', fileMenu, file, 'my-context-menu', null);
           }
         }
-        fileMenu.addItem((item) =>{
-          item.setTitle('Expand selection (E)').setIcon('dot-network')
-              .onClick((evt) => {
-                this.expand(view.viz.nodes(':selected'));
-              });
-        });
-        fileMenu.addItem((item) =>{
-          item.setTitle('Hide selection (H)').setIcon('dot-network')
-              .onClick((evt) => {
-                // this.hideSelection();
-              });
-        });
-        fileMenu.addItem((item) =>{
-          item.setTitle('Invert selection (I)').setIcon('dot-network')
-              .onClick((evt) => {
-                this.invertSelection();
-              });
-        });
+        const selection = view.viz.nodes(':selected');
+        if (selection.length > 0) {
+          fileMenu.addItem((item) => {
+            item.setTitle('Expand selection (E)').setIcon('dot-network')
+                .onClick((evt) => {
+                  this.expand(view.viz.nodes(':selected'));
+                });
+          });
+          fileMenu.addItem((item) => {
+            item.setTitle('Hide selection (H)').setIcon('dot-network')
+                .onClick((evt) => {
+                  this.removeSelection();
+                });
+          });
+          fileMenu.addItem((item) => {
+            item.setTitle('Invert selection (I)').setIcon('dot-network')
+                .onClick((evt) => {
+                  this.invertSelection();
+                });
+          });
+        }
         fileMenu.addItem((item) =>{
           item.setTitle('Select all (A)').setIcon('dot-network')
               .onClick((evt) => {
                 this.viz.elements().select();
               });
         });
-        fileMenu.addItem((item) =>{
-          item.setTitle('Select neighbors (N)').setIcon('dot-network')
-              .onClick((evt) => {
-                this.selectNeighbourhood();
-              });
-        });
+        console.log('here1');
+        console.log(selection);
+        if (selection.length > 0) {
+          console.log('selection!');
+          fileMenu.addItem((item) => {
+            item.setTitle('Select neighbors (N)').setIcon('dot-network')
+                .onClick((evt) => {
+                  this.selectNeighbourhood();
+                });
+          });
+          if (!view.pinned || selection.difference(view.pinned).length > 0) {
+            fileMenu.addItem((item) => {
+              item.setTitle('Pin selection (P)').setIcon('filled-pin')
+                  .onClick((evt) => {
+                    this.pinSelection();
+                  });
+            });
+          }
+          if (view.pinned && selection.intersect(view.pinned).length > 0) {
+            fileMenu.addItem((item) => {
+              item.setTitle('Unpin selection (U)').setIcon('pin')
+                  .onClick((evt) => {
+                    this.unpinSelection();
+                  });
+            });
+          }
+        }
         fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
       });
 
@@ -382,42 +412,23 @@ export class AdvancedGraphView extends ItemView {
         if (!(this.workspace.activeLeaf === this.leaf)) {
           return;
         }
-        console.log(evt);
         if (evt.key === 'e') {
           this.expand(view.viz.nodes(':selected'));
         } else if (evt.key === 'h' || evt.key === 'Backspace') {
-          // this.hideSelection();
+          this.removeSelection();
         } else if (evt.key === 'i') {
           this.invertSelection();
         } else if (evt.key === 'a') {
           this.viz.elements().select();
         } else if (evt.key === 'n') {
           this.selectNeighbourhood();
+        } else if (evt.key === 'p') {
+          this.pinSelection();
+        } else if (evt.key === 'u') {
+          this.unpinSelection();
         }
       }, true);
 
-      //     this.network.on('doubleClick', (event) => {
-      //       if (event.nodes.length > 0) {
-      //         this.onDoubleClickNode(this.findNodeRaw(event.nodes[0]));
-      //       }
-      //     });
-      //   if (this.rebuildRelations) {
-      //     const inQuery = this.getInQuery(this.viz.nodes.getIds());
-      //     const query = 'MATCH (n)-[r]-(m) WHERE n.' + PROP_VAULT + '= "' + this.vault.getName() + '" AND n.name ' + inQuery +
-      //               ' AND  m.' + PROP_VAULT + '= "' + this.vault.getName() + '" AND m.name ' + inQuery +
-      //               ' RETURN r';
-      //     this.viz.updateWithCypher(query);
-      //     this.rebuildRelations = false;
-      //   }
-      //   this.updateStyle();
-      //   if (!(this.selectName=== undefined)) {
-      //     this.viz.nodes.forEach((node) => {
-      //       if (node.label === this.selectName) {
-      //         this.network.setSelection({nodes: [node.id], edges: []});
-      //         this.selectName = undefined;
-      //       }
-      //     });
-      //   }
 
       // // Note: Nothing is implemented for on('createNode'). Is it true nothing should happen?
       // this.events.push(this.plugin.neo4jStream.on('renameNode', (o, n) => {
@@ -476,12 +487,10 @@ export class AdvancedGraphView extends ItemView {
       });
       this.viz.one('mouseout', (e) => {
         setTimeout(function() {
-          console.log('h1');
           if (!newDiv.hasClass('popover-hovered')) {
             popper.destroy();
             newDiv.remove();
           }
-          console.log('h2');
         }, 300);
       });
     }
@@ -503,7 +512,8 @@ export class AdvancedGraphView extends ItemView {
     }
 
     async expand(toExpand: NodeCollection) {
-      const neighbourhood = await this.neighbourhood(toExpand.map((n) => VizId.fromNode(n)));
+      const expandedIds = toExpand.map((n) => VizId.fromNode(n));
+      const neighbourhood = await this.neighbourhood(expandedIds);
       this.mergeToGraph(neighbourhood);
       const nodes = this.viz.collection();
       neighbourhood.forEach((n) => {
@@ -512,6 +522,7 @@ export class AdvancedGraphView extends ItemView {
       const edges = await this.buildEdges(nodes);
       this.mergeToGraph(edges);
       this.restartLayout();
+      this.trigger('expand', toExpand);
     }
 
     async createStylesheet(): Promise<string> {
@@ -523,40 +534,14 @@ export class AdvancedGraphView extends ItemView {
     protected async onClose(): Promise<void> {
     }
 
-    updateWithCypher(cypher: string) {
-      if (this.settings.debug) {
-        console.log(cypher);
-      }
-      // this.viz.updateWithCypher(cypher);
-      this.rebuildRelations = true;
-    }
-
-
-    // async onClickNode(node: INode) {
-    //   const file = this.getFileFromNode(node);
-    //   // @ts-ignore
-    //   const label = node.raw.properties['name'];
-    //   if (file) {
-    //     await this.plugin.openFile(file);
-    //   } else {
-    //     // Create dangling file
-    //     // TODO: Add default folder
-    //     // @ts-ignore
-    //     const filename = label + '.md';
-    //     const createdFile = await this.vault.create(filename, '');
-    //     await this.plugin.openFile(createdFile);
+    // updateWithCypher(cypher: string) {
+    //   if (this.settings.debug) {
+    //     console.log(cypher);
     //   }
-    //   if (this.settings.autoExpand) {
-    //     await this.updateWithCypher(this.plugin.localNeighborhoodCypher(label));
-    //   }
+    //   // this.viz.updateWithCypher(cypher);
+    //   this.rebuildRelations = true;
     // }
 
-    // async onDoubleClickNode(node: Node) {
-    //   // @ts-ignore
-    //   const label = node.properties['name'];
-    //   this.expandedNodes.push(label);
-    //   await this.updateWithCypher(this.plugin.localNeighborhoodCypher(label));
-    // }
 
     invertSelection() {
       this.viz.$(':selected')
@@ -573,30 +558,50 @@ export class AdvancedGraphView extends ItemView {
           .select();
     }
 
+    removeSelection() {
+      const removed = this.viz.nodes(':selected').remove();
+      this.restartLayout();
+      this.trigger('hide', removed);
+    }
 
-    public async onNodeModify(name: string) {
-      if (this.expandedNodes.includes(name)) {
-        this.updateWithCypher(this.plugin.localNeighborhoodCypher(name));
-      } else {
-        this.updateWithCypher(this.plugin.nodeCypher(name));
+    unpinSelection() {
+      const unlocked = this.viz.nodes(':selected').unlock();
+      this.restartLayout();
+      if (this.pinned) {
+        this.pinned = this.pinned.difference(unlocked);
       }
+      this.trigger('pin', unlocked);
     }
 
-    public async onNodeRenamed(oldName: string, newName: string) {
-      if (this.expandedNodes.includes(oldName)) {
-        this.updateWithCypher(this.plugin.localNeighborhoodCypher(newName));
-        this.expandedNodes.remove(oldName);
-        this.expandedNodes.push(newName);
+    pinSelection() {
+      const locked = this.viz.nodes(':selected').lock();
+      this.restartLayout();
+      if (this.pinned) {
+        this.pinned = this.pinned.union(locked);
       } else {
-        this.updateWithCypher(this.plugin.nodeCypher(newName));
+        this.pinned = locked;
       }
+      this.trigger('pin', locked);
     }
 
-    public async onNodeDeleted(name: string) {
-    // TODO: Maybe automatically update to dangling link by running an update query.
-    //   this.deleteNode(name);
-    // view.updateStyle();
-    }
+
+    // public async onNodeModify(name: string) {
+    //   if (this.expandedNodes.includes(name)) {
+    //     this.updateWithCypher(this.plugin.localNeighborhoodCypher(name));
+    //   } else {
+    //     this.updateWithCypher(this.plugin.nodeCypher(name));
+    //   }
+    // }
+    //
+    // public async onNodeRenamed(oldName: string, newName: string) {
+    //   if (this.expandedNodes.includes(oldName)) {
+    //     this.updateWithCypher(this.plugin.localNeighborhoodCypher(newName));
+    //     this.expandedNodes.remove(oldName);
+    //     this.expandedNodes.push(newName);
+    //   } else {
+    //     this.updateWithCypher(this.plugin.nodeCypher(newName));
+    //   }
+    // }
 
     // getInQuery(nodes: IdType[]): string {
     //   let query = 'IN [';
@@ -614,132 +619,7 @@ export class AdvancedGraphView extends ItemView {
     //   return query;
     // }
 
-    // async expandSelection() {
-    //   const selected_nodes = this.network.getSelectedNodes();
-    //   if (selected_nodes.length === 0) {
-    //     return;
-    //   }
-    //   let query = 'MATCH (n)-[r]-(m) WHERE n.' + PROP_VAULT + '= "' + this.vault.getName() + '" AND n.name ';
-    //   query += this.getInQuery(selected_nodes);
-    //   query += ' RETURN r,m';
-    //   const expandedNodes = this.expandedNodes;
-    //   selected_nodes.forEach((id) => {
-    //     // @ts-ignore
-    //     const title = this.findNodeRaw(id).properties['name'] as string;
-    //     if (!expandedNodes.includes(title)) {
-    //       expandedNodes.push(title);
-    //     }
-    //   });
-    //   this.updateWithCypher(query);
-    // }
-
-    // deleteNode(id: IdType) {
-    //   // console.log(this.viz.nodes);
-    //   // @ts-ignore
-    //
-    //   const node = this.findNode(id) || this.nodes[id];
-    //   if (node === undefined) {
-    //     return;
-    //   }
-    //   // @ts-ignore
-    //   const title = node.raw.properties['name'] as string;
-    //   if (this.expandedNodes.includes(title)) {
-    //     this.expandedNodes.remove(title);
-    //   }
-    //   const expandedNodes = this.expandedNodes;
-    //   this.network.getConnectedNodes(id).forEach((value: any) => {
-    //     this.findNodeRaw(value);
-    //     // @ts-ignore
-    //     const n_title = this.findNodeRaw(value).properties['name'] as string;
-    //     if (expandedNodes.includes(n_title)) {
-    //       expandedNodes.remove(n_title);
-    //     }
-    //   });
-    //
-    //   const edges_to_remove: IEdge[] = [];
-    //   this.viz.edges.forEach((edge) => {
-    //     if (edge.from === id || edge.to === id) {
-    //       edges_to_remove.push(edge);
-    //     }
-    //   });
-    //   edges_to_remove.forEach((edge) => {
-    //     this.viz.edges.remove(edge);
-    //   });
-    //
-    //   this.viz.nodes.remove(id);
-    //
-    //   const keys_to_remove = [];
-    //   for (const key in this.edges) {
-    //     const edge = this.edges[key];
-    //     if (edge.to === id || edge.from === id) {
-    //       keys_to_remove.push(key);
-    //     }
-    //   }
-    //   keys_to_remove.forEach((key) => {
-    //     // @ts-ignore
-    //     delete this.edges[key];
-    //   });
-    //
-    //   delete this.nodes[id as number];
-    // }
-    //
-    // deleteEdge(id: IdType) {
-    //   const edge = this.edges[id];
-    //   if (edge === undefined) {
-    //     return;
-    //   }
-    //
-    //   const nodes = [edge.from, edge.to];
-    //
-    //   this.viz.edges.remove(edge);
-    //
-    //   delete this.edges[id];
-    //
-    //   // TODO: Check if the node deletion is using the right rule
-    //   // Current rule: The connected nodes are not expanded, and also have no other edges.
-    //   nodes.forEach((node_id) => {
-    //     const node = this.findNodeRaw(node_id);
-    //     // @ts-ignore
-    //     if (!this.expandedNodes.contains(node.properties['name']) &&
-    //             this.network.getConnectedEdges(node_id).length === 0) {
-    //       this.deleteNode(node_id);
-    //     }
-    //   });
-    // }
-    //
-    // async hideSelection() {
-    //   if (this.network.getSelectedNodes().length === 0) {
-    //     return;
-    //   }
-    //   // Update expanded nodes. Make sure to not automatically expand nodes of which a neighbor was hidden.
-    //   // Otherwise, one would have to keep hiding nodes.
-    //   this.network.getSelectedNodes().forEach((id) => {
-    //     this.deleteNode(id);
-    //   });
-    //   // this.network.deleteSelected();
-    //
-    //   // This super hacky code is used because neovis.js doesn't like me removing nodes from the graph.
-    //   // Essentially, whenever it'd execute a new query, it'd re-add all hidden nodes!
-    //   // This resets the state of NeoVis so that it only acts as an interface with neo4j instead of also keeping
-    //   // track of the data.
-    //   // @ts-ignore
-    //   // let data = {nodes: this.viz.nodes, edges: this.viz.edges} as Data;
-    //   // this.viz.clearNetwork();
-    //   // this.network.setData(data);
-    //   this.updateStyle();
-    // }
-
-    // invertSelection() {
-    //   const selectedNodes = this.network.getSelectedNodes();
-    //   const network = this.network;
-    //   const inversion = this.viz.nodes.get({filter: function(item) {
-    //     return !selectedNodes.contains(item.id) && network.findNode(item.id).length > 0;
-    //   }}).map((item) => item.id);
-    //   this.network.setSelection({nodes: inversion, edges: []});
-    // }
-
     colaLayout(): LayoutOptions {
-      const viz = this;
       return {
         name: 'cola',
         // @ts-ignore
@@ -766,20 +646,6 @@ export class AdvancedGraphView extends ItemView {
         nodeSpacing: function( node: NodeSingular ) {
           return 10;
         }, // extra spacing around nodes
-        // flow: undefined, // use DAG/tree flow layout if specified, e.g. { axis: 'y', minSeparation: 30 }
-        // alignment: undefined, // relative alignment constraints on nodes, e.g. {vertical: [[{node: node1, offset: 0}, {node: node2, offset: 5}]], horizontal: [[{node: node3}, {node: node4}], [{node: node5}, {node: node6}]]}
-        // gapInequalities: undefined, // list of inequality constraints for the gap between the nodes, e.g. [{"axis":"y", "left":node1, "right":node2, "gap":25}]
-        //
-        // // different methods of specifying edge length
-        // // each can be a constant numerical value or a function like `function( edge ){ return 2; }`
-        // edgeLength: undefined, // sets edge length directly in simulation
-        // edgeSymDiffLength: undefined, // symmetric diff edge length in simulation
-        // edgeJaccardLength: undefined, // jaccard edge length in simulation
-        //
-        // // iterations of cola algorithm; uses default values on undefined
-        // unconstrIter: undefined, // unconstrained initial layout iterations
-        // userConstIter: undefined, // initial layout iterations with user-specified constraints
-        // allConstIter: undefined, // initial layout iterations with all constraints including non-overlap
       };
     }
 
@@ -827,29 +693,10 @@ export class AdvancedGraphView extends ItemView {
       }
     }
 
-
-    selectAll() {
-      // this.network.unselectAll();
-      // this.invertSelection();
+    public getViz(): Core {
+      return this.viz;
     }
 
-    // async checkAndUpdate() {
-    //   try {
-    //     if (await this.checkActiveLeaf()) {
-    //       await this.update();
-    //     }
-    //   } catch (error) {
-    //     console.error(error);
-    //   }
-    // }
-
-    async update() {
-      this.load();
-    }
-    //
-    // async checkActiveLeaf() {
-    //   return false;
-    // }
 
     getDisplayText(): string {
       return 'Advanced Graph';
@@ -860,6 +707,10 @@ export class AdvancedGraphView extends ItemView {
     }
 
     on(name:'stylesheet', callback: (sheet: GraphStyleSheet) => any): EventRef;
+    on(name: 'expand', callback: (elements: NodeCollection) => any): EventRef;
+    on(name: 'hide', callback: (elements: NodeCollection) => any): EventRef;
+    on(name: 'pin', callback: (elements: NodeCollection) => any): EventRef;
+    on(name: 'unpin', callback: (elements: NodeCollection) => any): EventRef;
     on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
       return this.events.on(name, callback, ctx);
     }
@@ -870,6 +721,10 @@ export class AdvancedGraphView extends ItemView {
       this.events.offref(ref);
     }
     trigger(name:'stylesheet', sheet: GraphStyleSheet): void;
+    trigger(name: 'expand', elements: NodeCollection): void;
+    trigger(name: 'hide', elements: NodeCollection): void;
+    trigger(name: 'pin', elements: NodeCollection): void;
+    trigger(name: 'unpin', elements: NodeCollection): void;
     trigger(name: string, ...data: any[]): void {
       this.events.trigger(name, ...data);
     }
