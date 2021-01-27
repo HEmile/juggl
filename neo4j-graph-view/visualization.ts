@@ -292,30 +292,27 @@ export class AdvancedGraphView extends ItemView {
                 });
           });
           fileMenu.addItem((item) => {
-            item.setTitle('Hide selection (H)').setIcon('dot-network')
+            item.setTitle('Hide selection (H)').setIcon('trash')
                 .onClick((evt) => {
                   this.removeSelection();
                 });
           });
           fileMenu.addItem((item) => {
-            item.setTitle('Invert selection (I)').setIcon('dot-network')
+            item.setTitle('Invert selection (I)').setIcon('blocks')
                 .onClick((evt) => {
                   this.invertSelection();
                 });
           });
         }
         fileMenu.addItem((item) =>{
-          item.setTitle('Select all (A)').setIcon('dot-network')
+          item.setTitle('Select all (A)').setIcon('blocks')
               .onClick((evt) => {
                 this.viz.elements().select();
               });
         });
-        console.log('here1');
-        console.log(selection);
         if (selection.length > 0) {
-          console.log('selection!');
           fileMenu.addItem((item) => {
-            item.setTitle('Select neighbors (N)').setIcon('dot-network')
+            item.setTitle('Select neighbors (N)').setIcon('blocks')
                 .onClick((evt) => {
                   this.selectNeighbourhood();
                 });
@@ -336,6 +333,7 @@ export class AdvancedGraphView extends ItemView {
                   });
             });
           }
+          // use 'info' for pinning the preview. or  'popup-open'
         }
         fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
       });

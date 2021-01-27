@@ -23,6 +23,8 @@ import {VizId} from './visualization';
 import {node} from 'cypher-query-builder';
 import * as Url from 'url';
 
+export const OBSIDIAN_STORE_NAME = 'Obsidian';
+
 export class ObsidianStore extends Component implements IDataStore {
     plugin: Neo4jViewPlugin;
     events: DataStoreEvents;

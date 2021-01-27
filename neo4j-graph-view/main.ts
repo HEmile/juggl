@@ -8,14 +8,14 @@ import {
   IAdvancedGraphSettings,
   Neo4jViewSettingTab,
   DefaultNeo4jViewSettings} from './settings';
-import {AdvancedGraphView, MD_VIEW_TYPE, PROP_VAULT} from './visualization';
+import {AdvancedGraphView, AG_VIEW_TYPE, MD_VIEW_TYPE, PROP_VAULT} from './visualization';
 import {Editor} from 'codemirror';
 import {Neo4jError} from 'neo4j-driver';
 import {Neo4jStream} from './stream';
 import {ImageServer} from './image-server';
 import {CAT_DANGLING, nameRegex} from './neo4j';
-import {ITypedLink, ITypedLinkProperties} from './interfaces';
-import {ObsidianStore} from './obsidian-store';
+import {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
+import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
 import coseBilkent from 'cytoscape-cose-bilkent';
 import cytoscape from 'cytoscape';
 import navigator from 'cytoscape-navigator';
@@ -37,13 +37,15 @@ export default class Neo4jViewPlugin extends Plugin {
     path: string;
     statusBar: HTMLElement;
     neovisView: AdvancedGraphView;
-    neo4jStream: Neo4jStream;
+    // neo4jStream: Neo4jStream;
     vault: Vault;
     metadata: MetadataCache
+    coreStores: Record<string, IDataStore> = {};
+    stores: IDataStore[] = [];
 
     async onload(): Promise<void> {
       super.onload();
-      console.log('Loading Neo4j graph view plugin');
+      console.log('Loading advanced graph view plugin');
       navigator(cytoscape);
       cytoscape.use(coseBilkent);
       cytoscape.use(popper);
@@ -53,6 +55,7 @@ export default class Neo4jViewPlugin extends Plugin {
       this.vault = this.app.vault;
       this.metadata = this.app.metadataCache;
       this.path = this.vault.getRoot().path;
+      this.registerCoreStore(new ObsidianStore(this), OBSIDIAN_STORE_NAME);
 
       this.settings = Object.assign(DefaultNeo4jViewSettings, await this.loadData());// (await this.loadData()) || DefaultNeo4jViewSettings;
       this.statusBar = this.addStatusBarItem();
@@ -63,21 +66,21 @@ export default class Neo4jViewPlugin extends Plugin {
 
       // this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.app.workspace.activeLeaf?.getDisplayText(), this))
 
-      this.addCommand({
-        id: 'restart-stream',
-        name: 'Restart Neo4j stream',
-        callback: () => {
-          console.log('Restarting stream');
-          this.neo4jStream.restart();
-        },
-      });
-      this.addCommand({
-        id: 'stop-stream',
-        name: 'Stop Neo4j stream',
-        callback: () => {
-          this.neo4jStream.shutdown();
-        },
-      });
+      // this.addCommand({
+      //   id: 'restart-stream',
+      //   name: 'Restart Neo4j stream',
+      //   callback: () => {
+      //     console.log('Restarting stream');
+      //     this.neo4jStream.restart();
+      //   },
+      // });
+      // this.addCommand({
+      //   id: 'stop-stream',
+      //   name: 'Stop Neo4j stream',
+      //   callback: () => {
+      //     this.neo4jStream.shutdown();
+      //   },
+      // });
 
       // this.addCommand({
       //   id: 'open-bloom-link',
@@ -112,17 +115,17 @@ export default class Neo4jViewPlugin extends Plugin {
         },
       });
 
-      this.addCommand({
-        id: 'execute-query',
-        name: 'Execute Cypher query',
-        callback: () => {
-          if (!this.neo4jStream) {
-            new Notice('Cannot open local graph as neo4j stream is not active.');
-            return;
-          }
-          this.executeQuery();
-        },
-      });
+      // this.addCommand({
+      //   id: 'execute-query',
+      //   name: 'Execute Cypher query',
+      //   callback: () => {
+      //     if (!this.neo4jStream) {
+      //       new Notice('Cannot open local graph as neo4j stream is not active.');
+      //       return;
+      //     }
+      //     this.executeQuery();
+      //   },
+      // });
 
       this.addSettingTab(new Neo4jViewSettingTab(this.app, this));
 
@@ -157,11 +160,11 @@ export default class Neo4jViewPlugin extends Plugin {
     }
 
 
-    openLocalGraph(name: string) {
+    async openLocalGraph(name: string) {
       const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
       // const query = this.localNeighborhoodCypher(name);
-      const neovisView = new AdvancedGraphView(leaf, this, name, [new ObsidianStore(this)]);
-      leaf.open(neovisView);
+      const neovisView = new AdvancedGraphView(leaf, this, name, [this.coreStores[this.settings.coreStore]].concat(this.stores));
+      await leaf.open(neovisView);
       neovisView.expandedNodes.push(name);
     }
 
@@ -319,8 +322,25 @@ export default class Neo4jViewPlugin extends Plugin {
       }
     }
 
+    public activeViews(): AdvancedGraphView[] {
+      return this.app.workspace
+          .getLeavesOfType(AG_VIEW_TYPE)
+          .map((l) => l.view as AdvancedGraphView);
+    }
+
     async onunload() {
       super.onunload();
       console.log('Unloading Neo4j Graph View plugin');
+    }
+
+    public registerStore(store: IDataStore) {
+      this.stores.push(store);
+    }
+
+    public registerCoreStore(store: IDataStore, name: string) {
+      if (!(store.storeId() === 'core')) {
+        throw new Error('Can only register IDataStores as core if their storeId is core');
+      }
+      this.coreStores[name] = store;
     }
 }

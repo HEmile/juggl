@@ -3,25 +3,25 @@ import {App, Notice, PluginSettingTab, Setting, SplitDirection} from 'obsidian';
 import Neo4jViewPlugin from './main';
 // import {EdgeOptions, NodeOptions} from 'vis-network';
 import {AdvancedGraphView, AG_VIEW_TYPE} from './visualization';
+import {OBSIDIAN_STORE_NAME} from './obsidian-store';
 
 export interface IAdvancedGraphSettings {
     indexContent: boolean; // neo4j
     autoExpand: boolean;
     autoAddNodes: boolean;
-    hierarchical: boolean;
     navigator: boolean;
     password: string; // neo4j
     typedLinkPrefix: string;
     splitDirection: SplitDirection; // 'horizontal';
     imgServerPort: number;
     debug: boolean;
+    coreStore: string;
 }
 
 
 export const DefaultNeo4jViewSettings: IAdvancedGraphSettings = {
   autoAddNodes: true,
   autoExpand: false,
-  hierarchical: false,
   indexContent: false,
   navigator: true,
   password: '',
@@ -29,6 +29,7 @@ export const DefaultNeo4jViewSettings: IAdvancedGraphSettings = {
   typedLinkPrefix: '-',
   imgServerPort: 3837,
   debug: false,
+  coreStore: OBSIDIAN_STORE_NAME,
 };
 
 
@@ -44,7 +45,7 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
       containerEl.empty();
 
       containerEl.createEl('h3');
-      containerEl.createEl('h3', {text: 'Neo4j Graph View'});
+      containerEl.createEl('h3', {text: 'Advanced Graph View'});
 
       const doc_link = document.createElement('a');
       doc_link.href = 'https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin';
@@ -57,23 +58,23 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
       discord_link.innerHTML = 'the Discord server';
 
       const introPar = document.createElement('p');
-      introPar.innerHTML = 'Check out ' + doc_link.outerHTML + ' for installation help and a getting started guide. <br>' +
-            'Join ' + discord_link.outerHTML + ' for nice discussion and additional help.';
+      introPar.innerHTML = 'Check out ' + doc_link.outerHTML + ' for guides on how to use the plugin. <br>' +
+            'Join ' + discord_link.outerHTML + ' for help, nice discussion and insight into development.';
 
       containerEl.appendChild(introPar);
 
-      new Setting(containerEl)
-          .setName('Neo4j database password')
-          .setDesc('The password of your neo4j graph database. WARNING: This is stored in plaintext in your vault. ' +
-                'Don\'t use sensitive passwords here!')
-          .addText((text) => {
-            text.setPlaceholder('')
-                .setValue(this.plugin.settings.password)
-                .onChange((newFolder) => {
-                  this.plugin.settings.password = newFolder;
-                  this.plugin.saveData(this.plugin.settings);
-                }).inputEl.setAttribute('type', 'password');
-          });
+      // new Setting(containerEl)
+      //     .setName('Neo4j database password')
+      //     .setDesc('The password of your neo4j graph database. WARNING: This is stored in plaintext in your vault. ' +
+      //           'Don\'t use sensitive passwords here!')
+      //     .addText((text) => {
+      //       text.setPlaceholder('')
+      //           .setValue(this.plugin.settings.password)
+      //           .onChange((newFolder) => {
+      //             this.plugin.settings.password = newFolder;
+      //             this.plugin.saveData(this.plugin.settings);
+      //           }).inputEl.setAttribute('type', 'password');
+      //     });
 
       containerEl.createEl('h3');
       containerEl.createEl('h3', {text: 'Extensions'});
@@ -89,16 +90,19 @@ export class Neo4jViewSettingTab extends PluginSettingTab {
           });
 
       new Setting(containerEl)
-          .setName('Hierarchical layout')
-          .setDesc('Use the hierarchical graph layout instead of the normal one.')
-          .addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.hierarchical)
+          .setName('Data store')
+          .setDesc('Set what database to get the Obsidian graph from. By default, only Obsidian itself is an option. ' +
+                'You can install the Neo4j Stream Plugin to use a Neo4j backend which has more features and scales better to large graphs.')
+          .addDropdown((dropdown) => {
+            Object.keys(this.plugin.coreStores).forEach((c) => {
+              dropdown.addOption(c, c);
+            });
+            dropdown.setValue(this.plugin.settings.coreStore)
                 .onChange((newValue) => {
-                  this.plugin.settings.hierarchical = newValue;
+                  this.plugin.settings.coreStore = newValue;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
-
 
       containerEl.createEl('h3');
       containerEl.createEl('h3', {text: 'Advanced'});
