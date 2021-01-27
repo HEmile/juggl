@@ -666,11 +666,12 @@ export class AdvancedGraphView extends ItemView {
       this.activeLayout = this.viz.layout(this.colaLayout()).start();
     }
 
-    mergeToGraph(elements: ElementDefinition[], batch=true) {
+    mergeToGraph(elements: ElementDefinition[], batch=true): Collection {
       if (batch) {
         this.viz.startBatch();
       }
       const addElements: ElementDefinition[] = [];
+      const mergedCollection = this.viz.collection();
       elements.forEach((n) => {
         if (this.viz.$id(n.data.id).length === 0) {
           addElements.push(n);
@@ -680,14 +681,16 @@ export class AdvancedGraphView extends ItemView {
           gElement.classes(n.classes);
           gElement.data(n.data);
           console.log('already in', n);
+          mergedCollection.merge(gElement);
         }
       });
-      this.viz.add(addElements);
+      mergedCollection.merge(this.viz.add(addElements));
       this.onGraphChanged(false);
       if (batch) {
         console.log('committing batch');
         this.viz.endBatch();
       }
+      return mergedCollection;
     }
 
     onGraphChanged(batch:boolean=true) {

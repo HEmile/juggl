@@ -19,7 +19,7 @@ import {
   NodeCollection,
   EdgeDataDefinition,
 } from 'cytoscape';
-import {VizId} from './visualization';
+import {AdvancedGraphView, VizId} from './visualization';
 import {node} from 'cypher-query-builder';
 import * as Url from 'url';
 
@@ -224,6 +224,17 @@ export class ObsidianStore extends Component implements IDataStore {
       return Promise.resolve(this.nodeFromFile(file));
     }
 
+    async refreshNode(view: AdvancedGraphView, id: VizId) {
+      const newNode = await this.get(id);
+      view.mergeToGraph([newNode]);
+      const edges = await view.buildEdges(view.viz.$id(id.toId()));
+      const correctEdges = view.mergeToGraph(edges);
+      view.viz.$id(id.toId())
+          .connectedEdges()
+          .difference(correctEdges)
+          .remove();
+      view.restartLayout();
+    }
 
     onload() {
       super.onload();
@@ -231,8 +242,10 @@ export class ObsidianStore extends Component implements IDataStore {
       this.registerEvent(
           this.metadata.on('changed', (file) => {
             console.log('changed');
-          },
-          ));
+            store.plugin.activeViews().forEach(async (v) => {
+              await store.refreshNode(v, VizId.fromFile(file));
+            });
+          }));
       this.registerEvent(
           this.vault.on('rename', (file, oldPath) => {
             if (file instanceof TFile) {
@@ -241,24 +254,23 @@ export class ObsidianStore extends Component implements IDataStore {
               store.plugin.activeViews().forEach(async (v) => {
                 setTimeout(async ()=> {
                   // Changing the ID of a node in Cytoscape is not allowed, so remove and then restore.
-                  v.viz.$id(oldId.toId()).remove();
                   // Put in setTimeout because Obsidian doesn't immediately update the metadata on rename...
-                  const newNode = await store.get(id);
-                  v.mergeToGraph([newNode]);
-                  const edges = await v.buildEdges(v.viz.$id(id.toId()));
-                  v.mergeToGraph(edges);
-                  v.restartLayout();
+                  v.viz.$id(oldId.toId()).remove();
+                  await store.refreshNode(v, id);
                 }, 500);
               });
             }
           }));
       this.registerEvent(
-          this.vault.on('modify', (file) => {}));
-      this.registerEvent(
           this.vault.on('delete', (file) => {
+            if (file instanceof TFile) {
+              store.plugin.activeViews().forEach((v) => {
+                v.viz.$id(VizId.fromFile(file).toId()).remove();
+              });
+            }
           }));
-      this.registerEvent(
-          this.vault.on('create', (file) => {
-          }));
+      // this.registerEvent(
+      //     this.vault.on('create', (file) => {
+      //     }));
     }
 }
