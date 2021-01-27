@@ -55,7 +55,9 @@ export default class Neo4jViewPlugin extends Plugin {
       this.vault = this.app.vault;
       this.metadata = this.app.metadataCache;
       this.path = this.vault.getRoot().path;
-      this.registerCoreStore(new ObsidianStore(this), OBSIDIAN_STORE_NAME);
+      const obsidianStore = new ObsidianStore(this);
+      this.addChild(obsidianStore);
+      this.registerCoreStore(obsidianStore, OBSIDIAN_STORE_NAME);
 
       this.settings = Object.assign(DefaultNeo4jViewSettings, await this.loadData());// (await this.loadData()) || DefaultNeo4jViewSettings;
       this.statusBar = this.addStatusBarItem();

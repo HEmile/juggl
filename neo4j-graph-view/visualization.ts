@@ -14,6 +14,7 @@ import cytoscape, {
 import {IDataStore} from './interfaces';
 import {GraphStyleSheet} from './stylesheet';
 import Timeout = NodeJS.Timeout;
+import {basename} from 'path';
 
 export const AG_VIEW_TYPE = 'advanced_graph_view';
 export const MD_VIEW_TYPE = 'markdown';
@@ -79,6 +80,16 @@ export class VizId {
 
     static fromNodes(nodes: NodeCollection) : VizId[] {
       return nodes.map((n) => VizId.fromNode(n));
+    }
+
+    static fromFile(file: TFile): VizId {
+      const name = file.extension === 'md' ? file.basename : file.name;
+      return new VizId(name, 'core');
+    }
+
+    static fromPath(path: string): VizId {
+      const name = basename(path, '.md');
+      return new VizId(name, 'core');
     }
 
     static toId(id: string, storeId: string) : string {

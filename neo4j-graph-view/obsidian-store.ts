@@ -212,11 +212,53 @@ export class ObsidianStore extends Component implements IDataStore {
 
     get(nodeId: VizId): Promise<NodeDefinition> {
       const file = this.getFile(nodeId);
+      if (file === null) {
+        console.log('null file', nodeId);
+        return null;
+      }
       const cache = this.metadata.getFileCache(file);
       if (cache === null) {
-        console.log('returning empty');
+        console.log('returning empty cache', nodeId);
         return null;
       }
       return Promise.resolve(this.nodeFromFile(file));
+    }
+
+
+    onload() {
+      super.onload();
+      const store = this;
+      this.registerEvent(
+          this.metadata.on('changed', (file) => {
+            console.log('changed');
+          },
+          ));
+      this.registerEvent(
+          this.vault.on('rename', (file, oldPath) => {
+            if (file instanceof TFile) {
+              const id = VizId.fromFile(file);
+              const oldId = VizId.fromPath(oldPath);
+              store.plugin.activeViews().forEach(async (v) => {
+                setTimeout(async ()=> {
+                  // Changing the ID of a node in Cytoscape is not allowed, so remove and then restore.
+                  v.viz.$id(oldId.toId()).remove();
+                  // Put in setTimeout because Obsidian doesn't immediately update the metadata on rename...
+                  const newNode = await store.get(id);
+                  v.mergeToGraph([newNode]);
+                  const edges = await v.buildEdges(v.viz.$id(id.toId()));
+                  v.mergeToGraph(edges);
+                  v.restartLayout();
+                }, 500);
+              });
+            }
+          }));
+      this.registerEvent(
+          this.vault.on('modify', (file) => {}));
+      this.registerEvent(
+          this.vault.on('delete', (file) => {
+          }));
+      this.registerEvent(
+          this.vault.on('create', (file) => {
+          }));
     }
 }
