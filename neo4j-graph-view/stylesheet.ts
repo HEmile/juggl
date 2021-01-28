@@ -142,24 +142,25 @@ export class GraphStyleSheet {
 
     genStyleSheet(): string {
       const tagColorMap = {} as Record<string, string>;
-      const folderShapeMap = {} as Record<string, string>;
-      const shapes = ['round-triangle',
-        'round-rectangle',
-        'barrel',
-        'rhomboid',
-        'round-diamond',
-        'round-pentagon',
-        'round-hexagon',
-        'round-heptagon',
-        'round-octagon',
-        'star',
-        'vee'];
+      // const folderShapeMap = {} as Record<string, string>;
+      // const shapes = ['round-triangle',
+      //   'round-rectangle',
+      //   'barrel',
+      //   'rhomboid',
+      //   'round-diamond',
+      //   'round-pentagon',
+      //   'round-hexagon',
+      //   'round-heptagon',
+      //   'round-octagon',
+      //   'star',
+      //   'vee'];
       const colorSet = [[
         '#0089BA',
         '#2C73D2',
         '#008E9B',
         '#0081CF',
         '#008F7A',
+        '#008E9B', // This one is double oops!
       ], [
         '#D65DB1',
         '#0082C1',
@@ -202,17 +203,17 @@ export class GraphStyleSheet {
           colors.push(colorSet[j][i]);
         }
       }
-      let folderIter = 0;
+      // let folderIter = 0;
       let tagsIter = 0;
       for (const file of this.plugin.vault.getMarkdownFiles()) {
-        if (!(file.parent.name === '/' || file.parent.name === '')) {
-          const folderClass = `folder-${file.parent.name
-              .replace(' ', '_')}`;
-          if (!(folderClass in folderShapeMap)) {
-            folderShapeMap[folderClass] = shapes[folderIter];
-            folderIter += 1;
-          }
-        }
+      //   if (!(file.parent.name === '/' || file.parent.name === '')) {
+      //     const folderClass = `folder-${file.parent.name
+      //         .replace(' ', '_')}`;
+      //     if (!(folderClass in folderShapeMap)) {
+      //       folderShapeMap[folderClass] = shapes[folderIter];
+      //       folderIter += 1;
+      //     }
+      //   }
 
         const cache = this.plugin.metadata.getFileCache(file);
         if (cache?.tags) {
@@ -228,6 +229,9 @@ export class GraphStyleSheet {
               if (!(tag in tagColorMap)) {
                 tagColorMap[tag] = colors[tagsIter];
                 tagsIter += 1;
+                if (tagsIter >= colors.length) {
+                  tagsIter = 0;
+                }
               }
             }
           });
@@ -235,14 +239,13 @@ export class GraphStyleSheet {
       }
 
       let genSheet = '/* For a full overview of styling options, see https://js.cytoscape.org/#style */';
-      console.log('here');
-      for (const folder of Object.keys(folderShapeMap)) {
-        genSheet += `
-.${folder} {
-    shape: ${folderShapeMap[folder]};
-}
-`;
-      }
+      //       for (const folder of Object.keys(folderShapeMap)) {
+      //         genSheet += `
+      // .${folder} {
+      //     shape: ${folderShapeMap[folder]};
+      // }
+      // `;
+      //       }
 
       for (const tag of Object.keys(tagColorMap)) {
         genSheet += `
