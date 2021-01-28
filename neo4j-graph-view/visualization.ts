@@ -199,6 +199,10 @@ export class AdvancedGraphView extends ItemView {
           const createdFile = await this.vault.create(filename, '');
           await this.plugin.openFile(createdFile);
         }
+        this.updateActiveFile(e.target, true);
+        this.viz.one('tap', (e) => {
+          e.cy.elements().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
+        });
       });
       this.viz.on('tap', 'edge', async (e) => {
 
@@ -354,7 +358,7 @@ export class AdvancedGraphView extends ItemView {
         if (file && this.settings.autoAddNodes) {
           const name = file.basename;
           const id = new VizId(name, 'core');
-          let newNode = false;
+          let followImmediate = true;
           if (this.viz.$id(id.toId()).length === 0) {
             for (const dataStore of this.datastores) {
               if (dataStore.storeId() === 'core') {
@@ -365,49 +369,15 @@ export class AdvancedGraphView extends ItemView {
                 this.viz.add(edges);
                 this.onGraphChanged(false);
                 this.viz.endBatch();
-                const vizNode = this.viz.$id(id.toId());
                 this.restartLayout();
-                this.viz.one('layoutready', (e)=> {
-                  console.log('Layout ready');
-                  e.cy.one('layoutstop', (e) => {
-                    // animation.stop();
-                    e.cy.animate({
-                      fit: {
-                        eles: vizNode.closedNeighborhood(),
-                        padding: 0,
-                      },
-                      duration: 500,
-                      queue: false,
-                    });
-                  });
-                });
-                newNode = true;
+                followImmediate = false;
                 break;
               }
             }
           }
           const node = this.viz.$id(id.toId()) as NodeSingular;
-          this.viz.elements()
-              .removeClass(['connected-active-file', 'active-file', 'inactive-file'])
-              .difference(node.closedNeighborhood())
-              .addClass('inactive-file');
-          node.addClass('active-file');
-          const neighbourhood = node.connectedEdges()
-              .addClass('connected-active-file')
-              .connectedNodes()
-              .addClass('connected-active-file')
-              .union(node);
-          if (!newNode) {
-            // If not a new node, start animating immediately
-            this.viz.animate({
-              fit: {
-                eles: neighbourhood,
-                padding: 0,
-              },
-              duration: 500,
-              queue: false,
-            });
-          }
+
+          this.updateActiveFile(node, followImmediate);
           // this.viz.fit(neighbourhood);
           this.viz.one('tap', (e) => {
             e.cy.elements().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
@@ -716,6 +686,45 @@ export class AdvancedGraphView extends ItemView {
 
     getViewType(): string {
       return AG_VIEW_TYPE;
+    }
+
+    updateActiveFile(node: NodeSingular, followImmediate: boolean) {
+      console.log('uaf');
+      console.log(node);
+      this.viz.elements()
+          .removeClass(['connected-active-file', 'active-file', 'inactive-file'])
+          .difference(node.closedNeighborhood())
+          .addClass('inactive-file');
+      node.addClass('active-file');
+      const neighbourhood = node.connectedEdges()
+          .addClass('connected-active-file')
+          .connectedNodes()
+          .addClass('connected-active-file')
+          .union(node);
+      if (followImmediate) {
+        this.viz.animate({
+          fit: {
+            eles: neighbourhood,
+            padding: 0,
+          },
+          duration: 500,
+          queue: false,
+        });
+      } else {
+        this.viz.one('layoutready', (e) => {
+          this.viz.one('layoutstop', (e) => {
+            // animation.stop();
+            e.cy.animate({
+              fit: {
+                eles: neighbourhood,
+                padding: 0,
+              },
+              duration: 500,
+              queue: false,
+            });
+          });
+        });
+      }
     }
 
     on(name:'stylesheet', callback: (sheet: GraphStyleSheet) => any): EventRef;

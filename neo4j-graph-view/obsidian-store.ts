@@ -17,7 +17,7 @@ import {
   ElementDataDefinition,
   NodeDataDefinition,
   NodeCollection,
-  EdgeDataDefinition,
+  EdgeDataDefinition, NodeSingular,
 } from 'cytoscape';
 import {AdvancedGraphView, VizId} from './visualization';
 import {node} from 'cypher-query-builder';
@@ -224,15 +224,18 @@ export class ObsidianStore extends Component implements IDataStore {
       return Promise.resolve(this.nodeFromFile(file));
     }
 
-    async refreshNode(view: AdvancedGraphView, id: VizId) {
+    async refreshNode(view: AdvancedGraphView, id: VizId, activeFile: boolean) {
       const newNode = await this.get(id);
-      view.mergeToGraph([newNode]);
+      const node = view.mergeToGraph([newNode]);
       const edges = await view.buildEdges(view.viz.$id(id.toId()));
       const correctEdges = view.mergeToGraph(edges);
       view.viz.$id(id.toId())
           .connectedEdges()
           .difference(correctEdges)
           .remove();
+      if (activeFile) {
+        view.updateActiveFile(node.nodes() as NodeSingular, true);
+      }
       view.restartLayout();
     }
 
@@ -243,7 +246,7 @@ export class ObsidianStore extends Component implements IDataStore {
           this.metadata.on('changed', (file) => {
             console.log('changed');
             store.plugin.activeViews().forEach(async (v) => {
-              await store.refreshNode(v, VizId.fromFile(file));
+              await store.refreshNode(v, VizId.fromFile(file), this.plugin.app.workspace.getActiveFile() === file);
             });
           }));
       this.registerEvent(
@@ -256,7 +259,7 @@ export class ObsidianStore extends Component implements IDataStore {
                   // Changing the ID of a node in Cytoscape is not allowed, so remove and then restore.
                   // Put in setTimeout because Obsidian doesn't immediately update the metadata on rename...
                   v.viz.$id(oldId.toId()).remove();
-                  await store.refreshNode(v, id);
+                  await store.refreshNode(v, id, this.plugin.app.workspace.getActiveFile() === file);
                 }, 500);
               });
             }
