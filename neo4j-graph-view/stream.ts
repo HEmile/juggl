@@ -14,7 +14,7 @@ import {Query, node, relation, NodePattern} from 'cypher-query-builder';
 import {SyncQueue} from './sync';
 import {basename} from 'path';
 import {DataStoreEvents} from './events';
-import {CAT_DANGLING, Neo4jInterface} from './neo4j';
+import {Neo4jInterface} from './neo4j';
 import {NodeDefinition, EdgeDefinition, NodeCollection} from 'cytoscape';
 import {VizId} from './visualization';
 
@@ -264,9 +264,9 @@ export class Neo4jStream extends Component implements IDataStore {
           if (oldLabels.length > 0) {
             query = query.removeLabels({n: oldLabels});
           }
-          query = query.setLabels({n: CAT_DANGLING})
+          query = query.setLabels({n: AdvancedGraphPlugin.CAT_DANGLING})
               .setValues({
-                SMD_community: this.tags.indexOf(CAT_DANGLING),
+                SMD_community: this.tags.indexOf(AdvancedGraphPlugin.CAT_DANGLING),
                 SMD_vault: this.vault.getName(),
                 name: name,
               }, false);

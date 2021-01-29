@@ -3,7 +3,7 @@ import {EventRef, Events, ItemView, MarkdownRenderer, Menu, TFile, Vault, Worksp
 import AdvancedGraphPlugin from './main';
 import cytoscape, {
   Collection,
-  Core,
+  Core, EdgeCollection,
   EdgeDefinition,
   EdgeSingular,
   ElementDefinition, LayoutOptions, Layouts,
@@ -494,7 +494,8 @@ export class AdvancedGraphView extends ItemView {
       return edges;
     }
 
-    async expand(toExpand: NodeCollection) {
+    async expand(toExpand: NodeCollection): Promise<Collection> {
+      // Currently returns the edges merged into the graph, not the full neighborhood
       const expandedIds = toExpand.map((n) => VizId.fromNode(n));
       const neighbourhood = await this.neighbourhood(expandedIds);
       this.mergeToGraph(neighbourhood);
@@ -503,10 +504,11 @@ export class AdvancedGraphView extends ItemView {
         nodes.merge(this.viz.$id(n.data.id) as NodeSingular);
       });
       const edges = await this.buildEdges(nodes);
-      this.mergeToGraph(edges);
+      const edgesInGraph = this.mergeToGraph(edges);
       this.restartLayout();
       this.trigger('expand', toExpand);
       this.setExpanded(toExpand);
+      return edgesInGraph;
     }
 
     async createStylesheet(): Promise<string> {
@@ -543,9 +545,21 @@ export class AdvancedGraphView extends ItemView {
     }
 
     removeSelection() {
-      const removed = this.viz.nodes(':selected').remove();
-      this.restartLayout();
+      const removed = this.removeNodes(this.viz.nodes(':selected'));
       this.trigger('hide', removed);
+    }
+
+    removeNodes(nodes: NodeCollection): NodeCollection {
+      // Only call this method if the node is forcefully removed from the graph, not when the node no longer exists
+      // on the back-end. This is because of how it handles expanded.
+      // Remove as expanded if a neighbour is removed from the graph.
+      const expInNeighbourhood = this.expanded
+          .intersection(nodes.neighborhood())
+          .removeClass('expanded');
+      this.expanded = this.expanded.difference(expInNeighbourhood);
+      const removed = nodes.remove();
+      this.restartLayout();
+      return removed;
     }
 
     unpinSelection() {
@@ -650,13 +664,14 @@ export class AdvancedGraphView extends ItemView {
       elements.forEach((n) => {
         if (this.viz.$id(n.data.id).length === 0) {
           addElements.push(n);
-          console.log('adding', n);
         } else {
           const gElement = this.viz.$id(n.data.id);
           gElement.classes(n.classes);
           gElement.data(n.data);
-          console.log('already in', n);
           mergedCollection.merge(gElement);
+          if (this.expanded.contains(gElement)) {
+            gElement.addClass('expanded');
+          }
         }
       });
       mergedCollection.merge(this.viz.add(addElements));
@@ -695,7 +710,6 @@ export class AdvancedGraphView extends ItemView {
 
     updateActiveFile(node: NodeSingular, followImmediate: boolean) {
       console.log('uaf');
-      console.log(node);
       this.viz.elements()
           .removeClass(['connected-active-file', 'active-file', 'inactive-file'])
           .difference(node.closedNeighborhood())
@@ -738,6 +752,7 @@ export class AdvancedGraphView extends ItemView {
       } else {
         this.expanded = this.expanded.union(nodes);
       }
+      console.log(this.expanded);
       nodes.addClass('expanded');
     }
 

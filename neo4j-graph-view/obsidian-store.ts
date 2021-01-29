@@ -17,7 +17,7 @@ import {
   ElementDataDefinition,
   NodeDataDefinition,
   NodeCollection,
-  EdgeDataDefinition, NodeSingular,
+  EdgeDataDefinition, NodeSingular, Collection,
 } from 'cytoscape';
 import {AdvancedGraphView, VizId} from './visualization';
 import {node} from 'cypher-query-builder';
@@ -226,21 +226,24 @@ export class ObsidianStore extends Component implements IDataStore {
 
     async refreshNode(view: AdvancedGraphView, id: VizId, activeFile: boolean) {
       const idS = id.toId();
+      let correctEdges: Collection;
       if (view.viz.$id(idS).length > 0 && view.expanded.contains(view.viz.$id(idS))) {
-        await view.expand(view.viz.$id(idS));
+        correctEdges = await view.expand(view.viz.$id(idS));
+        console.log(correctEdges);
       } else {
-        const newNode = await this.get(id);
-        view.mergeToGraph([newNode]);
+        const nodes = [await this.get(id)];
+        view.mergeToGraph(nodes);
         const node = view.viz.$id(idS);
         const edges = await view.buildEdges(node);
-        const correctEdges = view.mergeToGraph(edges);
-        // Remove outgoing edges that no longer exist.
-        node.outgoers()
-            .difference(correctEdges)
-            .remove();
-        view.restartLayout();
+        correctEdges = view.mergeToGraph(edges);
       }
       const node = view.viz.$id(idS);
+      // Remove outgoing edges that no longer exist.
+      node.connectedEdges().difference(correctEdges).forEach((n) => console.log(n.data()));
+      node.connectedEdges()
+          .difference(correctEdges)
+          .remove();
+      view.restartLayout();
       view.updateActiveFile(node.nodes() as NodeSingular, true);
     }
 

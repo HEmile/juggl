@@ -36,7 +36,7 @@ export default class AdvancedGraphPlugin extends Plugin {
     settings: IAdvancedGraphSettings;
     path: string;
     statusBar: HTMLElement;
-    neovisView: AdvancedGraphView;
+    agView: AdvancedGraphView;
     // neo4jStream: Neo4jStream;
     vault: Vault;
     metadata: MetadataCache
