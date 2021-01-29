@@ -1,4 +1,4 @@
-import Neo4jViewPlugin from './main';
+import AdvancedGraphPlugin from './main';
 import {
   Component,
   MetadataCache, Notice,
@@ -37,7 +37,7 @@ export class QueryMetadata {
 
 
 export class Neo4jStream extends Component implements IDataStore {
-    plugin: Neo4jViewPlugin;
+    plugin: AdvancedGraphPlugin;
     workspace: Workspace;
     settings: IAdvancedGraphSettings;
     vault: Vault;
@@ -48,7 +48,7 @@ export class Neo4jStream extends Component implements IDataStore {
     tags: string[];
     eventQueue: SyncQueue;
 
-    constructor(plugin: Neo4jViewPlugin) {
+    constructor(plugin: AdvancedGraphPlugin) {
       super();
       this.plugin = plugin;
       this.workspace = plugin.app.workspace;

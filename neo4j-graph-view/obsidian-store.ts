@@ -10,7 +10,7 @@ import {
 } from 'obsidian';
 import {IDataStore} from './interfaces';
 import {DataStoreEvents} from './events';
-import Neo4jViewPlugin from './main';
+import AdvancedGraphPlugin from './main';
 import {
   NodeDefinition,
   EdgeDefinition,
@@ -26,11 +26,11 @@ import * as Url from 'url';
 export const OBSIDIAN_STORE_NAME = 'Obsidian';
 
 export class ObsidianStore extends Component implements IDataStore {
-    plugin: Neo4jViewPlugin;
+    plugin: AdvancedGraphPlugin;
     events: DataStoreEvents;
     metadata: MetadataCache;
     vault: Vault
-    constructor(plugin: Neo4jViewPlugin) {
+    constructor(plugin: AdvancedGraphPlugin) {
       super();
       this.plugin = plugin;
       this.events = new DataStoreEvents();
@@ -225,18 +225,23 @@ export class ObsidianStore extends Component implements IDataStore {
     }
 
     async refreshNode(view: AdvancedGraphView, id: VizId, activeFile: boolean) {
-      const newNode = await this.get(id);
-      const node = view.mergeToGraph([newNode]);
-      const edges = await view.buildEdges(view.viz.$id(id.toId()));
-      const correctEdges = view.mergeToGraph(edges);
-      view.viz.$id(id.toId())
-          .connectedEdges()
-          .difference(correctEdges)
-          .remove();
-      if (activeFile) {
-        view.updateActiveFile(node.nodes() as NodeSingular, true);
+      const idS = id.toId();
+      if (view.viz.$id(idS).length > 0 && view.expanded.contains(view.viz.$id(idS))) {
+        await view.expand(view.viz.$id(idS));
+      } else {
+        const newNode = await this.get(id);
+        view.mergeToGraph([newNode]);
+        const node = view.viz.$id(idS);
+        const edges = await view.buildEdges(node);
+        const correctEdges = view.mergeToGraph(edges);
+        // Remove outgoing edges that no longer exist.
+        node.outgoers()
+            .difference(correctEdges)
+            .remove();
+        view.restartLayout();
       }
-      view.restartLayout();
+      const node = view.viz.$id(idS);
+      view.updateActiveFile(node.nodes() as NodeSingular, true);
     }
 
     onload() {

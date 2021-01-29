@@ -1,14 +1,14 @@
 import {IncomingMessage, Server, ServerResponse} from 'http';
 import {Component, FileSystemAdapter, Notice, TFile} from 'obsidian';
 import {IAdvancedGraphSettings} from './settings';
-import Neo4jViewPlugin from './main';
+import AdvancedGraphPlugin from './main';
 
 export class ImageServer extends Component {
     settings: IAdvancedGraphSettings;
-    plugin: Neo4jViewPlugin;
+    plugin: AdvancedGraphPlugin;
     imgServer: Server;
 
-    constructor(plugin: Neo4jViewPlugin) {
+    constructor(plugin: AdvancedGraphPlugin) {
       super();
       this.settings = plugin.settings;
       this.plugin = plugin;

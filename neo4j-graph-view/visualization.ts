@@ -106,12 +106,12 @@ export class AdvancedGraphView extends ItemView {
     viz: Core;
     rebuildRelations = true;
     selectName: string = undefined;
-    expandedNodes: string[] = [];
     events: Events;
     datastores: IDataStore[];
     activeLayout: Layouts;
     hoverTimeout: Record<string, Timeout> = {};
     pinned: NodeCollection;
+    expanded: NodeCollection;
 
     constructor(leaf: WorkspaceLeaf, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[]) {
       super(leaf);
@@ -134,7 +134,9 @@ export class AdvancedGraphView extends ItemView {
       div.setAttr('style', 'height: 100%; width:100%');
       div.setAttr('tabindex', '0');
 
-      const nodes = await this.neighbourhood([new VizId(this.initialNode, 'core')]);
+      const idInitial = new VizId(this.initialNode, 'core');
+
+      const nodes = await this.neighbourhood([idInitial]);
 
       this.viz = cytoscape({
         container: div,
@@ -160,6 +162,8 @@ export class AdvancedGraphView extends ItemView {
           rerenderDelay: 100, // ms to throttle rerender updates to the panzoom for performance
         });
       }
+
+      this.setExpanded(this.viz.$id(idInitial.toId()));
 
       const nodez = this.viz.nodes();
       const edges = await this.buildEdges(nodez);
@@ -502,6 +506,7 @@ export class AdvancedGraphView extends ItemView {
       this.mergeToGraph(edges);
       this.restartLayout();
       this.trigger('expand', toExpand);
+      this.setExpanded(toExpand);
     }
 
     async createStylesheet(): Promise<string> {
@@ -726,6 +731,16 @@ export class AdvancedGraphView extends ItemView {
         });
       }
     }
+
+    setExpanded(nodes: NodeCollection) {
+      if (!this.expanded) {
+        this.expanded = nodes;
+      } else {
+        this.expanded = this.expanded.union(nodes);
+      }
+      nodes.addClass('expanded');
+    }
+
 
     on(name:'stylesheet', callback: (sheet: GraphStyleSheet) => any): EventRef;
     on(name: 'expand', callback: (elements: NodeCollection) => any): EventRef;

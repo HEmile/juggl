@@ -1,6 +1,6 @@
 import {App, Notice, PluginSettingTab, Setting, SplitDirection} from 'obsidian';
 
-import Neo4jViewPlugin from './main';
+import AdvancedGraphPlugin from './main';
 // import {EdgeOptions, NodeOptions} from 'vis-network';
 import {AdvancedGraphView, AG_VIEW_TYPE} from './visualization';
 import {OBSIDIAN_STORE_NAME} from './obsidian-store';
@@ -19,7 +19,7 @@ export interface IAdvancedGraphSettings {
 }
 
 
-export const DefaultNeo4jViewSettings: IAdvancedGraphSettings = {
+export const DefaultAdvancedGraphSettings: IAdvancedGraphSettings = {
   autoAddNodes: true,
   autoExpand: false,
   indexContent: false,
@@ -33,9 +33,9 @@ export const DefaultNeo4jViewSettings: IAdvancedGraphSettings = {
 };
 
 
-export class Neo4jViewSettingTab extends PluginSettingTab {
-    plugin: Neo4jViewPlugin;
-    constructor(app: App, plugin: Neo4jViewPlugin) {
+export class AdvancedGraphSettingTab extends PluginSettingTab {
+    plugin: AdvancedGraphPlugin;
+    constructor(app: App, plugin: AdvancedGraphPlugin) {
       super(app, plugin);
       this.plugin = plugin;
     }

@@ -1,26 +1,25 @@
 import {Driver, Result, ResultSummary, Session} from 'neo4j-driver';
 import {IAdvancedGraphSettings} from './settings';
 import {getLinkpath, MetadataCache, Notice, TFile, Vault} from 'obsidian';
-import Neo4jViewPlugin from './main';
+import AdvancedGraphPlugin from './main';
 import neo4j from 'neo4j-driver';
 import {NodePattern, Query, node, relation} from 'cypher-query-builder';
 import {INoteProperties, ITypedLink} from './interfaces';
 import {QueryMetadata} from './stream';
 
-export const CAT_DANGLING = 'dangling';
+
 export const CAT_NO_TAGS = 'SMD_no_tags';
-export const nameRegex = '[^\\W\\d]\\w*';
-export const initialTags = ['image', 'audio', 'video', 'pdf', 'file', CAT_NO_TAGS, CAT_DANGLING];
+export const initialTags = ['image', 'audio', 'video', 'pdf', 'file', CAT_NO_TAGS, AdvancedGraphPlugin.CAT_DANGLING];
 
 export class Neo4jInterface {
   driver: Driver;
   settings: IAdvancedGraphSettings;
-  plugin: Neo4jViewPlugin;
+  plugin: AdvancedGraphPlugin;
   metadataCache: MetadataCache;
   vault: Vault;
   tags: string[];
 
-  constructor(plugin: Neo4jViewPlugin) {
+  constructor(plugin: AdvancedGraphPlugin) {
     this.settings = plugin.settings;
     this.plugin = plugin;
     this.metadataCache = this.plugin.app.metadataCache;
@@ -134,7 +133,7 @@ export class Neo4jInterface {
         });
       }
       const parentPath = file.parent.name.replace(' ', '_');
-      const fileTag = parentPath === '/' || !new RegExp(nameRegex).test(parentPath) ?
+      const fileTag = parentPath === '/' || !new RegExp(AdvancedGraphPlugin.nameRegex).test(parentPath) ?
           [] : [parentPath];
       const labels = (metadata.tags ? [].concat(...metadata.tags.map((tag) => {
         // Escape the hastag

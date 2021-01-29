@@ -6,14 +6,11 @@ import {
 } from 'obsidian';
 import {
   IAdvancedGraphSettings,
-  Neo4jViewSettingTab,
-  DefaultNeo4jViewSettings} from './settings';
+  AdvancedGraphSettingTab,
+  DefaultAdvancedGraphSettings} from './settings';
 import {AdvancedGraphView, AG_VIEW_TYPE, MD_VIEW_TYPE, PROP_VAULT} from './visualization';
 import {Editor} from 'codemirror';
-import {Neo4jError} from 'neo4j-driver';
-import {Neo4jStream} from './stream';
 import {ImageServer} from './image-server';
-import {CAT_DANGLING, nameRegex} from './neo4j';
 import {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
 import coseBilkent from 'cytoscape-cose-bilkent';
@@ -28,11 +25,14 @@ import dblclick from 'cytoscape-dblclick';
 
 const STATUS_OFFLINE = 'Neo4j stream offline';
 
-// Match around [[ and ]], and ensure content isn't a wikilnk closure
-// This doesn't explicitly parse aliases.
-const wikilinkRegex = '\\[\\[([^\\]\\r\\n]+?)\\]\\]';//
 
-export default class Neo4jViewPlugin extends Plugin {
+export default class AdvancedGraphPlugin extends Plugin {
+    // Match around [[ and ]], and ensure content isn't a wikilnk closure
+// This doesn't explicitly parse aliases.
+    static wikilinkRegex = '\\[\\[([^\\]\\r\\n]+?)\\]\\]';//
+    static CAT_DANGLING = 'dangling';
+    static nameRegex = '[^\\W\\d]\\w*';
+
     settings: IAdvancedGraphSettings;
     path: string;
     statusBar: HTMLElement;
@@ -59,7 +59,7 @@ export default class Neo4jViewPlugin extends Plugin {
       this.addChild(obsidianStore);
       this.registerCoreStore(obsidianStore, OBSIDIAN_STORE_NAME);
 
-      this.settings = Object.assign(DefaultNeo4jViewSettings, await this.loadData());// (await this.loadData()) || DefaultNeo4jViewSettings;
+      this.settings = Object.assign(DefaultAdvancedGraphSettings, await this.loadData());// (await this.loadData()) || DefaultNeo4jViewSettings;
       this.statusBar = this.addStatusBarItem();
       this.statusBar.setText(STATUS_OFFLINE);
       // this.neo4jStream = new Neo4jStream(this);
@@ -129,7 +129,7 @@ export default class Neo4jViewPlugin extends Plugin {
       //   },
       // });
 
-      this.addSettingTab(new Neo4jViewSettingTab(this.app, this));
+      this.addSettingTab(new AdvancedGraphSettingTab(this.app, this));
 
       this.registerEvent(this.app.workspace.on('file-menu', (menu, file: TFile) => {
         menu.addItem((item) => {
@@ -143,12 +143,6 @@ export default class Neo4jViewPlugin extends Plugin {
               });
         });
       }));
-    }
-
-    public getFileFromAbsolutePath(absPath: string): TAbstractFile {
-      const path = require('path');
-      const relPath = path.relative(this.path, absPath);
-      return this.app.vault.getAbstractFileByPath(relPath);
     }
 
     public async openFile(file: TFile) {
@@ -167,7 +161,6 @@ export default class Neo4jViewPlugin extends Plugin {
       // const query = this.localNeighborhoodCypher(name);
       const neovisView = new AdvancedGraphView(leaf, this, name, [this.coreStores[this.settings.coreStore]].concat(this.stores));
       await leaf.open(neovisView);
-      neovisView.expandedNodes.push(name);
     }
 
     getLinesOffsetToGoal(start: number, goal: string, step = 1, cm: Editor): number {
@@ -256,7 +249,7 @@ export default class Neo4jViewPlugin extends Plugin {
         }
         return classes;
       }
-      return [CAT_DANGLING];
+      return [AdvancedGraphPlugin.CAT_DANGLING];
     }
 
     regexEscape(str: string) {
@@ -266,7 +259,7 @@ export default class Neo4jViewPlugin extends Plugin {
     public parseTypedLink(link: ReferenceCache, line: string): ITypedLink {
     // TODO: This is something specific I use, but shouldn't keep being in this repo.
       const regexPublishedIn = new RegExp(
-          `^${this.regexEscape(this.settings.typedLinkPrefix)} (publishedIn) (\\d\\d\\d\\d) (${wikilinkRegex},? *)+$`);
+          `^${this.regexEscape(this.settings.typedLinkPrefix)} (publishedIn) (\\d\\d\\d\\d) (${AdvancedGraphPlugin.wikilinkRegex},? *)+$`);
       const matchPI = regexPublishedIn.exec(line);
       if (!(matchPI === null)) {
         return {
@@ -283,7 +276,7 @@ export default class Neo4jViewPlugin extends Plugin {
       // Intuition: Start with the typed link prefix. Then a neo4j name (nameRegex).
       // Then one or more of the wikilink group: wikilink regex separated by optional comma and multiple spaces
       const regex = new RegExp(
-          `^${this.regexEscape(this.settings.typedLinkPrefix)} (${nameRegex}) (${wikilinkRegex},? *)+$`);
+          `^${this.regexEscape(this.settings.typedLinkPrefix)} (${AdvancedGraphPlugin.nameRegex}) (${AdvancedGraphPlugin.wikilinkRegex},? *)+$`);
       const match = regex.exec(line);
       if (!(match === null)) {
         return {
@@ -297,32 +290,32 @@ export default class Neo4jViewPlugin extends Plugin {
       return null;
     }
 
-    executeQuery() {
-      // Code taken from https://github.com/mrjackphil/obsidian-text-expand/blob/0.6.4/main.ts
-      const currentView = this.app.workspace.activeLeaf.view;
-
-      if (!(currentView instanceof MarkdownView)) {
-        return;
-      }
-
-      const cmDoc = currentView.sourceMode.cmEditor;
-      const curNum = cmDoc.getCursor().line;
-      const query = this.getContentBetweenLines(curNum, '```cypher', '```', cmDoc);
-      if (query.length > 0) {
-        const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
-        try {
-          // TODO: Pass query.
-          // const neovisView = new NeoVisView((leaf, this, name, [new ObsidianStore(this)]);
-          // leaf.open(neovisView);
-        } catch (e) {
-          if (e instanceof Neo4jError) {
-            new Notice('Invalid cypher query. Check console for more info.');
-          } else {
-            throw e;
-          }
-        }
-      }
-    }
+    // executeQuery() {
+    //   // Code taken from https://github.com/mrjackphil/obsidian-text-expand/blob/0.6.4/main.ts
+    //   const currentView = this.app.workspace.activeLeaf.view;
+    //
+    //   if (!(currentView instanceof MarkdownView)) {
+    //     return;
+    //   }
+    //
+    //   const cmDoc = currentView.sourceMode.cmEditor;
+    //   const curNum = cmDoc.getCursor().line;
+    //   const query = this.getContentBetweenLines(curNum, '```cypher', '```', cmDoc);
+    //   if (query.length > 0) {
+    //     const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
+    //     try {
+    //       // TODO: Pass query.
+    //       // const neovisView = new NeoVisView((leaf, this, name, [new ObsidianStore(this)]);
+    //       // leaf.open(neovisView);
+    //     } catch (e) {
+    //       if (e instanceof Neo4jError) {
+    //         new Notice('Invalid cypher query. Check console for more info.');
+    //       } else {
+    //         throw e;
+    //       }
+    //     }
+    //   }
+    // }
 
     public activeViews(): AdvancedGraphView[] {
       return this.app.workspace
