@@ -188,7 +188,6 @@ export class AdvancedGraphView extends ItemView {
       const view = this;
 
       this.viz.on('tap', 'node', async (e) => {
-        console.log('tap');
         const id = VizId.fromNode(e.target);
         if (!(id.storeId === 'core')) {
           return;
@@ -203,10 +202,8 @@ export class AdvancedGraphView extends ItemView {
           const createdFile = await this.vault.create(filename, '');
           await this.plugin.openFile(createdFile);
         }
+        console.log('before uaf in tap');
         this.updateActiveFile(e.target, true);
-        this.viz.one('tap', (e) => {
-          e.cy.elements().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
-        });
       });
       this.viz.on('tap', 'edge', async (e) => {
 
@@ -269,7 +266,6 @@ export class AdvancedGraphView extends ItemView {
         }
       });
       this.viz.on('grab', (e) => {
-        console.log('grab');
         if (this.activeLayout) {
           this.activeLayout.stop();
         }
@@ -293,9 +289,7 @@ export class AdvancedGraphView extends ItemView {
         const fileMenu = new Menu(); // Creates empty file menu
         if (!(e.target === this.viz) && e.target.group() === 'nodes') {
           const id = VizId.fromNode(e.target);
-          if (!(id.storeId === 'core')) {
-            return;
-          }
+          e.target.select();
           const file = this.app.metadataCache.getFirstLinkpathDest(id.id, '');
           if (!(file === undefined)) {
             // hook for plugins to populate menu with "file-aware" menu items
@@ -357,6 +351,7 @@ export class AdvancedGraphView extends ItemView {
         fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
       });
 
+
       // Register on file open event
       this.registerEvent(this.workspace.on('file-open', async (file) => {
         if (file && this.settings.autoAddNodes) {
@@ -382,10 +377,6 @@ export class AdvancedGraphView extends ItemView {
           const node = this.viz.$id(id.toId()) as NodeSingular;
 
           this.updateActiveFile(node, followImmediate);
-          // this.viz.fit(neighbourhood);
-          this.viz.one('tap', (e) => {
-            e.cy.elements().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
-          });
         }
       }));
 
@@ -427,7 +418,6 @@ export class AdvancedGraphView extends ItemView {
     }
 
     async popover(mdContent: string, sourcePath: string, target: Singular, styleClass: string) {
-      console.log('here');
       const newDiv = document.createElement('div');
       newDiv.addClasses(['popover', 'hover-popover', 'is-loaded', 'advanced-graph-hover']);
       const mdEmbedDiv = document.createElement('div');
@@ -496,6 +486,7 @@ export class AdvancedGraphView extends ItemView {
 
     async expand(toExpand: NodeCollection): Promise<Collection> {
       // Currently returns the edges merged into the graph, not the full neighborhood
+      console.log('Enter expand');
       const expandedIds = toExpand.map((n) => VizId.fromNode(n));
       const neighbourhood = await this.neighbourhood(expandedIds);
       this.mergeToGraph(neighbourhood);
@@ -508,6 +499,8 @@ export class AdvancedGraphView extends ItemView {
       this.restartLayout();
       this.trigger('expand', toExpand);
       this.setExpanded(toExpand);
+      toExpand.neighborhood().forEach((e) => console.log(e.classes()));
+      this.updateActiveFile(toExpand, false);
       return edgesInGraph;
     }
 
@@ -622,18 +615,16 @@ export class AdvancedGraphView extends ItemView {
         name: 'cola',
         // @ts-ignore
         animate: true, // whether to show the layout as it's running
-        refresh: 1, // number of ticks per frame; higher is faster but more jerky
-        maxSimulationTime: 4000, // max length in ms to run the layout
+        refresh: 2, // number of ticks per frame; higher is faster but more jerky
+        maxSimulationTime: 3000, // max length in ms to run the layout
         ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
         fit: false, // on every layout reposition of nodes, fit the viewport
         padding: 30, // padding around the simulation
         nodeDimensionsIncludeLabels: true, // whether labels should be included in determining the space used by a node
         // layout event callbacks
         ready: function() {
-          console.log('ready!');
         }, // on layoutready
         stop: function() {
-          console.log('stop');
           // viz.activeLayout = null;
         }, // on layoutstop
         // positioning options
@@ -651,7 +642,6 @@ export class AdvancedGraphView extends ItemView {
       if (this.activeLayout) {
         this.activeLayout.stop();
       }
-      console.log('starting layout');
       this.activeLayout = this.viz.layout(this.colaLayout()).start();
     }
 
@@ -677,7 +667,6 @@ export class AdvancedGraphView extends ItemView {
       mergedCollection.merge(this.viz.add(addElements));
       this.onGraphChanged(false);
       if (batch) {
-        console.log('committing batch');
         this.viz.endBatch();
       }
       return mergedCollection;
@@ -708,7 +697,7 @@ export class AdvancedGraphView extends ItemView {
       return AG_VIEW_TYPE;
     }
 
-    updateActiveFile(node: NodeSingular, followImmediate: boolean) {
+    updateActiveFile(node: NodeCollection, followImmediate: boolean) {
       console.log('uaf');
       this.viz.elements()
           .removeClass(['connected-active-file', 'active-file', 'inactive-file'])
@@ -744,6 +733,9 @@ export class AdvancedGraphView extends ItemView {
           });
         });
       }
+      this.viz.one('tap', (e) => {
+        e.cy.elements().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
+      });
     }
 
     setExpanded(nodes: NodeCollection) {
@@ -752,7 +744,6 @@ export class AdvancedGraphView extends ItemView {
       } else {
         this.expanded = this.expanded.union(nodes);
       }
-      console.log(this.expanded);
       nodes.addClass('expanded');
     }
 
