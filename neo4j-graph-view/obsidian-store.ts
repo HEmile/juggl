@@ -1,27 +1,22 @@
 import {
-  CachedMetadata,
   Component,
   getLinkpath,
   iterateCacheRefs,
-  LinkCache,
   MetadataCache, ReferenceCache,
   TFile,
   Vault,
 } from 'obsidian';
-import {IDataStore} from './interfaces';
+import type {IDataStore} from './interfaces';
 import {DataStoreEvents} from './events';
-import AdvancedGraphPlugin from './main';
-import {
+import type AdvancedGraphPlugin from './main';
+import type {
   NodeDefinition,
   EdgeDefinition,
-  ElementDataDefinition,
   NodeDataDefinition,
   NodeCollection,
   EdgeDataDefinition, NodeSingular, Collection,
 } from 'cytoscape';
 import {AdvancedGraphView, VizId} from './visualization';
-import {node} from 'cypher-query-builder';
-import * as Url from 'url';
 
 export const OBSIDIAN_STORE_NAME = 'Obsidian';
 

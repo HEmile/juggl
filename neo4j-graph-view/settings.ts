@@ -1,6 +1,6 @@
-import {App, Notice, PluginSettingTab, Setting, SplitDirection} from 'obsidian';
+import {App, PluginSettingTab, Setting, SplitDirection} from 'obsidian';
 
-import AdvancedGraphPlugin from './main';
+import type AdvancedGraphPlugin from './main';
 // import {EdgeOptions, NodeOptions} from 'vis-network';
 import {AdvancedGraphView, AG_VIEW_TYPE} from './visualization';
 import {OBSIDIAN_STORE_NAME} from './obsidian-store';

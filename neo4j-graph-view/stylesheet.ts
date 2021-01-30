@@ -1,6 +1,6 @@
-import {Events, TFile} from 'obsidian';
-import AdvancedGraphPlugin from './main';
-import {AdvancedGraphView} from './visualization';
+import type {Events, TFile} from 'obsidian';
+import type AdvancedGraphPlugin from './main';
+import type {AdvancedGraphView} from './visualization';
 
 const DEFAULT_SHEET =`
 node {

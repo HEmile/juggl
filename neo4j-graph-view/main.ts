@@ -1,7 +1,5 @@
 import {
-  LinkCache,
   MarkdownView, MetadataCache,
-  Notice,
   Plugin, ReferenceCache, TAbstractFile, TFile, Vault,
 } from 'obsidian';
 import {
@@ -9,9 +7,9 @@ import {
   AdvancedGraphSettingTab,
   DefaultAdvancedGraphSettings} from './settings';
 import {AdvancedGraphView, AG_VIEW_TYPE, MD_VIEW_TYPE, PROP_VAULT} from './visualization';
-import {Editor} from 'codemirror';
+import type {Editor} from 'codemirror';
 import {ImageServer} from './image-server';
-import {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
+import type {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
 import coseBilkent from 'cytoscape-cose-bilkent';
 import cytoscape from 'cytoscape';
@@ -210,11 +208,11 @@ export default class AdvancedGraphPlugin extends Plugin {
     public getClasses(file: TFile): string[] {
       if (file) {
         const classes = [];
-        if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'tiff'].includes(file.extension)) {
+        if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'tiff'].contains(file.extension)) {
           classes.push('image');
-        } else if (['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac'].includes(file.extension)) {
+        } else if (['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac'].contains(file.extension)) {
           classes.push('audio');
-        } else if (['mp4', 'webm', 'ogv'].includes(file.extension)) {
+        } else if (['mp4', 'webm', 'ogv'].contains(file.extension)) {
           classes.push('video');
         } else if (file.extension === 'pdf') {
           classes.push('pdf');

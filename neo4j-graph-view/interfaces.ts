@@ -1,7 +1,7 @@
-import {Component} from 'obsidian';
-import {DataStoreEvents} from './events';
-import {EdgeDefinition, NodeCollection, NodeDefinition} from 'cytoscape';
-import {VizId} from './visualization';
+import type {Component} from 'obsidian';
+import type {DataStoreEvents} from './events';
+import type {EdgeDefinition, NodeCollection, NodeDefinition} from 'cytoscape';
+import type {VizId} from './visualization';
 
 export interface INoteProperties {
     SMD_community: number;

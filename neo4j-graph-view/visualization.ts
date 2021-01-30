@@ -1,9 +1,9 @@
-import {IAdvancedGraphSettings} from './settings';
+import type {IAdvancedGraphSettings} from './settings';
 import {EventRef, Events, ItemView, MarkdownRenderer, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
-import AdvancedGraphPlugin from './main';
+import type AdvancedGraphPlugin from './main';
 import cytoscape, {
   Collection,
-  Core, EdgeCollection,
+  Core,
   EdgeDefinition,
   EdgeSingular,
   ElementDefinition, LayoutOptions, Layouts,
@@ -11,10 +11,12 @@ import cytoscape, {
   NodeDefinition,
   NodeSingular, Singular,
 } from 'cytoscape';
-import {IDataStore} from './interfaces';
+import type {IDataStore} from './interfaces';
 import {GraphStyleSheet} from './stylesheet';
 import Timeout = NodeJS.Timeout;
-import {basename} from 'path';
+
+import Toolbar from './ui/Toolbar.svelte';
+
 
 export const AG_VIEW_TYPE = 'advanced_graph_view';
 export const MD_VIEW_TYPE = 'markdown';
@@ -88,7 +90,8 @@ export class VizId {
     }
 
     static fromPath(path: string): VizId {
-      const name = basename(path, '.md');
+      const pth = require('path');
+      const name = pth.basename(path, '.md');
       return new VizId(name, 'core');
     }
 
@@ -127,12 +130,18 @@ export class AdvancedGraphView extends ItemView {
     }
 
     async onOpen() {
+      const viewContent = this.containerEl.children[1];
+      viewContent.addClass('cy-content');
+      // Ensure the canvas fits the whole container
+      viewContent.setAttr('style', 'padding: 0');
+      this.createToolbar(viewContent);
+
       const div = document.createElement('div');
       div.id = 'cy' + VIEW_COUNTER;
-      VIEW_COUNTER += 1;
-      this.containerEl.children[1].appendChild(div);
+      viewContent.appendChild(div);
       div.setAttr('style', 'height: 100%; width:100%');
       div.setAttr('tabindex', '0');
+
 
       const idInitial = new VizId(this.initialNode, 'core');
 
@@ -162,6 +171,7 @@ export class AdvancedGraphView extends ItemView {
           rerenderDelay: 100, // ms to throttle rerender updates to the panzoom for performance
         });
       }
+      VIEW_COUNTER += 1;
 
       this.setExpanded(this.viz.$id(idInitial.toId()));
 
@@ -508,6 +518,10 @@ export class AdvancedGraphView extends ItemView {
       const sheet = new GraphStyleSheet(this);
       this.trigger('stylesheet', sheet);
       return await sheet.getStylesheet();
+    }
+
+    createToolbar(element: Element) {
+      new Toolbar({target: element});
     }
 
     protected async onClose(): Promise<void> {

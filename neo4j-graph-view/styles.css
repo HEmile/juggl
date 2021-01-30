@@ -67,3 +67,7 @@ div.cy-navigator {
 .advanced-graph-preview-edge {
     height: 140px !important;
 }
+
+.cy-content {
+    padding: 0;
+}
