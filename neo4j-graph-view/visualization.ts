@@ -493,7 +493,7 @@ export class AdvancedGraphView extends ItemView {
     async buildEdges(newNodes: NodeCollection): Promise<EdgeDefinition[]> {
       const edges: EdgeDefinition[] = [];
       for (const store of this.datastores) {
-        edges.push(...await store.connectNodes(this.viz.nodes(), VizId.fromNodes(newNodes)));
+        edges.push(...await store.connectNodes(this.viz.nodes(), newNodes));
       }
       return edges;
     }

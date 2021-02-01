@@ -12,7 +12,6 @@
     export let lockClick;
     export let unlockClick;
     export let fitClick;
-    export let imageClick;
 
     let disableOnNoneSelected = false;
     let disableOnAllPinned = false;

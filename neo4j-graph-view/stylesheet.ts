@@ -50,7 +50,9 @@ edge {
   target-arrow-color: #E6E6E6;
   arrow-scale: 0.5;
   font-size: 6;
-  curve-style: haystack;
+  curve-style: unbundled-bezier;
+  control-point-distance: 23;
+  control-point-weight: 0.6;
 }
 
 edge:selected {

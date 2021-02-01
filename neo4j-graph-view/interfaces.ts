@@ -35,7 +35,7 @@ export interface IDataStore extends Component {
 
     getNeighbourhood(nodeId: VizId[]): Promise<NodeDefinition[]>;
 
-    connectNodes(allNodes: NodeCollection, newNodes: VizId[]): Promise<EdgeDefinition[]>;
+    connectNodes(allNodes: NodeCollection, newNodes: NodeCollection): Promise<EdgeDefinition[]>;
 
     // Prefix of id of nodes from this store
     storeId(): string;

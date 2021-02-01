@@ -16,6 +16,7 @@ export interface IAdvancedGraphSettings {
     imgServerPort: number;
     debug: boolean;
     coreStore: string;
+    mergeEdges: boolean;
 }
 
 
@@ -30,6 +31,7 @@ export const DefaultAdvancedGraphSettings: IAdvancedGraphSettings = {
   imgServerPort: 3837,
   debug: false,
   coreStore: OBSIDIAN_STORE_NAME,
+  mergeEdges: true,
 };
 
 

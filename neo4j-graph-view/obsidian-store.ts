@@ -1,4 +1,5 @@
 import {
+  CachedMetadata,
   Component,
   getLinkpath,
   iterateCacheRefs,
@@ -17,6 +18,7 @@ import type {
   EdgeDataDefinition, NodeSingular, Collection,
 } from 'cytoscape';
 import {AdvancedGraphView, VizId} from './visualization';
+import Edge = cytoscape.Css.Edge;
 
 export const OBSIDIAN_STORE_NAME = 'Obsidian';
 
@@ -37,52 +39,77 @@ export class ObsidianStore extends Component implements IDataStore {
       return this.events;
     }
 
-    async connectNodes(allNodes: NodeCollection, newNodes: VizId[]): Promise<EdgeDefinition[]> {
+    async createEdges(srcFile: TFile, srcId: string, toNodes: NodeCollection): Promise<EdgeDefinition[]> {
+      const cache = this.metadata.getFileCache(srcFile);
+      if (!cache) {
+        return [];
+      }
+
+      const edges: Record<string, EdgeDefinition[]> = {};
+      const content = (await this.vault.cachedRead(srcFile)).split('\n');
+      iterateCacheRefs(cache, (ref) => {
+        const otherId = this.getOtherId(ref, srcFile.path).toId();
+        if (toNodes.$id(otherId).length > 0) {
+          const edgeId = `${srcId}->${otherId}`;
+          const count = edgeId in edges ? edges[edgeId].length + 1 : 1;
+          let data = {
+            id: `${edgeId}${count}`,
+            source: srcId,
+            target: otherId,
+          } as EdgeDataDefinition;
+          let classes = '';
+
+          const line = content[ref.position.start.line];
+          data.context = line;
+          const typedLink = this.plugin.parseTypedLink(ref, line);
+          if (typedLink === null) {
+            classes = `${classes} inline`;
+          } else {
+            data = {...typedLink.properties, ...data};
+            classes = `${classes} ${typedLink.class}`;
+          }
+          const edge = {
+            group: 'edges',
+            data: data,
+            classes: classes,
+          } as EdgeDefinition;
+          if (edgeId in edges) {
+            edges[edgeId].push(edge);
+          } else {
+            edges[edgeId] = [edge];
+          }
+        }
+      });
+      // No merging, TODO
+      return [].concat(...Object.values(edges));
+    }
+
+    async connectNodes(allNodes: NodeCollection, newNodes: NodeCollection): Promise<EdgeDefinition[]> {
       const edges: EdgeDefinition[] = [];
-      const counter: Record<string, number> = {};
-      for (const id of newNodes) {
+      // Find edges from newNodes to other nodes
+      // @ts-ignore
+      for (const node of newNodes) {
+        const id = VizId.fromNode(node);
         if (id.storeId === this.storeId()) {
           const file = this.getFile(id);
           if (file) {
-            const cache = this.metadata.getFileCache(file);
             const srcId = id.toId();
-            if (cache) {
-              const content = (await this.vault.cachedRead(file)).split('\n');
 
-              iterateCacheRefs(cache, (ref) => {
-                const otherId = this.getOtherId(ref, file.path).toId();
-                if (allNodes.$id(otherId).length > 0) {
-                  const edgeId = `${srcId}->${otherId}`;
-                  if (edgeId in counter) {
-                    counter[edgeId] += +1;
-                  } else {
-                    counter[edgeId] = 1;
-                  }
+            edges.push(...await this.createEdges(file, srcId, allNodes));
+          }
+        }
+      }
+      // @ts-ignore
+      for (const node of allNodes.difference(newNodes)) {
+        // For all nodes other than the new nodes
+        const id = VizId.fromNode(node);
+        if (id.storeId === this.storeId()) {
+          const file = this.getFile(id);
+          if (file) {
+            const srcId = id.toId();
 
-                  let data = {
-                    id: `${edgeId}${counter[edgeId]}`,
-                    source: srcId,
-                    target: otherId,
-                  } as EdgeDataDefinition;
-                  let classes = '';
-
-                  const line = content[ref.position.start.line];
-                  data.context = line;
-                  const typedLink = this.plugin.parseTypedLink(ref, line);
-                  if (typedLink === null) {
-                    classes = `${classes} inline`;
-                  } else {
-                    data = {...typedLink.properties, ...data};
-                    classes = `${classes} ${typedLink.class}`;
-                  }
-                  edges.push({
-                    group: 'edges',
-                    data: data,
-                    classes: classes,
-                  });
-                }
-              });
-            }
+            // Connect only to newNodes!
+            edges.push(...await this.createEdges(file, srcId, newNodes));
           }
         }
       }

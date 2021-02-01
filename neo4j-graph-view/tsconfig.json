@@ -10,7 +10,8 @@
       "dom",
       "es5",
       "scripthost",
-      "es2015"
+      "es2015",
+      "dom.iterable"
     ],
     "esModuleInterop": true,
     "types": ["node", "svelte"],
