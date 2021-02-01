@@ -151,7 +151,7 @@ export default class AdvancedGraphPlugin extends Plugin {
       const mdLeaves = this.app.workspace.getLeavesOfType(MD_VIEW_TYPE).concat(this.app.workspace.getLeavesOfType('image'));
       // this.app.workspace.iterateAllLeaves(leaf => console.log(leaf.view.getViewType()));
       if (mdLeaves.length > 0) {
-        await mdLeaves[0].openFile(file);
+        await mdLeaves[0].openFile(file);//
       } else {
         await this.app.workspace.getLeaf(true).openFile(file);
       }

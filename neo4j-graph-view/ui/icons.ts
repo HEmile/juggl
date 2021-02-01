@@ -3,9 +3,6 @@ import {addIcon} from 'obsidian';
 import * as mdiIcons from '@mdi/js';
 
 function pathToSvg(icon: string) {
-  // console.log(icon);
-  // return `<path fill="currentColor" d="${icon}" />`;
-  // style= "width:24px;height:24px"
   return `
     <svg style= "width:24px;height:24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path fill="currentcolor" d="${icon}" />
@@ -19,6 +16,8 @@ export const icons: Record<string, string> = {
   ag_lock: mdiIcons.mdiLock,
   ag_unlock: mdiIcons.mdiLockOpenVariantOutline,
   ag_hide: mdiIcons.mdiEyeOff,
+  ag_fit: mdiIcons.mdiFitToPageOutline,
+  ag_image: mdiIcons.mdiImage,
 };
 
 export const addIcons = (): void => {

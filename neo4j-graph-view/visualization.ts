@@ -536,6 +536,7 @@ export class AdvancedGraphView extends ItemView {
           selectNeighborClick: this.selectNeighbourhood.bind(this),
           lockClick: this.pinSelection.bind(this),
           unlockClick: this.unpinSelection.bind(this),
+          fitClick: this.fitView.bind(this),
         },
       });
       this.on('selectChange', tb.onSelect.bind(tb));
@@ -622,6 +623,10 @@ export class AdvancedGraphView extends ItemView {
         this.pinned = locked;
       }
       this.trigger('pin', locked);
+    }
+
+    fitView() {
+      this.viz.fit();
     }
 
 

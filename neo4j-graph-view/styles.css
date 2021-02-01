@@ -84,7 +84,7 @@ div.cy-navigator {
     border-style: solid;
 }
 
-.cy-toolbar-section > button {
+button.advanced-graph-button {
     width: 27px;
     height: 27px;
     text-align: center;
@@ -93,7 +93,7 @@ div.cy-navigator {
     margin: 1px;
 }
 
-.cy-toolbar-section > button:hover {
+button.advanced-graph-button:hover {
     background-color: hsl(0, 0%, 82%);
 }
 
@@ -103,6 +103,6 @@ div.cy-navigator {
     cursor: not-allowed;
 }
 
-.cy-toolbar-section > button:disabled > svg > path {
+button.advanced-graph-button:disabled > svg > path {
     fill: hsl(0, 0%, 78%);
 }
