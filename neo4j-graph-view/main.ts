@@ -17,11 +17,12 @@ import navigator from 'cytoscape-navigator';
 import popper from 'cytoscape-popper';
 import cola from 'cytoscape-cola';
 import dblclick from 'cytoscape-dblclick';
+import {addIcons} from './ui/icons';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
 
-const STATUS_OFFLINE = 'Neo4j stream offline';
+// const STATUS_OFFLINE = 'Neo4j stream offline';
 
 
 export default class AdvancedGraphPlugin extends Plugin {
@@ -33,8 +34,8 @@ export default class AdvancedGraphPlugin extends Plugin {
 
     settings: IAdvancedGraphSettings;
     path: string;
-    statusBar: HTMLElement;
-    agView: AdvancedGraphView;
+    // statusBar: HTMLElement;
+    agView: AdvancedGraphView;//
     // neo4jStream: Neo4jStream;
     vault: Vault;
     metadata: MetadataCache
@@ -50,6 +51,8 @@ export default class AdvancedGraphPlugin extends Plugin {
       cytoscape.use(cola);
       cytoscape.use( dblclick );
 
+      addIcons();
+
       this.vault = this.app.vault;
       this.metadata = this.app.metadataCache;
       this.path = this.vault.getRoot().path;
@@ -57,9 +60,10 @@ export default class AdvancedGraphPlugin extends Plugin {
       this.addChild(obsidianStore);
       this.registerCoreStore(obsidianStore, OBSIDIAN_STORE_NAME);
 
-      this.settings = Object.assign(DefaultAdvancedGraphSettings, await this.loadData());// (await this.loadData()) || DefaultNeo4jViewSettings;
-      this.statusBar = this.addStatusBarItem();
-      this.statusBar.setText(STATUS_OFFLINE);
+      this.settings = Object.assign(DefaultAdvancedGraphSettings, await this.loadData());
+
+      // this.statusBar = this.addStatusBarItem();
+      // this.statusBar.setText(STATUS_OFFLINE);
       // this.neo4jStream = new Neo4jStream(this);
       // this.addChild(this.neo4jStream);
       this.addChild(new ImageServer(this));
@@ -131,7 +135,7 @@ export default class AdvancedGraphPlugin extends Plugin {
 
       this.registerEvent(this.app.workspace.on('file-menu', (menu, file: TFile) => {
         menu.addItem((item) => {
-          item.setTitle('Open Neo4j Graph View').setIcon('dot-network')
+          item.setTitle('Open Advanced Graph View').setIcon('dot-network')
               .onClick((evt) => {
                 if (file.extension === 'md') {
                   this.openLocalGraph(file.basename);

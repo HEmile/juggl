@@ -48,6 +48,7 @@
     "uuid": "^8.3.2"
   },
   "dependencies": {
+    "@mdi/js": "^5.9.55",
     "cytoscape": "^3.17.1",
     "cytoscape-cola": "^2.4.0",
     "cytoscape-cose-bilkent": "^4.1.0",

@@ -1,7 +1,7 @@
 import type {Events, TFile} from 'obsidian';
 import type AdvancedGraphPlugin from './main';
 import type {AdvancedGraphView} from './visualization';
-
+//
 const DEFAULT_SHEET =`
 node {
   background-color: #828282;
@@ -50,9 +50,7 @@ edge {
   target-arrow-color: #E6E6E6;
   arrow-scale: 0.5;
   font-size: 6;
-  curve-style: unbundled-bezier;
-  control-point-distance: 23;
-  control-point-weight: 0.6;
+  curve-style: haystack;
 }
 
 edge:selected {

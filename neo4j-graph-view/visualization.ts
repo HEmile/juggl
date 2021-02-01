@@ -173,6 +173,8 @@ export class AdvancedGraphView extends ItemView {
       }
       VIEW_COUNTER += 1;
 
+      this.trigger('vizReady', this.viz);
+
       this.setExpanded(this.viz.$id(idInitial.toId()));
 
       const nodez = this.viz.nodes();
@@ -309,40 +311,40 @@ export class AdvancedGraphView extends ItemView {
         const selection = view.viz.nodes(':selected');
         if (selection.length > 0) {
           fileMenu.addItem((item) => {
-            item.setTitle('Expand selection (E)').setIcon('dot-network')
+            item.setTitle('Expand selection (E)').setIcon('ag-expand')
                 .onClick((evt) => {
-                  this.expand(view.viz.nodes(':selected'));
+                  this.expandSelection();
                 });
           });
           fileMenu.addItem((item) => {
-            item.setTitle('Hide selection (H)').setIcon('trash')
+            item.setTitle('Hide selection (H)').setIcon('ag-hide')
                 .onClick((evt) => {
                   this.removeSelection();
                 });
           });
+          fileMenu.addItem((item) =>{
+            item.setTitle('Select all (A)').setIcon('ag-select-all')
+                .onClick((evt) => {
+                  this.selectAll();
+                });
+          });
           fileMenu.addItem((item) => {
-            item.setTitle('Invert selection (I)').setIcon('blocks')
+            item.setTitle('Invert selection (I)').setIcon('ag-select-inverse')
                 .onClick((evt) => {
                   this.invertSelection();
                 });
           });
         }
-        fileMenu.addItem((item) =>{
-          item.setTitle('Select all (A)').setIcon('blocks')
-              .onClick((evt) => {
-                this.viz.elements().select();
-              });
-        });
         if (selection.length > 0) {
           fileMenu.addItem((item) => {
-            item.setTitle('Select neighbors (N)').setIcon('blocks')
+            item.setTitle('Select neighbors (N)').setIcon('ag-select-neighbors')
                 .onClick((evt) => {
                   this.selectNeighbourhood();
                 });
           });
           if (!view.pinned || selection.difference(view.pinned).length > 0) {
             fileMenu.addItem((item) => {
-              item.setTitle('Pin selection (P)').setIcon('filled-pin')
+              item.setTitle('Pin selection (P)').setIcon('ag-lock')
                   .onClick((evt) => {
                     this.pinSelection();
                   });
@@ -350,7 +352,7 @@ export class AdvancedGraphView extends ItemView {
           }
           if (view.pinned && selection.intersect(view.pinned).length > 0) {
             fileMenu.addItem((item) => {
-              item.setTitle('Unpin selection (U)').setIcon('pin')
+              item.setTitle('Unpin selection (U)').setIcon('ag-unlock')
                   .onClick((evt) => {
                     this.unpinSelection();
                   });
@@ -360,7 +362,9 @@ export class AdvancedGraphView extends ItemView {
         }
         fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
       });
-
+      this.viz.on('tapselect tapunselect boxselect', (e) => {
+        this.trigger('selectChange');
+      });
 
       // Register on file open event
       this.registerEvent(this.workspace.on('file-open', async (file) => {
@@ -397,13 +401,13 @@ export class AdvancedGraphView extends ItemView {
           return;
         }
         if (evt.key === 'e') {
-          this.expand(view.viz.nodes(':selected'));
+          this.expandSelection();
         } else if (evt.key === 'h' || evt.key === 'Backspace') {
           this.removeSelection();
         } else if (evt.key === 'i') {
           this.invertSelection();
         } else if (evt.key === 'a') {
-          this.viz.elements().select();
+          this.selectAll();
         } else if (evt.key === 'n') {
           this.selectNeighbourhood();
         } else if (evt.key === 'p') {
@@ -521,7 +525,26 @@ export class AdvancedGraphView extends ItemView {
     }
 
     createToolbar(element: Element) {
-      new Toolbar({target: element});
+      const tb = new Toolbar({
+        target: element,
+        props: {
+          viz: this.viz,
+          expandClick: this.expandSelection.bind(this),
+          hideClick: this.removeSelection.bind(this),
+          selectAllClick: this.selectAll.bind(this),
+          selectInvertClick: this.invertSelection.bind(this),
+          selectNeighborClick: this.selectNeighbourhood.bind(this),
+          lockClick: this.pinSelection.bind(this),
+          unlockClick: this.unpinSelection.bind(this),
+        },
+      });
+      this.on('selectChange', tb.onSelect.bind(tb));
+      this.on('vizReady', (viz) => {
+        console.log(viz);
+        tb.$set({viz: viz});
+        tb.onSelect.bind(tb)();
+        console.log(tb);
+      });
     }
 
     protected async onClose(): Promise<void> {
@@ -535,12 +558,27 @@ export class AdvancedGraphView extends ItemView {
     //   this.rebuildRelations = true;
     // }
 
+    async expandSelection() {
+      await this.expand(this.viz.nodes(':selected'));
+    }
+
+    removeSelection() {
+      const removed = this.removeNodes(this.viz.nodes(':selected'));
+      this.trigger('hide', removed);
+      this.trigger('selectChange');
+    }
+
+    selectAll() {
+      this.viz.nodes().select();
+      this.trigger('selectChange');
+    }
 
     invertSelection() {
       this.viz.$(':selected')
           .unselect()
           .absoluteComplement()
           .select();
+      this.trigger('selectChange');
     }
 
     selectNeighbourhood() {
@@ -549,12 +587,9 @@ export class AdvancedGraphView extends ItemView {
           .unselect()
           .openNeighborhood()
           .select();
+      this.trigger('selectChange');
     }
 
-    removeSelection() {
-      const removed = this.removeNodes(this.viz.nodes(':selected'));
-      this.trigger('hide', removed);
-    }
 
     removeNodes(nodes: NodeCollection): NodeCollection {
       // Only call this method if the node is forcefully removed from the graph, not when the node no longer exists
@@ -767,6 +802,8 @@ export class AdvancedGraphView extends ItemView {
     on(name: 'hide', callback: (elements: NodeCollection) => any): EventRef;
     on(name: 'pin', callback: (elements: NodeCollection) => any): EventRef;
     on(name: 'unpin', callback: (elements: NodeCollection) => any): EventRef;
+    on(name: 'selectChange', callback: () => any): EventRef;
+    on(name: 'vizReady', callback: (viz: Core) => any): EventRef;
     on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
       return this.events.on(name, callback, ctx);
     }
@@ -776,11 +813,13 @@ export class AdvancedGraphView extends ItemView {
     offref(ref: EventRef): void {
       this.events.offref(ref);
     }
-    trigger(name:'stylesheet', sheet: GraphStyleSheet): void;
+    trigger(name: 'stylesheet', sheet: GraphStyleSheet): void;
     trigger(name: 'expand', elements: NodeCollection): void;
     trigger(name: 'hide', elements: NodeCollection): void;
     trigger(name: 'pin', elements: NodeCollection): void;
     trigger(name: 'unpin', elements: NodeCollection): void;
+    trigger(name: 'selectChange'): void;
+    trigger(name: 'vizReady', viz: Core): void;
     trigger(name: string, ...data: any[]): void {
       this.events.trigger(name, ...data);
     }

@@ -71,3 +71,38 @@ div.cy-navigator {
 .cy-content {
     padding: 0;
 }
+
+.cy-toolbar-section {
+    width: fit-content;
+    text-align: center;
+    background-color: hsl(0, 0%, 96%);
+    display: inline-block;
+    margin: 1px;
+    padding: 1px;
+    border-color: hsl(0, 0%, 75%);
+    border-width: 1px;
+    border-style: solid;
+}
+
+.cy-toolbar-section > button {
+    width: 27px;
+    height: 27px;
+    text-align: center;
+    background-color: hsl(0, 0%, 90%);
+    padding: 0;
+    margin: 1px;
+}
+
+.cy-toolbar-section > button:hover {
+    background-color: hsl(0, 0%, 82%);
+}
+
+.cy-toolbar-section > button:disabled {
+    background: hsl(0, 0%, 96%);
+    color: hsl(0, 0%, 50%);
+    cursor: not-allowed;
+}
+
+.cy-toolbar-section > button:disabled > svg > path {
+    fill: hsl(0, 0%, 78%);
+}
