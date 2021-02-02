@@ -365,7 +365,21 @@ export class AdvancedGraphView extends ItemView {
       this.viz.on('tapselect tapunselect boxselect', (e) => {
         this.trigger('selectChange');
       });
-
+      this.viz.on('layoutstop', (e) => {
+        const activeFile = this.viz.nodes('.active-file');
+        if (activeFile.length > 0) {
+          // animation.stop();
+          console.log('animating');
+          e.cy.animate({
+            fit: {
+              eles: activeFile.closedNeighborhood(),
+              padding: 0,
+            },
+            duration: 500,
+            queue: false,
+          });
+        }
+      });
       // Register on file open event
       this.registerEvent(this.workspace.on('file-open', async (file) => {
         if (file && this.settings.autoAddNodes) {
@@ -764,27 +778,16 @@ export class AdvancedGraphView extends ItemView {
           .addClass('connected-active-file')
           .union(node);
       if (followImmediate) {
-        this.viz.animate({
+        const animation = this.viz.animate({
           fit: {
             eles: neighbourhood,
             padding: 0,
           },
           duration: 500,
           queue: false,
-        });
-      } else {
-        this.viz.one('layoutready', (e) => {
-          this.viz.one('layoutstop', (e) => {
-            // animation.stop();
-            e.cy.animate({
-              fit: {
-                eles: neighbourhood,
-                padding: 0,
-              },
-              duration: 500,
-              queue: false,
-            });
-          });
+          // step: () => {
+          //   animation.fit(neighbourhood);
+          // },
         });
       }
       this.viz.one('tap', (e) => {
