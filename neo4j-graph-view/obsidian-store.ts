@@ -52,15 +52,15 @@ export class ObsidianStore extends Component implements IDataStore {
         if (toNodes.$id(otherId).length > 0) {
           const edgeId = `${srcId}->${otherId}`;
           const count = edgeId in edges ? edges[edgeId].length + 1 : 1;
+          const line = content[ref.position.start.line];
           let data = {
             id: `${edgeId}${count}`,
             source: srcId,
             target: otherId,
+            context: line,
+            edgeCount: 1,
           } as EdgeDataDefinition;
           let classes = '';
-
-          const line = content[ref.position.start.line];
-          data.context = line;
           const typedLink = this.plugin.parseTypedLink(ref, line);
           if (typedLink === null) {
             classes = `${classes} inline`;
@@ -80,6 +80,37 @@ export class ObsidianStore extends Component implements IDataStore {
           }
         }
       });
+      if (this.plugin.settings.mergeEdges) {
+        // Merges inline edges.
+        const returnEdges: EdgeDefinition[] = [];
+        for (const edgeId of Object.keys(edges)) {
+          const connectedEdges: EdgeDefinition[] = edges[edgeId];
+          let inlineEdge: EdgeDefinition = null;
+          let countInline = 0;
+          for (const edge of connectedEdges) {
+            if (edge.classes === ' inline') {
+              if (inlineEdge) {
+                inlineEdge.data.context += `
+                
+---
+
+${edge.data.context}`;
+                countInline += 1;
+              } else {
+                inlineEdge = edge;
+                countInline = 1;
+              }
+            } else {
+              returnEdges.push(edge);
+            }
+          }
+          if (inlineEdge) {
+            inlineEdge.data.edgeCount = countInline;
+            returnEdges.push(inlineEdge);
+          }
+        }
+        return returnEdges;//
+      }
       // No merging, TODO
       return [].concat(...Object.values(edges));
     }

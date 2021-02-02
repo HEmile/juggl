@@ -44,7 +44,7 @@ edge {
   line-color: #E6E6E6;
   loop-sweep: -50deg;
   loop-direction: -45deg;
-  width: 0.5;
+  width: mapData(edgeCount, 1, 30, 0.4, 2);
   target-arrow-shape: vee;
   target-arrow-fill: filled;
   target-arrow-color: #E6E6E6;
@@ -62,7 +62,7 @@ edge:selected {
 }
 
 :loop {
-  width: 0.1;
+  width: mapData(edgeCount, 1, 30, 0.1, 1);
 }
 
 edge[type] {
