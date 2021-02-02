@@ -1,4 +1,5 @@
 import {
+  FileSystemAdapter,
   MarkdownView, MetadataCache,
   Plugin, ReferenceCache, TAbstractFile, TFile, Vault,
 } from 'obsidian';
@@ -18,6 +19,7 @@ import popper from 'cytoscape-popper';
 import cola from 'cytoscape-cola';
 import dblclick from 'cytoscape-dblclick';
 import {addIcons} from './ui/icons';
+import {STYLESHEET_PATH} from './stylesheet';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -145,6 +147,17 @@ export default class AdvancedGraphPlugin extends Plugin {
               });
         });
       }));
+      const path = (this.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
+      console.log(path);
+
+      require('original-fs').watch(path,
+          async (curr:any, prev:any) => {
+            console.log('Updating graph stylesheet');
+            for (const view of this.activeViews()) {
+              const style = await view.createStylesheet();
+              view.viz.style(style);
+            }
+          });
     }
 
     public async openFile(file: TFile) {
@@ -156,7 +169,6 @@ export default class AdvancedGraphPlugin extends Plugin {
         await this.app.workspace.getLeaf(true).openFile(file);
       }
     }
-
 
     async openLocalGraph(name: string) {
       const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);

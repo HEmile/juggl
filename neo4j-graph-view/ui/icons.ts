@@ -22,7 +22,6 @@ export const icons: Record<string, string> = {
 
 export const addIcons = (): void => {
   Object.keys(icons).forEach((key) => {
-    console.log((key.replace('_', '-')));
     addIcon(key.replace('_', '-').replace('_', '-'), pathToSvg(icons[key]));
   });
 };

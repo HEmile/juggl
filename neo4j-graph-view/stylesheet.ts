@@ -1,7 +1,12 @@
 import type {Events, TFile} from 'obsidian';
 import type AdvancedGraphPlugin from './main';
 import type {AdvancedGraphView} from './visualization';
+import type {FileSystemAdapter} from 'obsidian';
+import * as util from 'util';
+import {promises as fs} from 'fs';
 //
+export const STYLESHEET_PATH = './.obsidian/plugins/neo4j-graph-view/graph.css';
+
 const DEFAULT_SHEET =`
 node {
   background-color: #828282;
@@ -128,32 +133,42 @@ export class GraphStyleSheet {
     }
 
     async getStylesheet(): Promise<string> {
-      const file = this.plugin.vault.getAbstractFileByPath('graph.css') as TFile;
-      let customSheet = '';
-      if (file && await this.plugin.vault.adapter.exists(file.path)) {
-        customSheet = await this.plugin.vault.read(file);
-      } else {
-        customSheet = this.genStyleSheet();
-        await this.plugin.vault.adapter.write('graph.css', customSheet);
-      }
+      const file = (this.plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
+      console.log(file);
+      // const customSheet = '';
+      const customSheet = await fs.readFile(file, 'utf-8')
+          .catch(async (err) => {
+            if (err.code === 'ENOENT') {
+              const cstmSheet = this.genStyleSheet();
+              await fs.writeFile(file, cstmSheet);
+              console.log(cstmSheet);
+              return cstmSheet;
+            } else {
+              throw err;
+            }
+          });
 
+      // (file, 'utf-8', async (err, data) => {
+      //   console.log(err);
+      //   if (err) {
+      //     if (err.code === 'ENOENT') {
+      //       customSheet = this.genStyleSheet();
+      //       fs.writeFile(file, customSheet, ()=> {});
+      //       console.log(customSheet);
+      //     } else {
+      //       throw err;
+      //     }
+      //   } else {
+      //     customSheet = data;
+      //   }
+      // });
+      console.log(customSheet);
       return this.defaultSheet + customSheet + this.yamlModifySheet;
     }
 
     genStyleSheet(): string {
       const tagColorMap = {} as Record<string, string>;
-      // const folderShapeMap = {} as Record<string, string>;
-      // const shapes = ['round-triangle',
-      //   'round-rectangle',
-      //   'barrel',
-      //   'rhomboid',
-      //   'round-diamond',
-      //   'round-pentagon',
-      //   'round-hexagon',
-      //   'round-heptagon',
-      //   'round-octagon',
-      //   'star',
-      //   'vee'];
+
       const colorSet = [[
         '#0089BA',
         '#2C73D2',

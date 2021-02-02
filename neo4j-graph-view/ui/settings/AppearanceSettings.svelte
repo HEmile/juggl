@@ -1,11 +1,11 @@
 <script lang="ts">
     import {FileSystemAdapter} from "obsidian";
+    import {STYLESHEET_PATH} from "../../stylesheet";
 
     export let vault;
     let openGraphCSS = function() {
         const shell = require('electron').shell;
-        const path = require('path');
-        let fullPath = (vault.adapter as FileSystemAdapter).getFullPath("graph.css")
+        let fullPath = (vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
         console.log(fullPath);
         shell.openPath(fullPath);
     }
