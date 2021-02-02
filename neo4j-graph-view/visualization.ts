@@ -180,15 +180,13 @@ export class AdvancedGraphView extends ItemView {
       const nodez = this.viz.nodes();
       const edges = await this.buildEdges(nodez);
 
+      this.viz.add(edges);
+      this.onGraphChanged(true);
+
       if (this.settings.debug) {
         console.log(nodes);
         console.log(edges);
       }
-      this.viz.add(edges);
-
-      nodez.forEach((node) => {
-        node.data('degree', node.degree(true));
-      });
 
       const styleSheet = await this.createStylesheet();
       this.viz.style(styleSheet);
@@ -746,6 +744,8 @@ export class AdvancedGraphView extends ItemView {
       }
       this.viz.nodes().forEach((node) => {
         node.data('degree', node.degree(false));
+        node.data('nameLength', node.data('name').length);
+        console.log(node.data());
       });
       if (batch) {
         this.viz.endBatch();
