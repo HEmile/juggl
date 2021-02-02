@@ -1,9 +1,8 @@
 import {App, PluginSettingTab, Setting, SplitDirection} from 'obsidian';
 
 import type AdvancedGraphPlugin from './main';
-// import {EdgeOptions, NodeOptions} from 'vis-network';
-import {AdvancedGraphView, AG_VIEW_TYPE} from './visualization';
 import {OBSIDIAN_STORE_NAME} from './obsidian-store';
+import AppearanceSettings from './ui/settings/AppearanceSettings.svelte';
 
 export interface IAdvancedGraphSettings {
     indexContent: boolean; // neo4j
@@ -64,6 +63,8 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
             'Join ' + discord_link.outerHTML + ' for help, nice discussion and insight into development.';
 
       containerEl.appendChild(introPar);
+
+      new AppearanceSettings({target: containerEl, props: {vault: this.plugin.vault}});
 
       // new Setting(containerEl)
       //     .setName('Neo4j database password')
