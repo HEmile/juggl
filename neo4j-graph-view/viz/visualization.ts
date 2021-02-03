@@ -1,6 +1,6 @@
-import type {IAdvancedGraphSettings} from './settings';
+import type {IAdvancedGraphSettings} from '../settings';
 import {EventRef, Events, ItemView, MarkdownRenderer, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
-import type AdvancedGraphPlugin from './main';
+import type AdvancedGraphPlugin from '../main';
 import cytoscape, {
   Collection,
   Core,
@@ -11,11 +11,12 @@ import cytoscape, {
   NodeDefinition,
   NodeSingular, Singular,
 } from 'cytoscape';
-import type {IDataStore} from './interfaces';
+import type {IAGMode, IDataStore} from '../interfaces';
 import {GraphStyleSheet} from './stylesheet';
 import Timeout = NodeJS.Timeout;
 
-import Toolbar from './ui/Toolbar.svelte';
+import Toolbar from '../ui/Toolbar.svelte';
+import {WorkspaceMode} from './workspace-mode';
 
 
 export const AG_VIEW_TYPE = 'advanced_graph_view';
@@ -106,6 +107,8 @@ export class VizId {
     }
 }
 
+type AGMode = 'workspace' | 'local';
+
 export class AdvancedGraphView extends ItemView {
     workspace: Workspace;
     settings: IAdvancedGraphSettings;
@@ -119,6 +122,7 @@ export class AdvancedGraphView extends ItemView {
     datastores: IDataStore[];
     activeLayout: Layouts;
     hoverTimeout: Record<string, Timeout> = {};
+    mode: IAGMode;
 
     constructor(leaf: WorkspaceLeaf, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[]) {
       super(leaf);
@@ -131,6 +135,7 @@ export class AdvancedGraphView extends ItemView {
       this.plugin = plugin;
       this.datastores = dataStores;
       this.events = new Events();
+      this.mode = new WorkspaceMode();
     }
 
     async onOpen() {

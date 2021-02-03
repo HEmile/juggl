@@ -17,7 +17,7 @@ import type {
   NodeCollection,
   EdgeDataDefinition, NodeSingular, Collection,
 } from 'cytoscape';
-import {AdvancedGraphView, CLASS_EXPANDED, VizId} from './visualization';
+import {AdvancedGraphView, CLASS_EXPANDED, VizId} from './viz/visualization';
 import Edge = cytoscape.Css.Edge;
 
 export const OBSIDIAN_STORE_NAME = 'Obsidian';

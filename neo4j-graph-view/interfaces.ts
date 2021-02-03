@@ -1,7 +1,7 @@
 import type {Component} from 'obsidian';
 import type {DataStoreEvents} from './events';
 import type {EdgeDefinition, NodeCollection, NodeDefinition} from 'cytoscape';
-import type {VizId} from './visualization';
+import type {VizId} from './viz/visualization';
 
 export interface INoteProperties {
     SMD_community: number;
@@ -40,4 +40,8 @@ export interface IDataStore extends Component {
     // Prefix of id of nodes from this store
     storeId(): string;
 
+}
+
+export interface IAGMode {
+    getName(): string;
 }

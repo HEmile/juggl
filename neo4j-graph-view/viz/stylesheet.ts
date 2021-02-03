@@ -1,5 +1,5 @@
 import type {Events, TFile} from 'obsidian';
-import type AdvancedGraphPlugin from './main';
+import type AdvancedGraphPlugin from '../main';
 import type {AdvancedGraphView} from './visualization';
 import type {FileSystemAdapter} from 'obsidian';
 import * as util from 'util';

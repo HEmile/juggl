@@ -7,7 +7,7 @@ import {
   IAdvancedGraphSettings,
   AdvancedGraphSettingTab,
   DefaultAdvancedGraphSettings} from './settings';
-import {AdvancedGraphView, AG_VIEW_TYPE, MD_VIEW_TYPE, PROP_VAULT} from './visualization';
+import {AdvancedGraphView, AG_VIEW_TYPE, MD_VIEW_TYPE, PROP_VAULT} from './viz/visualization';
 import type {Editor} from 'codemirror';
 import {ImageServer} from './image-server';
 import type {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
@@ -19,7 +19,7 @@ import popper from 'cytoscape-popper';
 import cola from 'cytoscape-cola';
 import dblclick from 'cytoscape-dblclick';
 import {addIcons} from './ui/icons';
-import {STYLESHEET_PATH} from './stylesheet';
+import {STYLESHEET_PATH} from './viz/stylesheet';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts

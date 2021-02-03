@@ -1,6 +1,6 @@
 <script lang="ts">
     import {FileSystemAdapter} from "obsidian";
-    import {STYLESHEET_PATH, GraphStyleSheet} from "../../stylesheet";
+    import {STYLESHEET_PATH, GraphStyleSheet} from "../../viz/stylesheet";
     import {promises as fs} from "fs";
     import type AdvancedGraphPlugin from "../../main";
 
