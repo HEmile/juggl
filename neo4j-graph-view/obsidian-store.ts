@@ -1,5 +1,4 @@
 import {
-  CachedMetadata,
   Component,
   getLinkpath,
   iterateCacheRefs,
@@ -15,10 +14,11 @@ import type {
   EdgeDefinition,
   NodeDataDefinition,
   NodeCollection,
-  EdgeDataDefinition, NodeSingular, Collection,
+  EdgeDataDefinition, Collection,
 } from 'cytoscape';
-import {AdvancedGraphView, CLASS_EXPANDED, VizId} from './viz/visualization';
-import Edge = cytoscape.Css.Edge;
+import type {AdvancedGraphView} from './viz/visualization';
+import {CLASS_EXPANDED} from './constants';
+import {VizId} from './interfaces';
 
 export const OBSIDIAN_STORE_NAME = 'Obsidian';
 
@@ -295,7 +295,8 @@ ${edge.data.context}`;
           .difference(correctEdges)
           .remove();
       view.restartLayout();
-      view.updateActiveFile(node.nodes() as NodeSingular, true);
+      // TODO: I don't think this one here was correct / should be needed.
+      // view.updateActiveFile(node.nodes() as NodeSingular, true);
     }
 
     onload() {
@@ -331,8 +332,5 @@ ${edge.data.context}`;
               });
             }
           }));
-      // this.registerEvent(
-      //     this.vault.on('create', (file) => {
-      //     }));
     }
 }

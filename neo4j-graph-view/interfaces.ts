@@ -1,7 +1,9 @@
 import type {Component} from 'obsidian';
 import type {DataStoreEvents} from './events';
 import type {EdgeDefinition, NodeCollection, NodeDefinition} from 'cytoscape';
-import type {VizId} from './viz/visualization';
+import type {Menu} from 'obsidian';
+import type {NodeSingular} from 'cytoscape';
+import type {TFile} from 'obsidian';
 
 export interface INoteProperties {
     SMD_community: number;
@@ -42,6 +44,58 @@ export interface IDataStore extends Component {
 
 }
 
-export interface IAGMode {
+export interface IAGMode extends Component {
     getName(): string;
+
+    fillMenu(menu: Menu): void;
+
+    createToolbar(element: Element): void;
+
+}
+
+export class VizId {
+    id: string;
+    storeId: string;
+    constructor(id: string, storeId: string) {
+      this.id = id;
+      this.storeId = storeId;
+    }
+
+    toString(): string {
+      return `${this.storeId}:${this.id}`;
+    }
+
+    toId(): string {
+      return this.toString();
+    }
+
+    static fromId(id: string): VizId {
+      const split = id.split(':');
+      const storeId = split[0];
+      const _id = split.slice(1).join(':');
+      return new VizId(_id, storeId);
+    }
+
+    static fromNode(node: NodeSingular): VizId {
+      return VizId.fromId(node.id());
+    }
+
+    static fromNodes(nodes: NodeCollection) : VizId[] {
+      return nodes.map((n) => VizId.fromNode(n));
+    }
+
+    static fromFile(file: TFile): VizId {
+      const name = file.extension === 'md' ? file.basename : file.name;
+      return new VizId(name, 'core');
+    }
+
+    static fromPath(path: string): VizId {
+      const pth = require('path');
+      const name = pth.basename(path, '.md');
+      return new VizId(name, 'core');
+    }
+
+    static toId(id: string, storeId: string) : string {
+      return new VizId(id, storeId).toId();
+    }
 }

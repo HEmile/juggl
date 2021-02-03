@@ -1,19 +1,19 @@
 import {
   FileSystemAdapter,
   MarkdownView, MetadataCache,
-  Plugin, ReferenceCache, TAbstractFile, TFile, Vault,
+  Plugin, ReferenceCache, TFile, Vault,
 } from 'obsidian';
 import {
   IAdvancedGraphSettings,
   AdvancedGraphSettingTab,
   DefaultAdvancedGraphSettings} from './settings';
-import {AdvancedGraphView, AG_VIEW_TYPE, MD_VIEW_TYPE, PROP_VAULT} from './viz/visualization';
+import {AdvancedGraphView, AG_VIEW_TYPE, MD_VIEW_TYPE} from './viz/visualization';
 import type {Editor} from 'codemirror';
 import {ImageServer} from './image-server';
 import type {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
-import coseBilkent from 'cytoscape-cose-bilkent';
 import cytoscape from 'cytoscape';
+import coseBilkent from 'cytoscape-cose-bilkent';
 import navigator from 'cytoscape-navigator';
 import popper from 'cytoscape-popper';
 import cola from 'cytoscape-cola';
@@ -212,17 +212,17 @@ export default class AdvancedGraphPlugin extends Plugin {
           {line: botLine || fromLineNum, ch: cm.getLine(botLine)?.length});
     }
 
-    nodeCypher(label: string): string {
-      return 'MATCH (n) WHERE n.name="' + label +
-            '" AND n.' + PROP_VAULT + '="' + this.app.vault.getName() +
-            '" RETURN n';
-    }
-
-    localNeighborhoodCypher(label:string): string {
-      return 'MATCH (n {name: "' + label +
-            '", ' + PROP_VAULT + ':"' + this.app.vault.getName() +
-            '"}) OPTIONAL MATCH (n)-[r]-(m) RETURN n,r,m';
-    }
+    // nodeCypher(label: string): string {
+    //   return 'MATCH (n) WHERE n.name="' + label +
+    //         '" AND n.' + PROP_VAULT + '="' + this.app.vault.getName() +
+    //         '" RETURN n';
+    // }
+    //
+    // localNeighborhoodCypher(label:string): string {
+    //   return 'MATCH (n {name: "' + label +
+    //         '", ' + PROP_VAULT + ':"' + this.app.vault.getName() +
+    //         '"}) OPTIONAL MATCH (n)-[r]-(m) RETURN n,r,m';
+    // }
 
     public getClasses(file: TFile): string[] {
       if (file) {
