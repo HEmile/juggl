@@ -17,7 +17,7 @@ import type {
   NodeCollection,
   EdgeDataDefinition, NodeSingular, Collection,
 } from 'cytoscape';
-import {AdvancedGraphView, VizId} from './visualization';
+import {AdvancedGraphView, CLASS_EXPANDED, VizId} from './visualization';
 import Edge = cytoscape.Css.Edge;
 
 export const OBSIDIAN_STORE_NAME = 'Obsidian';
@@ -277,22 +277,20 @@ ${edge.data.context}`;
       return Promise.resolve(this.nodeFromFile(file));
     }
 
-    async refreshNode(view: AdvancedGraphView, id: VizId, activeFile: boolean) {
+    async refreshNode(view: AdvancedGraphView, id: VizId) {
       const idS = id.toId();
       let correctEdges: Collection;
-      if (view.viz.$id(idS).length > 0 && view.expanded.contains(view.viz.$id(idS))) {
-        correctEdges = await view.expand(view.viz.$id(idS));
-        console.log(correctEdges);
+      let node = view.viz.$id(idS);
+      if (node.length > 0 && node.hasClass(CLASS_EXPANDED)) {
+        correctEdges = await view.expand(node);
       } else {
-        const nodes = [await this.get(id)];
-        view.mergeToGraph(nodes);
-        const node = view.viz.$id(idS);
+        const nodeDef = [await this.get(id)];
+        view.mergeToGraph(nodeDef);
+        node = view.viz.$id(idS);
         const edges = await view.buildEdges(node);
         correctEdges = view.mergeToGraph(edges);
       }
-      const node = view.viz.$id(idS);
       // Remove outgoing edges that no longer exist.
-      node.connectedEdges().difference(correctEdges).forEach((n) => console.log(n.data()));
       node.connectedEdges()
           .difference(correctEdges)
           .remove();
@@ -307,7 +305,7 @@ ${edge.data.context}`;
           this.metadata.on('changed', (file) => {
             console.log('changed');
             store.plugin.activeViews().forEach(async (v) => {
-              await store.refreshNode(v, VizId.fromFile(file), this.plugin.app.workspace.getActiveFile() === file);
+              await store.refreshNode(v, VizId.fromFile(file));
             });
           }));
       this.registerEvent(
@@ -320,7 +318,7 @@ ${edge.data.context}`;
                   // Changing the ID of a node in Cytoscape is not allowed, so remove and then restore.
                   // Put in setTimeout because Obsidian doesn't immediately update the metadata on rename...
                   v.viz.$id(oldId.toId()).remove();
-                  await store.refreshNode(v, id, this.plugin.app.workspace.getActiveFile() === file);
+                  await store.refreshNode(v, id);
                 }, 500);
               });
             }

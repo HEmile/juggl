@@ -20,7 +20,8 @@
     export const onSelect = function () {
         let selected = viz.nodes(":selected");
         disableOnNoneSelected = selected.length === 0;
-        let pinned = viz.nodes(":locked");
+        // TODO: Hardcoded class
+        let pinned = viz.nodes(".pinned");
         let anyUnpinned = selected.difference(pinned).length > 0
         let anyPinned = selected.intersection(pinned);
         disableOnAllPinned = !anyUnpinned || disableOnNoneSelected;

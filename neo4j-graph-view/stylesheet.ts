@@ -94,6 +94,10 @@ edge.hover {
 .unhover {
     opacity: 0.3;
 }
+.pinned {
+    border-style: dotted;
+    border-width: 2;
+}
 `;
 
 const YAML_MODIFY_SHEET = `

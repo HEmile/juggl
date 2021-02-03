@@ -24,6 +24,9 @@ export const MD_VIEW_TYPE = 'markdown';
 export const PROP_VAULT = 'SMD_vault';
 export const PROP_PATH = 'SMD_path';
 
+export const CLASS_PINNED = 'pinned';
+export const CLASS_EXPANDED = 'expanded';
+
 export const COSE_LAYOUT = {
   name: 'cose-bilkent',
   ready: function() {
@@ -113,8 +116,6 @@ export class AdvancedGraphView extends ItemView {
     datastores: IDataStore[];
     activeLayout: Layouts;
     hoverTimeout: Record<string, Timeout> = {};
-    pinned: NodeCollection;
-    expanded: NodeCollection;
 
     constructor(leaf: WorkspaceLeaf, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[]) {
       super(leaf);
@@ -175,7 +176,7 @@ export class AdvancedGraphView extends ItemView {
 
       this.trigger('vizReady', this.viz);
 
-      this.setExpanded(this.viz.$id(idInitial.toId()));
+      this.viz.$id(idInitial.toId()).addClass(CLASS_EXPANDED);
 
       const nodez = this.viz.nodes();
       const edges = await this.buildEdges(nodez);
@@ -271,7 +272,7 @@ export class AdvancedGraphView extends ItemView {
           this.hoverTimeout[id] = undefined;
         }
         e.cy.elements().removeClass(['hover', 'unhover', 'connected-hover']);
-        if (this.pinned?.contains(e.target)) {
+        if (e.target.hasClass(CLASS_PINNED)) {
           e.target.lock();
         }
       });
@@ -287,12 +288,12 @@ export class AdvancedGraphView extends ItemView {
         // this.activeLayout = this.viz.layout(this.colaLayout()).start();
         this.activeLayout.start();
         const node = e.target;
+        node.lock();
         this.activeLayout.one('layoutstop', (e)=> {
-          if (!view.pinned || !view.pinned.contains(node)) {
+          if (!node.hasClass(CLASS_PINNED)) {
             node.unlock();
           }
         });
-        node.lock();
       });
       this.viz.on('cxttap', (e) =>{
         // Thanks Liam for sharing how to do context menus
@@ -340,7 +341,8 @@ export class AdvancedGraphView extends ItemView {
                   this.selectNeighbourhood();
                 });
           });
-          if (!view.pinned || selection.difference(view.pinned).length > 0) {
+          const pinned = this.getPinned();
+          if (selection.difference(pinned).length > 0) {
             fileMenu.addItem((item) => {
               item.setTitle('Pin selection (P)').setIcon('ag-lock')
                   .onClick((evt) => {
@@ -348,7 +350,7 @@ export class AdvancedGraphView extends ItemView {
                   });
             });
           }
-          if (view.pinned && selection.intersect(view.pinned).length > 0) {
+          if (selection.intersect(pinned).length > 0) {
             fileMenu.addItem((item) => {
               item.setTitle('Unpin selection (U)').setIcon('ag-unlock')
                   .onClick((evt) => {
@@ -512,7 +514,6 @@ export class AdvancedGraphView extends ItemView {
 
     async expand(toExpand: NodeCollection): Promise<Collection> {
       // Currently returns the edges merged into the graph, not the full neighborhood
-      console.log('Enter expand');
       const expandedIds = toExpand.map((n) => VizId.fromNode(n));
       const neighbourhood = await this.neighbourhood(expandedIds);
       this.mergeToGraph(neighbourhood);
@@ -523,10 +524,9 @@ export class AdvancedGraphView extends ItemView {
       const edges = await this.buildEdges(nodes);
       const edgesInGraph = this.mergeToGraph(edges);
       this.restartLayout();
-      this.trigger('expand', toExpand);
-      this.setExpanded(toExpand);
-      toExpand.neighborhood().forEach((e) => console.log(e.classes()));
+      toExpand.addClass(CLASS_EXPANDED);
       this.updateActiveFile(toExpand, false);
+      this.trigger('expand', toExpand);
       return edgesInGraph;
     }
 
@@ -608,32 +608,27 @@ export class AdvancedGraphView extends ItemView {
       // Only call this method if the node is forcefully removed from the graph, not when the node no longer exists
       // on the back-end. This is because of how it handles expanded.
       // Remove as expanded if a neighbour is removed from the graph.
-      const expInNeighbourhood = this.expanded
+      this.getExpanded()
           .intersection(nodes.neighborhood())
           .removeClass('expanded');
-      this.expanded = this.expanded.difference(expInNeighbourhood);
       const removed = nodes.remove();
       this.restartLayout();
       return removed;
     }
 
     unpinSelection() {
-      const unlocked = this.viz.nodes(':selected').unlock();
+      const unlocked = this.viz.nodes(':selected')
+          .unlock()
+          .removeClass(CLASS_PINNED);
       this.restartLayout();
-      if (this.pinned) {
-        this.pinned = this.pinned.difference(unlocked);
-      }
-      this.trigger('pin', unlocked);
+      this.trigger('unpin', unlocked);
     }
 
     pinSelection() {
-      const locked = this.viz.nodes(':selected').lock();
+      const locked = this.viz.nodes(':selected')
+          .lock()
+          .addClass(CLASS_PINNED);
       this.restartLayout();
-      if (this.pinned) {
-        this.pinned = this.pinned.union(locked);
-      } else {
-        this.pinned = locked;
-      }
       this.trigger('pin', locked);
     }
 
@@ -722,10 +717,21 @@ export class AdvancedGraphView extends ItemView {
           addElements.push(n);
         } else {
           const gElement = this.viz.$id(n.data.id);
+          const extraClasses = [];
+          if (gElement.hasClass(CLASS_EXPANDED)) {
+            extraClasses.push(CLASS_EXPANDED);
+          }
+          if (gElement.hasClass(CLASS_PINNED)) {
+            extraClasses.push(CLASS_PINNED);
+          }
+          // TODO: Maybe make an event here
           gElement.classes(n.classes);
+          for (const clazz of extraClasses) {
+            gElement.addClass(clazz);
+          }
           gElement.data(n.data);
           mergedCollection.merge(gElement);
-          if (this.expanded.contains(gElement)) {
+          if (this.getExpanded().contains(gElement)) {
             gElement.addClass('expanded');
           }
         }
@@ -795,15 +801,13 @@ export class AdvancedGraphView extends ItemView {
       });
     }
 
-    setExpanded(nodes: NodeCollection) {
-      if (!this.expanded) {
-        this.expanded = nodes;
-      } else {
-        this.expanded = this.expanded.union(nodes);
-      }
-      nodes.addClass('expanded');
+    public getPinned() {
+      return this.viz.nodes(`.${CLASS_PINNED}`);
     }
 
+    public getExpanded() {
+      return this.viz.nodes(`${CLASS_EXPANDED}`);
+    }
 
     on(name:'stylesheet', callback: (sheet: GraphStyleSheet) => any): EventRef;
     on(name: 'expand', callback: (elements: NodeCollection) => any): EventRef;

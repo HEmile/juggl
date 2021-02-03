@@ -150,6 +150,9 @@ export default class AdvancedGraphPlugin extends Plugin {
       const path = (this.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
       console.log(path);
 
+      // If this doesn't work nicely,
+      // The Obsidian-way is this.registerEvent( this.app.vault.on("raw", {} );
+      // But that'll fire on every file change.
       require('original-fs').watch(path,
           async (curr:any, prev:any) => {
             console.log('Updating graph stylesheet');
