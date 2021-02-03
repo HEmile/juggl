@@ -531,7 +531,7 @@ export class AdvancedGraphView extends ItemView {
     }
 
     async createStylesheet(): Promise<string> {
-      const sheet = new GraphStyleSheet(this);
+      const sheet = new GraphStyleSheet(this.plugin);
       this.trigger('stylesheet', sheet);
       return await sheet.getStylesheet();
     }

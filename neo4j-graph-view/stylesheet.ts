@@ -127,18 +127,15 @@ defaultSheet comes before graph.css, yamlModifySheet comes after.
 export class GraphStyleSheet {
     defaultSheet: string;
     yamlModifySheet: string;
-    view: AdvancedGraphView;
     plugin: AdvancedGraphPlugin;
-    constructor(view: AdvancedGraphView) {
+    constructor(plugin: AdvancedGraphPlugin) {
       this.defaultSheet = DEFAULT_SHEET;
       this.yamlModifySheet = YAML_MODIFY_SHEET;
-      this.plugin = view.plugin;
-      this.view = view;
+      this.plugin = plugin;
     }
 
     async getStylesheet(): Promise<string> {
       const file = (this.plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
-      console.log(file);
       // const customSheet = '';
       const customSheet = await fs.readFile(file, 'utf-8')
           .catch(async (err) => {
@@ -152,21 +149,6 @@ export class GraphStyleSheet {
             }
           });
 
-      // (file, 'utf-8', async (err, data) => {
-      //   console.log(err);
-      //   if (err) {
-      //     if (err.code === 'ENOENT') {
-      //       customSheet = this.genStyleSheet();
-      //       fs.writeFile(file, customSheet, ()=> {});
-      //       console.log(customSheet);
-      //     } else {
-      //       throw err;
-      //     }
-      //   } else {
-      //     customSheet = data;
-      //   }
-      // });
-      console.log(customSheet);
       return this.defaultSheet + customSheet + this.yamlModifySheet;
     }
 
@@ -222,18 +204,8 @@ export class GraphStyleSheet {
           colors.push(colorSet[j][i]);
         }
       }
-      // let folderIter = 0;
       let tagsIter = 0;
       for (const file of this.plugin.vault.getMarkdownFiles()) {
-      //   if (!(file.parent.name === '/' || file.parent.name === '')) {
-      //     const folderClass = `folder-${file.parent.name
-      //         .replace(' ', '_')}`;
-      //     if (!(folderClass in folderShapeMap)) {
-      //       folderShapeMap[folderClass] = shapes[folderIter];
-      //       folderIter += 1;
-      //     }
-      //   }
-
         const cache = this.plugin.metadata.getFileCache(file);
         if (cache?.tags) {
           cache.tags.forEach((t) => {
@@ -258,14 +230,6 @@ export class GraphStyleSheet {
       }
 
       let genSheet = '/* For a full overview of styling options, see https://js.cytoscape.org/#style */';
-      //       for (const folder of Object.keys(folderShapeMap)) {
-      //         genSheet += `
-      // .${folder} {
-      //     shape: ${folderShapeMap[folder]};
-      // }
-      // `;
-      //       }
-
       for (const tag of Object.keys(tagColorMap)) {
         genSheet += `
 .${tag} {
@@ -273,8 +237,6 @@ export class GraphStyleSheet {
 }
 `;
       }
-
-      console.log('her!!');
       return genSheet;
     }
 }

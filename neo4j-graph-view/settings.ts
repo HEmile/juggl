@@ -64,7 +64,7 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
 
       containerEl.appendChild(introPar);
 
-      new AppearanceSettings({target: containerEl, props: {vault: this.plugin.vault}});
+      new AppearanceSettings({target: containerEl, props: {plugin: this.plugin}});
 
       // new Setting(containerEl)
       //     .setName('Neo4j database password')
