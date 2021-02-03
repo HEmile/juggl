@@ -27,6 +27,9 @@ export const PROP_PATH = 'SMD_path';
 export const CLASS_PINNED = 'pinned';
 export const CLASS_EXPANDED = 'expanded';
 
+export const VIEWPORT_ANIMATION_TIME = 250;
+export const LAYOUT_ANIMATION_TIME = 1500;
+
 export const COSE_LAYOUT = {
   name: 'cose-bilkent',
   ready: function() {
@@ -213,7 +216,6 @@ export class AdvancedGraphView extends ItemView {
           const createdFile = await this.vault.create(filename, '');
           await this.plugin.openFile(createdFile);
         }
-        console.log('before uaf in tap');
         this.updateActiveFile(e.target, true);
       });
       this.viz.on('tap', 'edge', async (e) => {
@@ -368,14 +370,12 @@ export class AdvancedGraphView extends ItemView {
       this.viz.on('layoutstop', (e) => {
         const activeFile = this.viz.nodes('.active-file');
         if (activeFile.length > 0) {
-          // animation.stop();
-          console.log('animating');
           e.cy.animate({
             fit: {
               eles: activeFile.closedNeighborhood(),
               padding: 0,
             },
-            duration: 500,
+            duration: VIEWPORT_ANIMATION_TIME,
             queue: false,
           });
         }
@@ -636,25 +636,6 @@ export class AdvancedGraphView extends ItemView {
       this.viz.fit();
     }
 
-
-    // public async onNodeModify(name: string) {
-    //   if (this.expandedNodes.includes(name)) {
-    //     this.updateWithCypher(this.plugin.localNeighborhoodCypher(name));
-    //   } else {
-    //     this.updateWithCypher(this.plugin.nodeCypher(name));
-    //   }
-    // }
-    //
-    // public async onNodeRenamed(oldName: string, newName: string) {
-    //   if (this.expandedNodes.includes(oldName)) {
-    //     this.updateWithCypher(this.plugin.localNeighborhoodCypher(newName));
-    //     this.expandedNodes.remove(oldName);
-    //     this.expandedNodes.push(newName);
-    //   } else {
-    //     this.updateWithCypher(this.plugin.nodeCypher(newName));
-    //   }
-    // }
-
     // getInQuery(nodes: IdType[]): string {
     //   let query = 'IN [';
     //   let first = true;
@@ -677,7 +658,7 @@ export class AdvancedGraphView extends ItemView {
         // @ts-ignore
         animate: true, // whether to show the layout as it's running
         refresh: 2, // number of ticks per frame; higher is faster but more jerky
-        maxSimulationTime: 3000, // max length in ms to run the layout
+        maxSimulationTime: LAYOUT_ANIMATION_TIME, // max length in ms to run the layout
         ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
         fit: false, // on every layout reposition of nodes, fit the viewport
         padding: 30, // padding around the simulation
@@ -784,12 +765,12 @@ export class AdvancedGraphView extends ItemView {
           .addClass('connected-active-file')
           .union(node);
       if (followImmediate) {
-        const animation = this.viz.animate({
+        this.viz.animate({
           fit: {
             eles: neighbourhood,
             padding: 0,
           },
-          duration: 500,
+          duration: VIEWPORT_ANIMATION_TIME,
           queue: false,
           // step: () => {
           //   animation.fit(neighbourhood);
@@ -806,7 +787,7 @@ export class AdvancedGraphView extends ItemView {
     }
 
     public getExpanded() {
-      return this.viz.nodes(`${CLASS_EXPANDED}`);
+      return this.viz.nodes(`.${CLASS_EXPANDED}`);
     }
 
     on(name:'stylesheet', callback: (sheet: GraphStyleSheet) => any): EventRef;
