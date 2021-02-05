@@ -36,6 +36,9 @@
         margin-block-start: 0;
         margin-block-end: 0;">
     <div class="cy-toolbar-section">
+        <ToolbarButton icon={icons.ag_fit} onClick={fitClick} title="Fit view"/>
+    </div>
+    <div class="cy-toolbar-section">
         <ToolbarButton icon={icons.ag_expand} onClick={expandClick}
                        disabled="{disableOnNoneSelected}" title="Expand selected nodes (E)"/>
         <ToolbarButton icon={icons.ag_hide} onClick={hideClick}
@@ -54,8 +57,5 @@
         <ToolbarButton icon={icons.ag_unlock} onClick={unlockClick}
                        disabled="{disableOnNonePinned}" title="Unlock selected nodes in place (U)"/>
 
-    </div>
-    <div class="cy-toolbar-section">
-        <ToolbarButton icon={icons.ag_fit} onClick={fitClick} title="Fit view"/>
     </div>
 </div>

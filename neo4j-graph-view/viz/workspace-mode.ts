@@ -32,7 +32,6 @@ export class WorkspaceMode extends Component implements IAGMode {
   }
 
   onload() {
-    console.log('here!');
     this.registerEvent(this.view.on('vizReady', (viz) => {
       this.viz = this.view.viz;
       this.registerCyEvent('tap', 'node', async (e: EventObject) => {
@@ -120,7 +119,7 @@ export class WorkspaceMode extends Component implements IAGMode {
       // // Register keypress event
       // Note: Registered on window because it wouldn't fire on the div...
       window.addEventListener('keydown', this.windowEvent, true);
-    });
+    }));
   }
 
   registerCyEvent(name: EventNames, selector: string, callback: any) {

@@ -6,7 +6,7 @@ import cytoscape, {
   Core,
   EdgeDefinition,
   EdgeSingular,
-  ElementDefinition, LayoutOptions, Layouts,
+  ElementDefinition, EventObject, LayoutOptions, Layouts,
   NodeCollection,
   NodeDefinition,
   NodeSingular, Singular,
@@ -18,13 +18,15 @@ import Timeout = NodeJS.Timeout;
 import {WorkspaceMode} from './workspace-mode';
 import {VizId} from '../interfaces';
 import {
+  CLASS_ACTIVE_FILE,
   CLASS_CONNECTED_HOVER,
   CLASS_EXPANDED,
   CLASS_HOVER,
   CLASS_PINNED,
   CLASS_UNHOVER, CLASSES,
-  LAYOUT_ANIMATION_TIME,
+  LAYOUT_ANIMATION_TIME, VIEWPORT_ANIMATION_TIME,
 } from '../constants';
+import {LocalMode} from './local-mode';
 
 
 export const AG_VIEW_TYPE = 'advanced_graph_view';
@@ -86,7 +88,7 @@ export class AdvancedGraphView extends ItemView {
       this.plugin = plugin;
       this.datastores = dataStores;
       this.events = new Events();
-      this.mode = new WorkspaceMode(this);
+      this.mode = new LocalMode(this);
       this.addChild(this.mode);
       console.log('adding child');
     }
@@ -135,8 +137,6 @@ export class AdvancedGraphView extends ItemView {
         });
       }
       VIEW_COUNTER += 1;
-
-      this.trigger('vizReady', this.viz);
 
       this.viz.$id(idInitial.toId()).addClass(CLASS_EXPANDED);
 
@@ -266,6 +266,25 @@ export class AdvancedGraphView extends ItemView {
         this.mode.fillMenu(fileMenu);
         fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
       });
+      this.viz.on('layoutstop', (e: EventObject) => {
+        const activeFile = this.viz.nodes(`.${CLASS_ACTIVE_FILE}`);
+        if (activeFile.length > 0) {
+          const delayedAnimation = setTimeout(() => e.cy.animate({
+            fit: {
+              eles: activeFile.closedNeighborhood(),
+              padding: 0,
+            },
+            duration: VIEWPORT_ANIMATION_TIME,
+            queue: false,
+          }), 100);
+          this.viz.one('layoutstart', (e) => {
+            // This prevents janky animations happening because of many consecutive restartLayout()
+            clearTimeout(delayedAnimation);
+          });
+        }
+      });
+
+      this.trigger('vizReady', this.viz);
     }
 
     async popover(mdContent: string, sourcePath: string, target: Singular, styleClass: string) {
@@ -335,11 +354,11 @@ export class AdvancedGraphView extends ItemView {
       return edges;
     }
 
-    async expand(toExpand: NodeCollection): Promise<Collection> {
+    async expand(toExpand: NodeCollection, batch=true): Promise<Collection> {
       // Currently returns the edges merged into the graph, not the full neighborhood
       const expandedIds = toExpand.map((n) => VizId.fromNode(n));
       const neighbourhood = await this.neighbourhood(expandedIds);
-      this.mergeToGraph(neighbourhood);
+      this.mergeToGraph(neighbourhood, batch);
       const nodes = this.viz.collection();
       neighbourhood.forEach((n) => {
         nodes.merge(this.viz.$id(n.data.id) as NodeSingular);
@@ -457,9 +476,6 @@ export class AdvancedGraphView extends ItemView {
           }
           gElement.data(n.data);
           mergedCollection.merge(gElement);
-          if (this.getExpanded().contains(gElement)) {
-            gElement.addClass('expanded');
-          }
         }
       });
       mergedCollection.merge(this.viz.add(addElements));
