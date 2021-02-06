@@ -73,12 +73,16 @@ edge:selected {
 edge[type] {
   label: data(type);
 }
-
+.inactive-file,
+.unhover {
+    opacity: 0.3;
+}
 node.active-file,
 node.hover {
     font-weight: bold;
     border-width: 1;
     border-color: #1b6299;
+    opacity: 1;
 }
 edge.hover,
 edge.connected-active-file,
@@ -87,13 +91,12 @@ edge.connected-hover {
     line-color: #1b6299;  
     target-arrow-color: #1b6299;
 }
-edge.hover {
+edge.hover,
+edge.connected-hover {
     font-weight: bold;
+    opacity: 1;
 }
-.inactive-file,
-.unhover {
-    opacity: 0.3;
-}
+
 .pinned {
     border-style: dotted;
     border-width: 2;
