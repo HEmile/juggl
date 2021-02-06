@@ -18,6 +18,8 @@ export const icons: Record<string, string> = {
   ag_hide: mdiIcons.mdiEyeOff,
   ag_fit: mdiIcons.mdiFitToPageOutline,
   ag_image: mdiIcons.mdiImage,
+  ag_workspace: mdiIcons.mdiToolboxOutline,
+  ag_local: mdiIcons.mdiFlare,
 };
 
 export const addIcons = (): void => {

@@ -72,6 +72,16 @@ div.cy-navigator {
     padding: 0;
 }
 
+.cy-toolbar {
+    height: fit-content;
+    position: fixed;
+    width: 100%;
+    margin: 0;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    z-index: 1000;
+}
+
 .cy-toolbar-section {
     width: fit-content;
     text-align: center;

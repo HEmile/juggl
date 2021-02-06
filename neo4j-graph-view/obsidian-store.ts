@@ -173,22 +173,22 @@ ${edge.data.context}`;
       return this.metadata.getFirstLinkpathDest(nodeId.id, '');
     }
 
-    getBacklinks(nodeId: VizId): NodeDefinition[] {
+    fillWithBacklinks(nodes: Record<string, NodeDefinition>, nodeId: VizId) {
       // Could be an expensive operation... No cached backlinks implementation is available in the Obsidian API though.
       if (nodeId.storeId === 'core') {
         const path = this.getFile(nodeId).path;
         // @ts-ignore
         const resolvedLinks = this.metadata.resolvedLinks;
-        const nodes = [];
         for (const otherPath of Object.keys(resolvedLinks)) {
           if (path in resolvedLinks[otherPath]) {
             const file = this.vault.getAbstractFileByPath(otherPath) as TFile;
-            nodes.push(this.nodeFromFile(file));
+            const id = VizId.fromFile(file).toId();
+            if (!(id in nodes)) {
+              nodes[id] = this.nodeFromFile(file);
+            }
           }
         }
-        return nodes;
       }
-      return [];
     }
 
     nodeFromFile(file: TFile) : NodeDefinition {
@@ -240,23 +240,30 @@ ${edge.data.context}`;
     }
 
     async getNeighbourhood(nodeIds: VizId[]): Promise<NodeDefinition[]> {
-      const nodes: NodeDefinition[] = [];
+      const nodes: Record<string, NodeDefinition> = {};
       for (const nodeId of nodeIds) {
         if (nodeId.storeId === this.storeId()) {
           const file = this.getFile(nodeId);
+          if (file === null) {
+            continue;
+          }
           const cache = this.metadata.getFileCache(file);
           if (cache === null) {
-            console.log('returning empty');
-            return [];
+            continue;
           }
-          nodes.push(this.nodeFromFile(file));
+          if (!(nodeId.toId() in nodes)) {
+            nodes[nodeId.toId()] = this.nodeFromFile(file);
+          }
           iterateCacheRefs(cache, (ref) => {
-            nodes.push(this.getNodeFromLink(ref, file.path));
+            const id = this.getOtherId(ref, file.path).toId();
+            if (!(id in nodes)) {
+              nodes[id] = this.getNodeFromLink(ref, file.path);
+            }
           });
-          nodes.push(...this.getBacklinks(nodeId));
+          this.fillWithBacklinks(nodes, nodeId);
         }
       }
-      return nodes;
+      return Object.values(nodes);
     }
 
     storeId(): string {

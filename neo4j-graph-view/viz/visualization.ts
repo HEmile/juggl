@@ -76,6 +76,7 @@ export class AdvancedGraphView extends ItemView {
     activeLayout: Layouts;
     hoverTimeout: Record<string, Timeout> = {};
     mode: IAGMode;
+    vizReady = false;
 
     constructor(leaf: WorkspaceLeaf, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[]) {
       super(leaf);
@@ -99,7 +100,11 @@ export class AdvancedGraphView extends ItemView {
       viewContent.addClass('cy-content');
       // Ensure the canvas fits the whole container
       viewContent.setAttr('style', 'padding: 0');
-      this.mode.createToolbar(viewContent);
+
+      const toolbarDiv = document.createElement('div');
+      toolbarDiv.addClass('cy-toolbar');
+      viewContent.appendChild(toolbarDiv);
+      this.mode.createToolbar(toolbarDiv);
 
       const div = document.createElement('div');
       div.id = 'cy' + VIEW_COUNTER;
@@ -283,7 +288,7 @@ export class AdvancedGraphView extends ItemView {
           });
         }
       });
-
+      this.vizReady = true;
       this.trigger('vizReady', this.viz);
     }
 
@@ -502,6 +507,17 @@ export class AdvancedGraphView extends ItemView {
 
     public getViz(): Core {
       return this.viz;
+    }
+
+    public setMode(modeName: string) {
+      this.removeChild(this.mode);
+      if (modeName === 'local') {
+        this.mode = new LocalMode(this);
+      } else if (modeName === 'workspace') {
+        this.mode = new WorkspaceMode(this);
+      }
+      this.addChild(this.mode);
+      this.mode.createToolbar(this.containerEl.children[1].children[0]);
     }
 
 

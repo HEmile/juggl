@@ -1,8 +1,5 @@
-import type {Events, TFile} from 'obsidian';
 import type AdvancedGraphPlugin from '../main';
-import type {AdvancedGraphView} from './visualization';
 import type {FileSystemAdapter} from 'obsidian';
-import * as util from 'util';
 import {promises as fs} from 'fs';
 //
 export const STYLESHEET_PATH = './.obsidian/plugins/neo4j-graph-view/graph.css';

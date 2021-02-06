@@ -12,6 +12,7 @@
     export let lockClick;
     export let unlockClick;
     export let fitClick;
+    export let localModeClick;
 
     let disableOnNoneSelected = false;
     let disableOnAllPinned = false;
@@ -30,13 +31,10 @@
 
 </script>
 
-<div class="cy-toolbar" style="height: fit-content;
-        width: 100%;
-        margin: 0;
-        margin-block-start: 0;
-        margin-block-end: 0;">
+<!--<div class="cy-toolbar">-->
     <div class="cy-toolbar-section">
         <ToolbarButton icon={icons.ag_fit} onClick={fitClick} title="Fit view"/>
+        <ToolbarButton icon={icons.ag_local} onClick={localModeClick} title="Local mode"/>
     </div>
     <div class="cy-toolbar-section">
         <ToolbarButton icon={icons.ag_expand} onClick={expandClick}
@@ -58,4 +56,4 @@
                        disabled="{disableOnNonePinned}" title="Unlock selected nodes in place (U)"/>
 
     </div>
-</div>
+<!--</div>-->

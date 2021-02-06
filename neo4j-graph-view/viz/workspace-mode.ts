@@ -13,6 +13,7 @@ import {
   VIEWPORT_ANIMATION_TIME,
 } from '../constants';
 import type {Core} from 'cytoscape';
+import type {SvelteComponent} from 'svelte';
 
 
 class EventRec {
@@ -26,100 +27,110 @@ export class WorkspaceMode extends Component implements IAGMode {
   viz: Core;
   events: EventRec[] = [];
   windowEvent: any;
+  toolbar: SvelteComponent;
   constructor(view: AdvancedGraphView) {
     super();
     this.view = view;
   }
 
   onload() {
-    this.registerEvent(this.view.on('vizReady', (viz) => {
-      this.viz = this.view.viz;
-      this.registerCyEvent('tap', 'node', async (e: EventObject) => {
-        const id = VizId.fromNode(e.target);
-        if (!(id.storeId === 'core')) {
-          return;
-        }
-        this.updateActiveFile(e.target, true);
-      });
+    console.log('oon load');
+    if (this.view.vizReady) {
+      this._onLoad();
+    } else {
+      this.registerEvent(this.view.on('vizReady', (viz) => {
+        this._onLoad();
+      }));
+    }
+  }
 
-      this.registerCyEvent('dblclick', 'node', async (e: EventObject) => {
-        await this.view.expand(e.target as NodeSingular);
-      });
+  _onLoad() {
+    this.viz = this.view.viz;
+    this.registerCyEvent('tap', 'node', async (e: EventObject) => {
+      const id = VizId.fromNode(e.target);
+      if (!(id.storeId === 'core')) {
+        return;
+      }
+      this.updateActiveFile(e.target, true);
+    });
 
-      this.registerCyEvent('tapselect tapunselect boxselect', null, (e: EventObject) => {
-        this.view.trigger('selectChange');
-      });
+    this.registerCyEvent('dblclick', 'node', async (e: EventObject) => {
+      await this.view.expand(e.target as NodeSingular);
+    });
 
-      this.registerCyEvent('layoutstop', null, (e: EventObject) => {
-        const activeFile = this.viz.nodes(`.${CLASS_ACTIVE_FILE}`);
-        if (activeFile.length > 0) {
-          e.cy.animate({
-            fit: {
-              eles: activeFile.closedNeighborhood(),
-              padding: 0,
-            },
-            duration: VIEWPORT_ANIMATION_TIME,
-            queue: false,
-          });
-        }
-      });
+    this.registerCyEvent('tapselect tapunselect boxselect', null, (e: EventObject) => {
+      this.view.trigger('selectChange');
+    });
 
-      // Register on file open event
-      this.registerEvent(this.view.workspace.on('file-open', async (file) => {
-        if (file && this.view.settings.autoAddNodes) {
-          const name = file.basename;
-          const id = new VizId(name, 'core');
-          let followImmediate = true;
-          if (this.viz.$id(id.toId()).length === 0) {
-            for (const dataStore of this.view.datastores) {
-              if (dataStore.storeId() === 'core') {
-                const node = await dataStore.get(id);
-                this.viz.startBatch();
-                this.viz.add(node);
-                const edges = await this.view.buildEdges(this.viz.$id(id.toId()));
-                this.viz.add(edges);
-                this.view.onGraphChanged(false);
-                this.viz.endBatch();
-                this.view.restartLayout();
-                followImmediate = false;
-                break;
-              }
+    this.registerCyEvent('layoutstop', null, (e: EventObject) => {
+      const activeFile = this.viz.nodes(`.${CLASS_ACTIVE_FILE}`);
+      if (activeFile.length > 0) {
+        e.cy.animate({
+          fit: {
+            eles: activeFile.closedNeighborhood(),
+            padding: 0,
+          },
+          duration: VIEWPORT_ANIMATION_TIME,
+          queue: false,
+        });
+      }
+    });
+
+    // Register on file open event
+    this.registerEvent(this.view.workspace.on('file-open', async (file) => {
+      if (file && this.view.settings.autoAddNodes) {
+        const name = file.basename;
+        const id = new VizId(name, 'core');
+        let followImmediate = true;
+        if (this.viz.$id(id.toId()).length === 0) {
+          for (const dataStore of this.view.datastores) {
+            if (dataStore.storeId() === 'core') {
+              const node = await dataStore.get(id);
+              this.viz.startBatch();
+              this.viz.add(node);
+              const edges = await this.view.buildEdges(this.viz.$id(id.toId()));
+              this.viz.add(edges);
+              this.view.onGraphChanged(false);
+              this.viz.endBatch();
+              this.view.restartLayout();
+              followImmediate = false;
+              break;
             }
           }
-          const node = this.viz.$id(id.toId()) as NodeSingular;
-
-          this.updateActiveFile(node, followImmediate);
         }
-      }));
+        const node = this.viz.$id(id.toId()) as NodeSingular;
 
-      this.registerEvent(this.view.on('expand', (expanded) => {
-        this.updateActiveFile(expanded, false);
-      }));
-
-      this.windowEvent = async (evt: KeyboardEvent) => {
-        if (!(this.view.workspace.activeLeaf === this.view.leaf)) {
-          return;
-        }
-        if (evt.key === 'e') {
-          await this.expandSelection();
-        } else if (evt.key === 'h' || evt.key === 'Backspace') {
-          this.removeSelection();
-        } else if (evt.key === 'i') {
-          this.invertSelection();
-        } else if (evt.key === 'a') {
-          this.selectAll();
-        } else if (evt.key === 'n') {
-          this.selectNeighbourhood();
-        } else if (evt.key === 'p') {
-          this.pinSelection();
-        } else if (evt.key === 'u') {
-          this.unpinSelection();
-        }
-      };
-      // // Register keypress event
-      // Note: Registered on window because it wouldn't fire on the div...
-      window.addEventListener('keydown', this.windowEvent, true);
+        this.updateActiveFile(node, followImmediate);
+      }
     }));
+
+    this.registerEvent(this.view.on('expand', (expanded) => {
+      this.updateActiveFile(expanded, false);
+    }));
+
+    this.windowEvent = async (evt: KeyboardEvent) => {
+      if (!(this.view.workspace.activeLeaf === this.view.leaf)) {
+        return;
+      }
+      if (evt.key === 'e') {
+        await this.expandSelection();
+      } else if (evt.key === 'h' || evt.key === 'Backspace') {
+        this.removeSelection();
+      } else if (evt.key === 'i') {
+        this.invertSelection();
+      } else if (evt.key === 'a') {
+        this.selectAll();
+      } else if (evt.key === 'n') {
+        this.selectNeighbourhood();
+      } else if (evt.key === 'p') {
+        this.pinSelection();
+      } else if (evt.key === 'u') {
+        this.unpinSelection();
+      }
+    };
+    // // Register keypress event
+    // Note: Registered on window because it wouldn't fire on the div...
+    window.addEventListener('keydown', this.windowEvent, true);
   }
 
   registerCyEvent(name: EventNames, selector: string, callback: any) {
@@ -141,6 +152,7 @@ export class WorkspaceMode extends Component implements IAGMode {
     }
     this.events = [];
     window.removeEventListener('keydown', this.windowEvent);
+    this.toolbar.$destroy();
   }
 
   getName(): string {
@@ -203,7 +215,7 @@ export class WorkspaceMode extends Component implements IAGMode {
   }
 
   createToolbar(element: Element) {
-    const tb = new Toolbar({
+    this.toolbar = new Toolbar({
       target: element,
       props: {
         viz: this.viz,
@@ -215,12 +227,13 @@ export class WorkspaceMode extends Component implements IAGMode {
         lockClick: this.pinSelection.bind(this),
         unlockClick: this.unpinSelection.bind(this),
         fitClick: this.view.fitView.bind(this.view),
+        localModeClick: () => this.view.setMode('local'),
       },
     });
-    this.view.on('selectChange', tb.onSelect.bind(tb));
+    this.view.on('selectChange', this.toolbar.onSelect.bind(this.toolbar));
     this.view.on('vizReady', (viz) => {
-      tb.$set({viz: viz});
-      tb.onSelect.bind(tb)();
+      this.toolbar.$set({viz: viz});
+      this.toolbar.onSelect.bind(this.toolbar)();
     });
   }
 

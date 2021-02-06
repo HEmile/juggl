@@ -13,6 +13,7 @@ import {
   VIEWPORT_ANIMATION_TIME,
 } from '../constants';
 import type {Core} from 'cytoscape';
+import type {SvelteComponent} from 'svelte';
 
 
 class EventRec {
@@ -26,31 +27,40 @@ export class LocalMode extends Component implements IAGMode {
     viz: Core;
     events: EventRec[] = [];
     windowEvent: any;
+    toolbar: SvelteComponent;
     constructor(view: AdvancedGraphView) {
       super();
       this.view = view;
     }
 
     onload() {
-      this.registerEvent(this.view.on('vizReady', (viz) => {
-        this.viz = this.view.viz;
-        this.registerCyEvent('tap', 'node', async (e: EventObject) => {
-          const id = VizId.fromNode(e.target);
-          if (!(id.storeId === 'core')) {
-            return;
-          }
-          const file = this.view.app.metadataCache.getFirstLinkpathDest(id.id, '');
-          if (file) {
-            await this.onOpenFile(file);
-          }
-        });
-
-        // Register on file open event
-        this.registerEvent(this.view.workspace.on('file-open', async (file) => {
-          if (file) {
-            await this.onOpenFile(file);
-          }
+      if (this.view.vizReady) {
+        this._onLoad();
+      } else {
+        this.registerEvent(this.view.on('vizReady', (viz) => {
+          this._onLoad();
         }));
+      }
+    }
+
+    _onLoad() {
+      this.viz = this.view.viz;
+      this.registerCyEvent('tap', 'node', async (e: EventObject) => {
+        const id = VizId.fromNode(e.target);
+        if (!(id.storeId === 'core')) {
+          return;
+        }
+        const file = this.view.app.metadataCache.getFirstLinkpathDest(id.id, '');
+        if (file) {
+          await this.onOpenFile(file);
+        }
+      });
+
+      // Register on file open event
+      this.registerEvent(this.view.workspace.on('file-open', async (file) => {
+        if (file) {
+          await this.onOpenFile(file);
+        }
       }));
     }
 
@@ -99,6 +109,7 @@ export class LocalMode extends Component implements IAGMode {
         }
       }
       this.events = [];
+      this.toolbar.$destroy();
     }
 
     getName(): string {
@@ -110,11 +121,13 @@ export class LocalMode extends Component implements IAGMode {
     }
 
     createToolbar(element: Element) {
-      const tb = new ToolbarLocal({
+      const view = this.view;
+      this.toolbar = new ToolbarLocal({
         target: element,
         props: {
           viz: this.viz,
-          fitClick: this.view.fitView.bind(this.view),
+          fitClick: this.view.fitView.bind(view),
+          workspaceModeClick: () => view.setMode('workspace'),
         },
       });
       // this.view.on('vizReady', (viz) => {
