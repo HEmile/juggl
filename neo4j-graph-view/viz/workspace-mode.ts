@@ -74,7 +74,8 @@ export class WorkspaceMode extends Component implements IAGMode {
             if (dataStore.storeId() === 'core') {
               const node = await dataStore.get(id);
               this.viz.startBatch();
-              this.viz.add(node);
+              // Make sure it doesn't immediately get removed
+              this.viz.add(node).addClass(CLASS_PROTECTED);
               const edges = await this.view.buildEdges(this.viz.$id(id.toId()));
               this.viz.add(edges);
               this.view.onGraphChanged(false);
@@ -108,6 +109,7 @@ export class WorkspaceMode extends Component implements IAGMode {
             return ele.closedNeighborhood('node.expanded').length === 0;
           })
           .remove();
+      console.log(removed);
       this.recursionPreventer = true;
       this.view.onGraphChanged();
       this.recursionPreventer = false;
