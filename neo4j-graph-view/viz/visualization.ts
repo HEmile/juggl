@@ -22,7 +22,7 @@ import {
   CLASS_CONNECTED_HOVER,
   CLASS_EXPANDED,
   CLASS_HOVER,
-  CLASS_PINNED,
+  CLASS_PINNED, CLASS_PROTECTED,
   CLASS_UNHOVER, CLASSES,
   LAYOUT_ANIMATION_TIME, VIEWPORT_ANIMATION_TIME,
 } from '../constants';
@@ -147,7 +147,10 @@ export class AdvancedGraphView extends ItemView {
       }
       VIEW_COUNTER += 1;
 
-      this.viz.$id(idInitial.toId()).addClass(CLASS_EXPANDED);
+      const initialNode = this.viz.$id(idInitial.toId());
+      initialNode.addClass(CLASS_EXPANDED);
+      initialNode.addClass(CLASS_PROTECTED);
+
 
       const nodez = this.viz.nodes();
       const edges = await this.buildEdges(nodez);
@@ -280,15 +283,21 @@ export class AdvancedGraphView extends ItemView {
       this.viz.on('layoutstop', (e: EventObject) => {
         const activeFile = this.viz.nodes(`.${CLASS_ACTIVE_FILE}`);
         if (activeFile.length > 0) {
-          const delayedAnimation = setTimeout(() => e.cy.animate({
-            fit: {
-              eles: activeFile.closedNeighborhood(),
-              padding: 0,
-            },
-            duration: VIEWPORT_ANIMATION_TIME,
-            queue: false,
-          }), 100);
-          this.viz.one('layoutstart', (e) => {
+          console.log('on timeout start');
+          const delayedAnimation = setTimeout(() => {
+            console.log('on animation start');
+            e.cy.animate({
+              fit: {
+                eles: activeFile.closedNeighborhood(),
+                padding: 0,
+              },
+              duration: VIEWPORT_ANIMATION_TIME,
+              queue: false,
+            });
+          }, 300);
+
+          this.viz.one('layoutstart layoutstop', (e) => {
+            console.log('on timeout clear');
             // This prevents janky animations happening because of many consecutive restartLayout()
             clearTimeout(delayedAnimation);
           });
@@ -369,7 +378,7 @@ export class AdvancedGraphView extends ItemView {
       // Currently returns the edges merged into the graph, not the full neighborhood
       const expandedIds = toExpand.map((n) => VizId.fromNode(n));
       const neighbourhood = await this.neighbourhood(expandedIds);
-      this.mergeToGraph(neighbourhood, batch);
+      this.mergeToGraph(neighbourhood, batch, false);
       const nodes = this.viz.collection();
       neighbourhood.forEach((n) => {
         nodes.merge(this.viz.$id(n.data.id) as NodeSingular);
@@ -378,6 +387,7 @@ export class AdvancedGraphView extends ItemView {
       const edgesInGraph = this.mergeToGraph(edges);
       this.restartLayout();
       toExpand.addClass(CLASS_EXPANDED);
+      toExpand.addClass(CLASS_PROTECTED);
       this.trigger('expand', toExpand);
       return edgesInGraph;
     }
@@ -404,10 +414,14 @@ export class AdvancedGraphView extends ItemView {
       // Only call this method if the node is forcefully removed from the graph, not when the node no longer exists
       // on the back-end. This is because of how it handles expanded.
       // Remove as expanded if a neighbour is removed from the graph.
-      this.getExpanded()
-          .intersection(nodes.neighborhood())
-          .removeClass('expanded');
-      const removed = nodes.remove();
+      let removed = null;
+      this.viz.batch(() => {
+        this.getExpanded()
+            .intersection(nodes.neighborhood())
+            .removeClass('expanded');
+        removed = nodes.remove();
+        this.onGraphChanged(false);
+      });
       this.restartLayout();
       return removed;
     }
@@ -468,7 +482,7 @@ export class AdvancedGraphView extends ItemView {
       this.activeLayout = this.viz.layout(this.colaLayout()).start();
     }
 
-    mergeToGraph(elements: ElementDefinition[], batch=true): Collection {
+    mergeToGraph(elements: ElementDefinition[], batch=true, triggerGraphChanged=true): Collection {
       if (batch) {
         this.viz.startBatch();
       }
@@ -490,7 +504,9 @@ export class AdvancedGraphView extends ItemView {
         }
       });
       mergedCollection.merge(this.viz.add(addElements));
-      this.onGraphChanged(false);
+      if (triggerGraphChanged) {
+        this.onGraphChanged(false);
+      }
       if (batch) {
         this.viz.endBatch();
       }
@@ -504,11 +520,11 @@ export class AdvancedGraphView extends ItemView {
       this.viz.nodes().forEach((node) => {
         node.data('degree', node.degree(false));
         node.data('nameLength', node.data('name').length);
-        console.log(node.data());
       });
       if (batch) {
         this.viz.endBatch();
       }
+      this.trigger('elementsChange');
     }
 
     public getViz(): Core {
@@ -544,12 +560,17 @@ export class AdvancedGraphView extends ItemView {
       return this.viz.nodes(`.${CLASS_EXPANDED}`);
     }
 
+    public getProtected() {
+      return this.viz.nodes(`.${CLASS_PROTECTED}`);
+    }
+
     on(name:'stylesheet', callback: (sheet: GraphStyleSheet) => any): EventRef;
     on(name: 'expand', callback: (elements: NodeCollection) => any): EventRef;
     on(name: 'hide', callback: (elements: NodeCollection) => any): EventRef;
     on(name: 'pin', callback: (elements: NodeCollection) => any): EventRef;
     on(name: 'unpin', callback: (elements: NodeCollection) => any): EventRef;
     on(name: 'selectChange', callback: () => any): EventRef;
+    on(name: 'elementsChange', callback: () => any): EventRef;
     on(name: 'vizReady', callback: (viz: Core) => any): EventRef;
     on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
       return this.events.on(name, callback, ctx);
@@ -566,6 +587,7 @@ export class AdvancedGraphView extends ItemView {
     trigger(name: 'pin', elements: NodeCollection): void;
     trigger(name: 'unpin', elements: NodeCollection): void;
     trigger(name: 'selectChange'): void;
+    trigger(name: 'elementsChange'): void;
     trigger(name: 'vizReady', viz: Core): void;
     trigger(name: string, ...data: any[]): void {
       this.events.trigger(name, ...data);

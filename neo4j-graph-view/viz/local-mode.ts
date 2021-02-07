@@ -9,7 +9,7 @@ import {VizId} from '../interfaces';
 import {
   CLASS_ACTIVE_FILE,
   CLASS_CONNECTED_ACTIVE_FILE,
-  CLASS_INACTIVE_FILE, CLASS_PINNED,
+  CLASS_INACTIVE_FILE, CLASS_PINNED, CLASS_PROTECTED,
   VIEWPORT_ANIMATION_TIME,
 } from '../constants';
 import type {Core} from 'cytoscape';
@@ -137,7 +137,6 @@ export class LocalMode extends Component implements IAGMode {
     }
 
     updateActiveFile(node: NodeCollection) {
-      console.log('uaf');
       this.viz.elements()
           .removeClass([CLASS_CONNECTED_ACTIVE_FILE, CLASS_ACTIVE_FILE, CLASS_INACTIVE_FILE])
           .difference(node.closedNeighborhood())

@@ -8,8 +8,8 @@ import {Component} from 'obsidian';
 import {VizId} from '../interfaces';
 import {
   CLASS_ACTIVE_FILE,
-  CLASS_CONNECTED_ACTIVE_FILE,
-  CLASS_INACTIVE_FILE, CLASS_PINNED,
+  CLASS_CONNECTED_ACTIVE_FILE, CLASS_EXPANDED,
+  CLASS_INACTIVE_FILE, CLASS_PINNED, CLASS_PROTECTED,
   VIEWPORT_ANIMATION_TIME,
 } from '../constants';
 import type {Core} from 'cytoscape';
@@ -28,6 +28,7 @@ export class WorkspaceMode extends Component implements IAGMode {
   events: EventRec[] = [];
   windowEvent: any;
   toolbar: SvelteComponent;
+  recursionPreventer = false;
   constructor(view: AdvancedGraphView) {
     super();
     this.view = view;
@@ -62,20 +63,6 @@ export class WorkspaceMode extends Component implements IAGMode {
       this.view.trigger('selectChange');
     });
 
-    this.registerCyEvent('layoutstop', null, (e: EventObject) => {
-      const activeFile = this.viz.nodes(`.${CLASS_ACTIVE_FILE}`);
-      if (activeFile.length > 0) {
-        e.cy.animate({
-          fit: {
-            eles: activeFile.closedNeighborhood(),
-            padding: 0,
-          },
-          duration: VIEWPORT_ANIMATION_TIME,
-          queue: false,
-        });
-      }
-    });
-
     // Register on file open event
     this.registerEvent(this.view.workspace.on('file-open', async (file) => {
       if (file && this.view.settings.autoAddNodes) {
@@ -99,6 +86,7 @@ export class WorkspaceMode extends Component implements IAGMode {
           }
         }
         const node = this.viz.$id(id.toId()) as NodeSingular;
+        node.addClass(CLASS_PROTECTED);
 
         this.updateActiveFile(node, followImmediate);
       }
@@ -106,6 +94,23 @@ export class WorkspaceMode extends Component implements IAGMode {
 
     this.registerEvent(this.view.on('expand', (expanded) => {
       this.updateActiveFile(expanded, false);
+    }));
+
+    this.registerEvent(this.view.on('elementsChange', () => {
+      if (this.recursionPreventer) {
+        return;
+      }
+      // Remove nodes that are not protected and not connected to expanded nodes
+      const removed = this.viz.nodes()
+          .difference(this.viz.nodes(`.${CLASS_PROTECTED}`))
+          .filter((ele) => {
+            // If none in the closed neighborhood are expanded
+            return ele.closedNeighborhood('node.expanded').length === 0;
+          })
+          .remove();
+      this.recursionPreventer = true;
+      this.view.onGraphChanged();
+      this.recursionPreventer = false;
     }));
 
     this.windowEvent = async (evt: KeyboardEvent) => {
@@ -238,7 +243,6 @@ export class WorkspaceMode extends Component implements IAGMode {
   }
 
   updateActiveFile(node: NodeCollection, followImmediate: boolean) {
-    console.log('uaf');
     this.viz.elements()
         .removeClass([CLASS_CONNECTED_ACTIVE_FILE, CLASS_ACTIVE_FILE, CLASS_INACTIVE_FILE])
         .difference(node.closedNeighborhood())
