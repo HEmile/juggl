@@ -89,7 +89,11 @@ export class AdvancedGraphView extends ItemView {
       this.plugin = plugin;
       this.datastores = dataStores;
       this.events = new Events();
-      this.mode = new LocalMode(this);
+      if (this.settings.defaultMode === 'local') {
+        this.mode = new LocalMode(this);
+      } else if (this.settings.defaultMode === 'workspace') {
+        this.mode = new WorkspaceMode(this);
+      }
       this.addChild(this.mode);
       console.log('adding child');
     }
@@ -209,12 +213,14 @@ export class AdvancedGraphView extends ItemView {
       });
       this.viz.on('mouseover', 'edge', async (e) => {
         const edge = e.target as EdgeSingular;
-        e.cy.elements()
-            .difference(edge.connectedNodes().union(edge))
-            .addClass(CLASS_UNHOVER);
-        edge.addClass('hover')
-            .connectedNodes()
-            .addClass(CLASS_CONNECTED_HOVER);
+        if (this.settings.hoverEdges) {
+          e.cy.elements()
+              .difference(edge.connectedNodes().union(edge))
+              .addClass(CLASS_UNHOVER);
+          edge.addClass('hover')
+              .connectedNodes()
+              .addClass(CLASS_CONNECTED_HOVER);
+        }
         if ('context' in edge.data()) {// && e.originalEvent.metaKey) {
           // TODO resolve SourcePath, can be done using the source file.
           this.hoverTimeout[e.target.id()] = setTimeout(async () =>

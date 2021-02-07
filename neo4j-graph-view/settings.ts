@@ -16,6 +16,8 @@ export interface IAdvancedGraphSettings {
     debug: boolean;
     coreStore: string;
     mergeEdges: boolean;
+    defaultMode: string;
+    hoverEdges: boolean;
 }
 
 
@@ -31,6 +33,8 @@ export const DefaultAdvancedGraphSettings: IAdvancedGraphSettings = {
   debug: false,
   coreStore: OBSIDIAN_STORE_NAME,
   mergeEdges: true,
+  defaultMode: 'local',
+  hoverEdges: false,
 };
 
 
@@ -93,9 +97,23 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
           });
 
       new Setting(containerEl)
+          .setName('Default mode')
+          .setDesc('The default mode to open the Advanced Graph View in.')
+          .addDropdown((dropdown) => {
+            dropdown.addOption('local', 'Local Mode');
+            dropdown.addOption('workspace', 'Workspace Mode');
+            dropdown.setValue(this.plugin.settings.defaultMode)
+                .onChange((newValue) => {
+                  this.plugin.settings.defaultMode = newValue;
+                  this.plugin.saveData(this.plugin.settings);
+                });
+          });
+
+
+      new Setting(containerEl)
           .setName('Data store')
           .setDesc('Set what database to get the Obsidian graph from. By default, only Obsidian itself is an option. ' +
-                'You can install the Neo4j Stream Plugin to use a Neo4j backend which has more features and scales better to large graphs.')
+                'Later on, you will be able to install the Neo4j Stream Plugin to use a Neo4j backend which has more features and scales better to large graphs.')
           .addDropdown((dropdown) => {
             Object.keys(this.plugin.coreStores).forEach((c) => {
               dropdown.addOption(c, c);
@@ -110,20 +128,32 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
       containerEl.createEl('h3');
       containerEl.createEl('h3', {text: 'Advanced'});
 
+      // Not currently implemented
+      // new Setting(containerEl)
+      //     .setName('Automatic expand')
+      //     .setDesc('This will automatically expand the neighbourhood around any nodes clicked on or added to the graph. ' +
+      //           'This normally only happens when pressing E or when double-clicking.')
+      //     .addToggle((toggle) => {
+      //       toggle.setValue(this.plugin.settings.autoExpand)
+      //           .onChange((new_value) => {
+      //             this.plugin.settings.autoExpand = new_value;
+      //             this.plugin.saveData(this.plugin.settings);
+      //           });
+      //     });
       new Setting(containerEl)
-          .setName('Automatic expand')
-          .setDesc('This will automatically expand the neighbourhood around any nodes clicked on or added to the graph. ' +
-                'This normally only happens when pressing E or when double-clicking.')
+          .setName('Hover on edges')
+          .setDesc('Hover on edges to show what they are connected to..')
           .addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.autoExpand)
+            toggle.setValue(this.plugin.settings.hoverEdges)
                 .onChange((new_value) => {
-                  this.plugin.settings.autoExpand = new_value;
+                  this.plugin.settings.hoverEdges = new_value;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
+
       new Setting(containerEl)
           .setName('Automatically add nodes')
-          .setDesc('This will automatically add nodes to the graph whenever a note is opened.')
+          .setDesc('This will automatically add nodes to the graph whenever a note is opened in workspace mode.')
           .addToggle((toggle) => {
             toggle.setValue(this.plugin.settings.autoAddNodes)
                 .onChange((new_value) => {
@@ -132,17 +162,17 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
                 });
           });
 
-      new Setting(containerEl)
-          .setName('Index note content')
-          .setDesc('This will full-text index the content of notes. ' +
-                'This allows searching within notes using the Neo4j Bloom search bar. However, it could decrease performance.')
-          .addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.indexContent)
-                .onChange((new_value) => {
-                  this.plugin.settings.indexContent = new_value;
-                  this.plugin.saveData(this.plugin.settings);
-                });
-          });
+      // new Setting(containerEl)
+      //     .setName('Index note content')
+      //     .setDesc('This will full-text index the content of notes. ' +
+      //           'This allows searching within notes using the Neo4j Bloom search bar. However, it could decrease performance.')
+      //     .addToggle((toggle) => {
+      //       toggle.setValue(this.plugin.settings.indexContent)
+      //           .onChange((new_value) => {
+      //             this.plugin.settings.indexContent = new_value;
+      //             this.plugin.saveData(this.plugin.settings);
+      //           });
+      //     });
 
       new Setting(containerEl)
           .setName('Typed links prefix')
@@ -158,10 +188,10 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
 
       new Setting(containerEl)
           .setName('Image server port')
-          .setDesc('Set the port of the image server. If you use multiple vaults, these need to be set differently. Default 3000.')
+          .setDesc('Set the port of the image server. If you use multiple vaults, these need to be set differently. Default 3837.')
           .addText((text) => {
             text.setValue(this.plugin.settings.imgServerPort + '')
-                .setPlaceholder('3000')
+                .setPlaceholder('3837')
                 .onChange((new_value) => {
                   this.plugin.settings.imgServerPort = parseInt(new_value.trim());
                   this.plugin.saveData(this.plugin.settings);
@@ -170,7 +200,7 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
 
       new Setting(containerEl)
           .setName('Debug')
-          .setDesc('Enable debug mode. Prints a lot of stuff in the developers console. Requires a server restart.')
+          .setDesc('Enable debug mode, which prints a lot of stuff in the developers console.')
           .addToggle((toggle) => {
             toggle.setValue(this.plugin.settings.debug)
                 .onChange((new_value) => {
