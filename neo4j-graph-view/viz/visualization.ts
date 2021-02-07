@@ -95,11 +95,9 @@ export class AdvancedGraphView extends ItemView {
         this.mode = new WorkspaceMode(this);
       }
       this.addChild(this.mode);
-      console.log('adding child');
     }
 
     async onOpen() {
-      console.log('On open!');
       const viewContent = this.containerEl.children[1];
       viewContent.addClass('cy-content');
       // Ensure the canvas fits the whole container
@@ -283,9 +281,7 @@ export class AdvancedGraphView extends ItemView {
       this.viz.on('layoutstop', (e: EventObject) => {
         const activeFile = this.viz.nodes(`.${CLASS_ACTIVE_FILE}`);
         if (activeFile.length > 0) {
-          console.log('on timeout start');
           const delayedAnimation = setTimeout(() => {
-            console.log('on animation start');
             e.cy.animate({
               fit: {
                 eles: activeFile.closedNeighborhood(),
@@ -297,7 +293,6 @@ export class AdvancedGraphView extends ItemView {
           }, 300);
 
           this.viz.one('layoutstart layoutstop', (e) => {
-            console.log('on timeout clear');
             // This prevents janky animations happening because of many consecutive restartLayout()
             clearTimeout(delayedAnimation);
           });
@@ -375,6 +370,8 @@ export class AdvancedGraphView extends ItemView {
     }
 
     async expand(toExpand: NodeCollection, batch=true): Promise<Collection> {
+      toExpand.addClass(CLASS_EXPANDED);
+      toExpand.addClass(CLASS_PROTECTED);
       // Currently returns the edges merged into the graph, not the full neighborhood
       const expandedIds = toExpand.map((n) => VizId.fromNode(n));
       const neighbourhood = await this.neighbourhood(expandedIds);
@@ -386,8 +383,6 @@ export class AdvancedGraphView extends ItemView {
       const edges = await this.buildEdges(nodes);
       const edgesInGraph = this.mergeToGraph(edges);
       this.restartLayout();
-      toExpand.addClass(CLASS_EXPANDED);
-      toExpand.addClass(CLASS_PROTECTED);
       this.trigger('expand', toExpand);
       return edgesInGraph;
     }
