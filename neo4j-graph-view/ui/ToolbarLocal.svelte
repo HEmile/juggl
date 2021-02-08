@@ -8,9 +8,11 @@
 
 </script>
 
-<!--<div class="cy-toolbar">-->
-    <div class="cy-toolbar-section">
-        <ToolbarButton icon={icons.ag_fit} onClick={fitClick} title="Fit view"/>
-        <ToolbarButton icon={icons.ag_workspace} onClick={workspaceModeClick} title="Workspace mode"/>
-    </div>
-<!--</div>-->
+<div class="cy-toolbar-section">
+    <ToolbarButton icon={icons.ag_fit} onClick={fitClick} title="Fit view"/>
+    <ToolbarButton icon={icons.ag_workspace} onClick={workspaceModeClick} title="Workspace mode"/>
+</div>
+<div class="cy-toolbar-section">
+    <ToolbarButton icon={icons.ag_fit} onClick={fitClick} title="Fit view"/>
+    <ToolbarButton icon={icons.ag_workspace} onClick={workspaceModeClick} title="Workspace mode"/>
+</div>

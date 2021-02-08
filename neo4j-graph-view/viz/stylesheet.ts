@@ -194,13 +194,13 @@ edge.hover,
 edge.connected-active-file,
 edge.connected-hover {
     width: 1;
-    line-color: ${lineHighlightColor};  
-    target-arrow-color: ${lineHighlightColor};
+    opacity: 1;
 }
 edge.hover,
 edge.connected-hover {
     font-weight: bold;
-    opacity: 1;
+    line-color: ${lineHighlightColor};  
+    target-arrow-color: ${lineHighlightColor};
 }
 
 .pinned {

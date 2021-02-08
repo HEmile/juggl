@@ -75,8 +75,9 @@ div.cy-navigator {
 .cy-toolbar {
     height: fit-content;
     position: fixed;
+    left: 8px;
     width: 100%;
-    margin: 0;
+    margin: 2px;
     margin-block-start: 0;
     margin-block-end: 0;
     z-index: 1000;
@@ -85,11 +86,11 @@ div.cy-navigator {
 .cy-toolbar-section {
     width: fit-content;
     text-align: center;
-    background-color: hsl(0, 0%, 96%);
+    background-color: var(--background-secondary);
     display: inline-block;
     margin: 1px;
     padding: 1px;
-    border-color: hsl(0, 0%, 75%);
+    border-color: var(--background-modifier-border);
     border-width: 1px;
     border-style: solid;
 }
@@ -98,21 +99,87 @@ button.advanced-graph-button {
     width: 27px;
     height: 27px;
     text-align: center;
-    background-color: hsl(0, 0%, 90%);
+    background-color: var(--background-primary);
     padding: 0;
     margin: 1px;
 }
 
-button.advanced-graph-button:hover {
-    background-color: hsl(0, 0%, 82%);
-}
+/*button.advanced-graph-button:hover {*/
+/*    background-color: hsl(0, 0%, 82%);*/
+/*}*/
 
 .cy-toolbar-section > button:disabled {
-    background: hsl(0, 0%, 96%);
-    color: hsl(0, 0%, 50%);
+    background: var(--background-secondary);
     cursor: not-allowed;
 }
 
+button.advanced-graph-button > svg > path {
+    fill: var(--text-muted);
+    opacity: 0.65;
+}
+
+button.advanced-graph-button:hover > svg > path {
+    opacity: 1;
+}
+
 button.advanced-graph-button:disabled > svg > path {
-    fill: hsl(0, 0%, 78%);
+    opacity: 0.35;
+}
+
+button[data-tooltip] {
+    position: relative;
+    z-index: 2;
+    /*display: block;*/
+}
+
+button[data-tooltip]:before,
+button[data-tooltip]:after {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: .2s ease-out;
+    transform: translate(-50%, -5px)
+}
+
+button[data-tooltip]:before {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-bottom: 5px;
+    padding: 7px;
+    width: 100%;
+    min-width: 70px;
+    max-width: 250px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    background-color: #000;
+    background-color: hsla(0, 0%, 20%, 1);
+    color: #fff;
+    content: attr(data-tooltip);
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.2;
+    transition: .2s ease-out
+}
+
+button[data-tooltip]:after {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 0;
+    border-top: 5px solid #000;
+    border-top: 5px solid hsla(0, 0%, 20%, 1);
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+    content: " ";
+    font-size: 0;
+    line-height: 0;
+}
+
+button[data-tooltip]:hover:before,
+button[data-tooltip]:hover:after {
+    visibility: visible;
+    opacity: 1;
+    transform: translate(-50%, 0)
 }

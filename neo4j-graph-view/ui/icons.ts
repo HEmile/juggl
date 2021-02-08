@@ -20,6 +20,7 @@ export const icons: Record<string, string> = {
   ag_image: mdiIcons.mdiImage,
   ag_workspace: mdiIcons.mdiToolboxOutline,
   ag_local: mdiIcons.mdiFlare,
+  ag_concentric: mdiIcons.mdiGraph,
 };
 
 export const addIcons = (): void => {
