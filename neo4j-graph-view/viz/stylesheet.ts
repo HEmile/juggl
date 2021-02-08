@@ -4,102 +4,6 @@ import {promises as fs} from 'fs';
 //
 export const STYLESHEET_PATH = './.obsidian/plugins/neo4j-graph-view/graph.css';
 
-const DEFAULT_SHEET =`
-node {
-  background-color: #828282;
-  label: data(name);
-  text-valign: bottom;
-  shape: ellipse;
-  width: mapData(degree, 0, 60, 5, 35);
-  height: mapData(degree, 0, 60, 5, 35);
-  font-size: mapData(degree, 0, 60, 5, 11);
-  text-opacity: mapData(degree, 0, 60, 0.7, 1);
-  border-width: 0;
-  text-wrap: wrap;
-  text-max-width: mapData(degree, 0, 60, 65px, 100px);
-}
-
-node:selected {
-  background-blacken: 0.3;
-  border-width: mapData(degree, 0, 60, 1, 3);
-  font-weight: bold;
-  
-}
-
-.dangling {
-  background-color: #CFCFCF;
-}
-
-.image {
-  shape: round-rectangle;
-  width: 50;
-  height: 50;
-  background-opacity: 0;
-  background-image: data(resource_url);
-  background-image-opacity: 1;
-  background-fit: contain;
-  font-size: 0;
-  background-clip: node;
-}
-
-edge {
-  line-color: #E6E6E6;
-  loop-sweep: -50deg;
-  loop-direction: -45deg;
-  width: mapData(edgeCount, 1, 30, 0.4, 2);
-  target-arrow-shape: vee;
-  target-arrow-fill: filled;
-  target-arrow-color: #E6E6E6;
-  arrow-scale: 0.5;
-  font-size: 6;
-  curve-style: unbundled-bezier;
-  control-point-distance: 23;
-  control-point-weight: 0.6;
-}
-
-edge:selected {
-  width: 0.7;
-  font-weight: bold;
-  line-color: #6A8695;
-}
-
-:loop {
-  width: mapData(edgeCount, 1, 30, 0.1, 1);
-}
-
-edge[type] {
-  label: data(type);
-}
-.inactive-file,
-.unhover {
-    opacity: 0.3;
-}
-node.active-file,
-node.hover {
-    font-weight: bold;
-    border-width: 1;
-    border-color: #1b6299;
-    opacity: 1;
-}
-edge.hover,
-edge.connected-active-file,
-edge.connected-hover {
-    width: 1;
-    line-color: #1b6299;  
-    target-arrow-color: #1b6299;
-}
-edge.hover,
-edge.connected-hover {
-    font-weight: bold;
-    opacity: 1;
-}
-
-.pinned {
-    border-style: dotted;
-    border-width: 2;
-}
-`;
-
 const YAML_MODIFY_SHEET = `
 node[color] {
   background-color: data(color);
@@ -129,7 +33,7 @@ export class GraphStyleSheet {
     yamlModifySheet: string;
     plugin: AdvancedGraphPlugin;
     constructor(plugin: AdvancedGraphPlugin) {
-      this.defaultSheet = DEFAULT_SHEET;
+      this.defaultSheet = this.getDefaultStylesheet();
       this.yamlModifySheet = YAML_MODIFY_SHEET;
       this.plugin = plugin;
     }
@@ -151,6 +55,161 @@ export class GraphStyleSheet {
 
       return this.defaultSheet + customSheet + this.yamlModifySheet;
     }
+
+
+    colorToRGBA(col: string): string {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 1;
+      const ctx = canvas.getContext('2d');
+
+
+      ctx.clearRect(0, 0, 1, 1);
+      // In order to detect invalid values,
+      // we can't rely on col being in the same format as what fillStyle is computed as,
+      // but we can ask it to implicitly compute a normalized value twice and compare.
+      ctx.fillStyle = '#000';
+      ctx.fillStyle = col;
+      const computed = ctx.fillStyle;
+      ctx.fillStyle = '#fff';
+      ctx.fillStyle = col;
+      if (computed !== ctx.fillStyle) {
+        return; // invalid color
+      }
+      ctx.fillRect(0, 0, 1, 1);
+      const rgba = [...ctx.getImageData(0, 0, 1, 1).data];
+      return `rgb(${rgba[0]}, ${rgba[1]}, ${rgba[2]})`;
+    }
+
+    getGraphColor(clazz: string): string {
+      // Hacky way to get style properties set for Obsidians graph view
+      const graphDiv = document.createElement('div');
+      graphDiv.addClass('graph-view', clazz);
+      document.body.appendChild(graphDiv);
+      const computedColor = getComputedStyle(graphDiv).getPropertyValue('color');
+      graphDiv.detach();
+      return computedColor;
+    }
+
+    getDefaultStylesheet(): string {
+      const style = getComputedStyle(document.body);
+      let font = style.getPropertyValue('--text');
+      font = font.replace('BlinkMacSystemFont,', ''); // This crashes electron for some reason.
+      const fillColor = this.getGraphColor('color-fill');
+      const fillHighlightColor = this.getGraphColor('color-fill-highlight');
+      const accentBorderColor = this.getGraphColor('color-circle');
+      const lineColor = this.getGraphColor('color-line');
+      const lineHighlightColor = this.getGraphColor('color-line-highlight');
+      const textColor = this.getGraphColor('color-text');
+      const danglingColor = this.getGraphColor('color-fill-unresolved');
+      console.log(danglingColor);
+      console.log(fillColor);
+      return `
+node {
+  background-color: ${fillColor};
+  label: data(name);
+  color: ${textColor};
+  font-family: ${font};
+  text-valign: bottom;
+  shape: ellipse;
+  border-width: 0;
+  text-wrap: wrap;
+}
+
+node[degree] {
+  width: mapData(degree, 0, 60, 5, 35);
+  height: mapData(degree, 0, 60, 5, 35);
+  font-size: mapData(degree, 0, 60, 5, 11);
+  text-opacity: mapData(degree, 0, 60, 0.7, 1);
+  text-max-width: mapData(degree, 0, 60, 65px, 100px);
+}
+
+node:selected {
+  background-blacken: 0.3;
+  font-weight: bold;
+  
+}
+node:selected[degree] {
+  border-width: mapData(degree, 0, 60, 1, 3);
+}
+
+.dangling {
+  background-color: ${danglingColor};
+}
+
+.image {
+  shape: round-rectangle;
+  width: 50;
+  height: 50;
+  background-opacity: 0;
+  background-image: data(resource_url);
+  background-image-opacity: 1;
+  background-fit: contain;
+  font-size: 0;
+  background-clip: node;
+}
+
+edge {
+  line-color: ${lineColor};
+  loop-sweep: -50deg;
+  loop-direction: -45deg;
+  width: mapData(edgeCount, 1, 30, 0.4, 2);
+  target-arrow-shape: vee;
+  target-arrow-fill: filled;
+  target-arrow-color: ${lineColor};
+  arrow-scale: 0.5;
+  font-size: 6;
+  font-family: ${font};
+  color: ${textColor};
+  curve-style: unbundled-bezier;
+  control-point-distance: 23;
+  control-point-weight: 0.6;
+}
+
+edge:selected {
+  width: 0.7;
+  font-weight: bold;
+  line-color: ${lineHighlightColor};
+}
+
+:loop {
+  width: mapData(edgeCount, 1, 30, 0.1, 1);
+}
+
+edge[type] {
+  label: data(type);
+}
+.inactive-file,
+.unhover {
+    opacity: 0.3;
+}
+node.active-file,
+node.hover {
+    background-color: ${fillHighlightColor};
+    font-weight: bold;
+    border-width: 0.4;
+    border-color: ${accentBorderColor};
+    opacity: 1;
+}
+edge.hover,
+edge.connected-active-file,
+edge.connected-hover {
+    width: 1;
+    line-color: ${lineHighlightColor};  
+    target-arrow-color: ${lineHighlightColor};
+}
+edge.hover,
+edge.connected-hover {
+    font-weight: bold;
+    opacity: 1;
+}
+
+.pinned {
+    border-style: dotted;
+    border-width: 2;
+}
+`;
+    }
+
 
     genStyleSheet(): string {
       const tagColorMap = {} as Record<string, string>;

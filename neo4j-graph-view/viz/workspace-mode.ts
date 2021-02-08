@@ -106,7 +106,7 @@ export class WorkspaceMode extends Component implements IAGMode {
           .difference(this.viz.nodes(`.${CLASS_PROTECTED}`))
           .filter((ele) => {
             // If none in the closed neighborhood are expanded
-            return ele.closedNeighborhood('node.expanded').length === 0;
+            return ele.closedNeighborhood(`node.${CLASS_PROTECTED}`).length === 0;
           })
           .remove();
       console.log(removed);
