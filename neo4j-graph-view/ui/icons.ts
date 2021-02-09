@@ -6,7 +6,7 @@ function pathToSvg(icon: string) {
   return `
     <svg style= "width:24px;height:24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path fill="currentcolor" d="${icon}" />
-    </svg>`;
+    </svg>`;//
 }
 export const icons: Record<string, string> = {
   ag_expand: mdiIcons.mdiArrowExpandAll,
