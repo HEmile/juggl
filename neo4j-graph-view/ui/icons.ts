@@ -10,6 +10,7 @@ function pathToSvg(icon: string) {
 }
 export const icons: Record<string, string> = {
   ag_expand: mdiIcons.mdiArrowExpandAll,
+  ag_collapse: mdiIcons.mdiArrowCollapseAll,
   ag_select_all: mdiIcons.mdiSelectAll,
   ag_select_inverse: mdiIcons.mdiSelectCompare,
   ag_select_neighbors: mdiIcons.mdiSelectGroup,

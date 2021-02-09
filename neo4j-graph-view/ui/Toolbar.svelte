@@ -5,6 +5,7 @@
 
     export let viz: Core;
     export let expandClick;
+    export let collapseClick;
     export let hideClick;
     export let selectAllClick;
     export let selectInvertClick;
@@ -39,6 +40,8 @@
     <div class="cy-toolbar-section">
         <ToolbarButton icon={icons.ag_expand} onClick={expandClick}
                        disabled="{disableOnNoneSelected}" title="Expand selected nodes (E)"/>
+        <ToolbarButton icon={icons.ag_collapse} onClick={collapseClick}
+                       disabled="{disableOnNoneSelected}" title="Collapse expanded nodes (C)"/>
         <ToolbarButton icon={icons.ag_hide} onClick={hideClick}
                        disabled="{disableOnNoneSelected}" title="Hide selected nodes (H)"/>
     </div>

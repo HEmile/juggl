@@ -102,14 +102,14 @@ export class WorkspaceMode extends Component implements IAGMode {
         return;
       }
       // Remove nodes that are not protected and not connected to expanded nodes
-      const removed = this.viz.nodes()
+      this.viz.nodes()
           .difference(this.viz.nodes(`.${CLASS_PROTECTED}`))
           .filter((ele) => {
-            // If none in the closed neighborhood are expanded
+            // If none in the closed neighborhood are expanded.
+            // Note that the closed neighborhood includes the current note.
             return ele.closedNeighborhood(`node.${CLASS_PROTECTED}`).length === 0;
           })
           .remove();
-      console.log(removed);
       this.recursionPreventer = true;
       this.view.onGraphChanged();
       this.recursionPreventer = false;
@@ -133,6 +133,8 @@ export class WorkspaceMode extends Component implements IAGMode {
         this.pinSelection();
       } else if (evt.key === 'u') {
         this.unpinSelection();
+      } else if (evt.key === 'c') {
+        this.collapseSelection();
       }
     };
     // // Register keypress event
@@ -173,6 +175,12 @@ export class WorkspaceMode extends Component implements IAGMode {
         item.setTitle('Expand selection (E)').setIcon('ag-expand')
             .onClick(async (evt) => {
               await this.expandSelection();
+            });
+      });
+      menu.addItem((item) => {
+        item.setTitle('Collapse selection (C)').setIcon('ag-collapse')
+            .onClick((evt) =>{
+              this.collapseSelection();
             });
       });
       menu.addItem((item) => {
@@ -227,6 +235,7 @@ export class WorkspaceMode extends Component implements IAGMode {
       props: {
         viz: this.viz,
         expandClick: this.expandSelection.bind(this),
+        collapseClick: this.collapseSelection.bind(this),
         hideClick: this.removeSelection.bind(this),
         selectAllClick: this.selectAll.bind(this),
         selectInvertClick: this.invertSelection.bind(this),
@@ -272,6 +281,23 @@ export class WorkspaceMode extends Component implements IAGMode {
 
   async expandSelection() {
     await this.view.expand(this.viz.nodes(':selected'));
+  }
+
+  collapseSelection() {
+    const selectedProtected = this.viz.nodes(`:selected.${CLASS_PROTECTED}`)
+        .removeClass([CLASS_PROTECTED, CLASS_EXPANDED]);
+    selectedProtected.openNeighborhood()
+        .nodes()
+        .filter((ele) => {
+          // If none in the closed neighborhood are protected that aren't also selected
+          // (their PROTECTED flag has been removed)
+          return ele.closedNeighborhood(`node.${CLASS_PROTECTED}`).length === 0;
+        })
+        .remove();
+    // can this cause race conditions with on elementsChange?
+    this.recursionPreventer = true;
+    this.view.onGraphChanged();
+    this.recursionPreventer = false;
   }
 
   removeSelection() {

@@ -150,7 +150,7 @@ edge {
   line-color: ${lineColor};
   loop-sweep: -50deg;
   loop-direction: -45deg;
-  width: mapData(edgeCount, 1, 30, 0.4, 2);
+  width: mapData(edgeCount, 1, 50, 0.55, 3);
   target-arrow-shape: vee;
   target-arrow-fill: filled;
   target-arrow-color: ${lineColor};
@@ -201,9 +201,15 @@ edge.connected-hover {
     target-arrow-color: ${lineHighlightColor};
 }
 
-.pinned {
+node.pinned {
     border-style: dotted;
     border-width: 2;
+}
+node.protected {
+    ghost: yes;
+    ghost-offset-x: 1px;
+    ghost-offset-y: 1px;
+    ghost-opacity: 0.5;
 }
 `;
     }
