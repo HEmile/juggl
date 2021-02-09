@@ -1,6 +1,6 @@
 import {
   FileSystemAdapter,
-  MarkdownView, MetadataCache,
+  MarkdownView, MetadataCache, parseFrontMatterTags,
   Plugin, ReferenceCache, TFile, Vault,
 } from 'obsidian';
 import {
@@ -224,6 +224,20 @@ export default class AdvancedGraphPlugin extends Plugin {
     //         '"}) OPTIONAL MATCH (n)-[r]-(m) RETURN n,r,m';
     // }
 
+    _parseTags(tags: string[]): string[] {
+      return [].concat(...tags
+          .map((tag) => {
+            tag = tag.slice(1);
+            const hSplit = tag.split('/');
+            const tags = [];
+            for (const i in hSplit) {
+              const hTag = hSplit.slice(0, parseInt(i) + 1).join('-');
+              tags.push(`tag-${hTag}`);
+            }
+            return tags;
+          }));
+    }
+
     public getClasses(file: TFile): string[] {
       if (file) {
         const classes = [];
@@ -245,21 +259,16 @@ export default class AdvancedGraphPlugin extends Plugin {
         if (file.extension === 'md') {
           classes.push('note');
           const cache = this.app.metadataCache.getFileCache(file);
-          if (cache?.frontmatter && 'image' in cache.frontmatter) {
-            classes.push('image');
+          if (cache?.frontmatter) {
+            if ('image' in cache.frontmatter) {
+              classes.push('image');
+            }
+            if ('tags' in cache.frontmatter) {
+              classes.push(...this._parseTags(parseFrontMatterTags(cache.frontmatter)));
+            }
           }
           if (cache?.tags) {
-            classes.push(...[].concat(...cache.tags
-                .map((t) => {
-                  const tag = t.tag.slice(1);
-                  const hSplit = tag.split('/');
-                  const tags = [];
-                  for (const i in hSplit) {
-                    const hTag = hSplit.slice(0, parseInt(i) + 1).join('-');
-                    tags.push(`tag-${hTag}`);
-                  }
-                  return tags;
-                })));
+            classes.push(...this._parseTags(cache.tags.map((t) => t.tag)));
           }
         } else {
           classes.push('file');

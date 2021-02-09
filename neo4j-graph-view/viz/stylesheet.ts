@@ -101,8 +101,6 @@ export class GraphStyleSheet {
       const lineHighlightColor = this.getGraphColor('color-line-highlight');
       const textColor = this.getGraphColor('color-text');
       const danglingColor = this.getGraphColor('color-fill-unresolved');
-      console.log(danglingColor);
-      console.log(fillColor);
       return `
 node {
   background-color: ${fillColor};
