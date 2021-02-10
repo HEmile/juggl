@@ -21,7 +21,10 @@ export const icons: Record<string, string> = {
   ag_image: mdiIcons.mdiImage,
   ag_workspace: mdiIcons.mdiToolboxOutline,
   ag_local: mdiIcons.mdiFlare,
-  ag_concentric: mdiIcons.mdiGraph,
+  ag_fdgd: mdiIcons.mdiGrain,
+  ag_concentric: mdiIcons.mdiGraphql,
+  ag_grid: mdiIcons.mdiDotsGrid,
+  ag_hierarchy: mdiIcons.mdiGraph,
 };
 
 export const addIcons = (): void => {

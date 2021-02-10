@@ -14,6 +14,13 @@ import {
 } from '../constants';
 import type {Core} from 'cytoscape';
 import type {SvelteComponent} from 'svelte';
+import {
+  AVSDFGlobalLayout,
+  ColaGlobalLayout,
+  ConcentricLayout,
+  DagreGlobalLayout,
+  GridGlobalLayout,
+} from './layout-settings';
 
 
 class EventRec {
@@ -82,13 +89,13 @@ export class LocalMode extends Component implements IAGMode {
       }
       console.log('Here');
       await this.view.expand(node, false);
+      node.addClass(CLASS_ACTIVE_FILE);
       this.viz.nodes()
           .difference(node.closedNeighborhood())
           .remove();
       this.view.onGraphChanged(false);
       this.updateActiveFile(node as NodeSingular);
       this.viz.endBatch();
-      this.view.restartLayout();
     }
 
     registerCyEvent(name: EventNames, selector: string, callback: any) {
@@ -127,6 +134,10 @@ export class LocalMode extends Component implements IAGMode {
         props: {
           viz: this.viz,
           fitClick: this.view.fitView.bind(view),
+          fdgdClick: () => this.view.setLayout(new ColaGlobalLayout()),
+          concentricClick: () => this.view.setLayout(new ConcentricLayout()),
+          gridClick: () => this.view.setLayout(new GridGlobalLayout()),
+          hierarchyClick: () => this.view.setLayout(new DagreGlobalLayout()),
           workspaceModeClick: () => view.setMode('workspace'),
         },
       });

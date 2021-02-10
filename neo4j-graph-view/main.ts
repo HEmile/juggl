@@ -13,10 +13,12 @@ import {ImageServer} from './image-server';
 import type {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
 import cytoscape from 'cytoscape';
-import coseBilkent from 'cytoscape-cose-bilkent';
+// import coseBilkent from 'cytoscape-cose-bilkent';
 import navigator from 'cytoscape-navigator';
 import popper from 'cytoscape-popper';
 import cola from 'cytoscape-cola';
+import avsdf from 'cytoscape-avsdf';
+import dagre from 'cytoscape-dagre';
 import dblclick from 'cytoscape-dblclick';
 import {addIcons} from './ui/icons';
 import {STYLESHEET_PATH} from './viz/stylesheet';
@@ -48,10 +50,12 @@ export default class AdvancedGraphPlugin extends Plugin {
       super.onload();
       console.log('Loading advanced graph view plugin');
       navigator(cytoscape);
-      cytoscape.use(coseBilkent);
+      // cytoscape.use(coseBilkent);
       cytoscape.use(popper);
       cytoscape.use(cola);
-      cytoscape.use( dblclick );
+      cytoscape.use(dagre);
+      cytoscape.use(avsdf);
+      cytoscape.use(dblclick);
 
       addIcons();
 

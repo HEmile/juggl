@@ -24,43 +24,17 @@ import {
   CLASS_HOVER,
   CLASS_PINNED, CLASS_PROTECTED,
   CLASS_UNHOVER, CLASSES,
-  LAYOUT_ANIMATION_TIME, VIEWPORT_ANIMATION_TIME,
+  VIEWPORT_ANIMATION_TIME,
 } from '../constants';
 import {LocalMode} from './local-mode';
+import type {LayoutSettings} from './layout-settings';
+import {ColaGlobalLayout} from './layout-settings';
 
 
 export const AG_VIEW_TYPE = 'advanced_graph_view';
 export const MD_VIEW_TYPE = 'markdown';
 
-export const COSE_LAYOUT = {
-  name: 'cose-bilkent',
-  ready: function() {
-    console.log('ready!');
-  },
-  stop: function() {
-    console.log('stop!');
-  },
-  // @ts-ignore
-  animate: 'end',
-  animationDuration: 1000,
-  refresh: 20,
-  numIter: 5000,
-  // @ts-ignore
-  nodeRepulsion: 7000,
-  // @ts-ignore
-  idealEdgeLength: 80,
-  // @ts-ignore
-  edgeElasticity: 0.45,
-  coolingFactor: 0.99,
-  nodeDimensionsIncludeLabels: true,
-  nestingFactor: 0.1,
-  gravity: 0.25,
-  tile: true,
-};
-
-
 let VIEW_COUNTER = 0;
-
 
 export class AdvancedGraphView extends ItemView {
     workspace: Workspace;
@@ -74,6 +48,7 @@ export class AdvancedGraphView extends ItemView {
     events: Events;
     datastores: IDataStore[];
     activeLayout: Layouts;
+    layoutSettings: LayoutSettings;
     hoverTimeout: Record<string, Timeout> = {};
     mode: IAGMode;
     vizReady = false;
@@ -89,6 +64,7 @@ export class AdvancedGraphView extends ItemView {
       this.plugin = plugin;
       this.datastores = dataStores;
       this.events = new Events();
+      this.layoutSettings = new ColaGlobalLayout();
       if (this.settings.defaultMode === 'local') {
         this.mode = new LocalMode(this);
       } else if (this.settings.defaultMode === 'workspace') {
@@ -164,7 +140,8 @@ export class AdvancedGraphView extends ItemView {
       const styleSheet = await this.createStylesheet();
       this.viz.style(styleSheet);
 
-      this.activeLayout = this.viz.layout(this.colaLayout()).start();
+      // Shouldn'' this just call restartLayout?
+      this.activeLayout = this.layoutSettings.startLayout(this);
 
       console.log('Visualization ready');
 
@@ -279,24 +256,28 @@ export class AdvancedGraphView extends ItemView {
         fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
       });
       this.viz.on('layoutstop', (e: EventObject) => {
+        let fitNodes: NodeCollection = null;
         const activeFile = this.viz.nodes(`.${CLASS_ACTIVE_FILE}`);
         if (activeFile.length > 0) {
-          const delayedAnimation = setTimeout(() => {
-            e.cy.animate({
-              fit: {
-                eles: activeFile.closedNeighborhood(),
-                padding: 0,
-              },
-              duration: VIEWPORT_ANIMATION_TIME,
-              queue: false,
-            });
-          }, 300);
-
-          this.viz.one('layoutstart layoutstop', (e) => {
-            // This prevents janky animations happening because of many consecutive restartLayout()
-            clearTimeout(delayedAnimation);
-          });
+          fitNodes = activeFile.closedNeighborhood();
+        } else {
+          fitNodes = this.viz.nodes();
         }
+        const delayedAnimation = setTimeout(() => {
+          e.cy.animate({
+            fit: {
+              eles: fitNodes,
+              padding: 0,
+            },
+            duration: VIEWPORT_ANIMATION_TIME,
+            queue: false,
+          });
+        }, 300);
+
+        this.viz.one('layoutstart layoutstop', (e) => {
+          // This prevents janky animations happening because of many consecutive restartLayout()
+          clearTimeout(delayedAnimation);
+        });
       });
       this.vizReady = true;
       this.trigger('vizReady', this.viz);
@@ -369,20 +350,25 @@ export class AdvancedGraphView extends ItemView {
       return edges;
     }
 
-    async expand(toExpand: NodeCollection, batch=true): Promise<Collection> {
+    async expand(toExpand: NodeCollection, batch=true, triggerGraphChanged=true): Promise<Collection> {
+      if (batch) {
+        this.viz.startBatch();
+      }
       toExpand.addClass(CLASS_EXPANDED);
       toExpand.addClass(CLASS_PROTECTED);
       // Currently returns the edges merged into the graph, not the full neighborhood
       const expandedIds = toExpand.map((n) => VizId.fromNode(n));
       const neighbourhood = await this.neighbourhood(expandedIds);
-      this.mergeToGraph(neighbourhood, batch, false);
+      this.mergeToGraph(neighbourhood, false, false);
       const nodes = this.viz.collection();
       neighbourhood.forEach((n) => {
         nodes.merge(this.viz.$id(n.data.id) as NodeSingular);
       });
       const edges = await this.buildEdges(nodes);
-      const edgesInGraph = this.mergeToGraph(edges);
-      this.restartLayout();
+      const edgesInGraph = this.mergeToGraph(edges, false, triggerGraphChanged);
+      if (batch) {
+        this.viz.endBatch();
+      }
       this.trigger('expand', toExpand);
       return edgesInGraph;
     }
@@ -417,7 +403,6 @@ export class AdvancedGraphView extends ItemView {
         removed = nodes.remove();
         this.onGraphChanged(false);
       });
-      this.restartLayout();
       return removed;
     }
 
@@ -442,39 +427,16 @@ export class AdvancedGraphView extends ItemView {
     //   return query;
     // }
 
-    colaLayout(): LayoutOptions {
-      return {
-        name: 'cola',
-        // @ts-ignore
-        animate: true, // whether to show the layout as it's running
-        refresh: 2, // number of ticks per frame; higher is faster but more jerky
-        maxSimulationTime: LAYOUT_ANIMATION_TIME, // max length in ms to run the layout
-        ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
-        fit: false, // on every layout reposition of nodes, fit the viewport
-        padding: 30, // padding around the simulation
-        nodeDimensionsIncludeLabels: true, // whether labels should be included in determining the space used by a node
-        // layout event callbacks
-        ready: function() {
-        }, // on layoutready
-        stop: function() {
-          // viz.activeLayout = null;
-        }, // on layoutstop
-        // positioning options
-        randomize: false, // use random node positions at beginning of layout
-        avoidOverlap: true, // if true, prevents overlap of node bounding boxes
-        handleDisconnected: true, // if true, avoids disconnected components from overlapping
-        convergenceThreshold: 0.01, // when the alpha value (system energy) falls below this value, the layout stops
-        nodeSpacing: function( node: NodeSingular ) {
-          return 10;
-        }, // extra spacing around nodes
-      };
-    }
-
     restartLayout() {
       if (this.activeLayout) {
         this.activeLayout.stop();
       }
-      this.activeLayout = this.viz.layout(this.colaLayout()).start();
+      this.activeLayout = this.layoutSettings.startLayout(this);
+    }
+
+    setLayout(settings: LayoutSettings) {
+      this.layoutSettings = settings;
+      this.restartLayout();
     }
 
     mergeToGraph(elements: ElementDefinition[], batch=true, triggerGraphChanged=true): Collection {
@@ -519,6 +481,8 @@ export class AdvancedGraphView extends ItemView {
       if (batch) {
         this.viz.endBatch();
       }
+
+      this.restartLayout();
       this.trigger('elementsChange');
     }
 

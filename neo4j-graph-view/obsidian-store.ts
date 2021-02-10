@@ -292,16 +292,16 @@ ${edge.data.context}`;
         correctEdges = await view.expand(node);
       } else {
         const nodeDef = [await this.get(id)];
-        view.mergeToGraph(nodeDef);
+        view.mergeToGraph(nodeDef, true, false);
         node = view.viz.$id(idS);
         const edges = await view.buildEdges(node);
-        correctEdges = view.mergeToGraph(edges);
+        correctEdges = view.mergeToGraph(edges, true, false);
       }
       // Remove outgoing edges that no longer exist.
       node.connectedEdges()
           .difference(correctEdges)
           .remove();
-      view.restartLayout();
+      view.onGraphChanged();
       // TODO: I don't think this one here was correct / should be needed.
       // view.updateActiveFile(node.nodes() as NodeSingular, true);
     }
