@@ -4,37 +4,69 @@ import type AdvancedGraphPlugin from './main';
 import {OBSIDIAN_STORE_NAME} from './obsidian-store';
 import AppearanceSettings from './ui/settings/AppearanceSettings.svelte';
 
+export const LAYOUTS = ['force-directed', 'circle', 'grid', 'hierarchy'];
+export type AGLayouts = 'force-directed' | 'circle' | 'grid' | 'hierarchy';
+
 export interface IAdvancedGraphSettings {
-    indexContent: boolean; // neo4j
-    autoExpand: boolean;
     autoAddNodes: boolean;
     navigator: boolean;
+    coreStore: string;
+    mergeEdges: boolean;
+    mode: string;
+    hoverEdges: boolean;
+    autoExpand: boolean;
+    layout: AGLayouts;
+    limit: number;
+}
+
+export interface IAGEmbedSettings extends IAdvancedGraphSettings {
+    width: string | number;
+    height: string | number;
+}
+
+export interface IAGPluginSettings {
+    // indexContent: boolean; // neo4j
     password: string; // neo4j
     typedLinkPrefix: string;
     splitDirection: SplitDirection; // 'horizontal';
     imgServerPort: number;
     debug: boolean;
-    coreStore: string;
-    mergeEdges: boolean;
-    defaultMode: string;
-    hoverEdges: boolean;
+    graphSettings: IAdvancedGraphSettings;
 }
 
 
-export const DefaultAdvancedGraphSettings: IAdvancedGraphSettings = {
-  autoAddNodes: true,
-  autoExpand: false,
-  indexContent: false,
-  navigator: true,
+export const DefaultAdvancedGraphSettings: IAGPluginSettings = {
   password: '',
   splitDirection: 'vertical',
   typedLinkPrefix: '-',
   imgServerPort: 3837,
   debug: false,
+  graphSettings: {
+    autoAddNodes: true,
+    autoExpand: false,
+    navigator: true,
+    hoverEdges: false,
+    mergeEdges: true,
+    coreStore: OBSIDIAN_STORE_NAME,
+    mode: 'local',
+    layout: 'force-directed',
+    // TODO: Not currently used anywhere
+    limit: 10000,
+  },
+};
+
+export const DefaultAdvancedGraphEmbedSettings: IAGEmbedSettings = {
+  autoAddNodes: false,
+  autoExpand: false,
   coreStore: OBSIDIAN_STORE_NAME,
-  mergeEdges: true,
-  defaultMode: 'local',
   hoverEdges: false,
+  mergeEdges: true,
+  mode: 'local',
+  navigator: false,
+  layout: 'force-directed',
+  limit: 1000,
+  width: '100%',
+  height: '500px',
 };
 
 
@@ -89,9 +121,9 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
           .setName('Use navigator')
           .setDesc('Use the navigator overview in the bottom-right corner. Disabling could improve performance.')
           .addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.navigator)
+            toggle.setValue(this.plugin.settings.graphSettings.navigator)
                 .onChange((newValue) => {
-                  this.plugin.settings.navigator = newValue;
+                  this.plugin.settings.graphSettings.navigator = newValue;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
@@ -102,9 +134,9 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
           .addDropdown((dropdown) => {
             dropdown.addOption('local', 'Local Mode');
             dropdown.addOption('workspace', 'Workspace Mode');
-            dropdown.setValue(this.plugin.settings.defaultMode)
+            dropdown.setValue(this.plugin.settings.graphSettings.mode)
                 .onChange((newValue) => {
-                  this.plugin.settings.defaultMode = newValue;
+                  this.plugin.settings.graphSettings.mode = newValue;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
@@ -118,9 +150,9 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
             Object.keys(this.plugin.coreStores).forEach((c) => {
               dropdown.addOption(c, c);
             });
-            dropdown.setValue(this.plugin.settings.coreStore)
+            dropdown.setValue(this.plugin.settings.graphSettings.coreStore)
                 .onChange((newValue) => {
-                  this.plugin.settings.coreStore = newValue;
+                  this.plugin.settings.graphSettings.coreStore = newValue;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
@@ -144,9 +176,9 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
           .setName('Hover on edges')
           .setDesc('Hover on edges to show what they are connected to..')
           .addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.hoverEdges)
+            toggle.setValue(this.plugin.settings.graphSettings.hoverEdges)
                 .onChange((new_value) => {
-                  this.plugin.settings.hoverEdges = new_value;
+                  this.plugin.settings.graphSettings.hoverEdges = new_value;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
@@ -155,9 +187,9 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
           .setName('Automatically add nodes')
           .setDesc('This will automatically add nodes to the graph whenever a note is opened in workspace mode.')
           .addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.autoAddNodes)
+            toggle.setValue(this.plugin.settings.graphSettings.autoAddNodes)
                 .onChange((new_value) => {
-                  this.plugin.settings.autoAddNodes = new_value;
+                  this.plugin.settings.graphSettings.autoAddNodes = new_value;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });

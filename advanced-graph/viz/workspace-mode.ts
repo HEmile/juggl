@@ -1,6 +1,6 @@
 import type {IAGMode} from '../interfaces';
 import type {EventNames, EventObject, NodeSingular} from 'cytoscape';
-import type {AdvancedGraphView} from './visualization';
+import type {AdvancedGraph} from './visualization';
 import type {NodeCollection} from 'cytoscape';
 import type {Menu} from 'obsidian';
 import Toolbar from '../ui/Toolbar.svelte';
@@ -15,12 +15,12 @@ import {
 import type {Core} from 'cytoscape';
 import type {SvelteComponent} from 'svelte';
 import {
-  AVSDFGlobalLayout,
   ColaGlobalLayout,
   ConcentricLayout,
   DagreGlobalLayout,
   GridGlobalLayout,
 } from './layout-settings';
+import {AdvancedGraphView} from './ag-view';
 
 
 class EventRec {
@@ -36,7 +36,7 @@ export class WorkspaceMode extends Component implements IAGMode {
   windowEvent: any;
   toolbar: SvelteComponent;
   recursionPreventer = false;
-  constructor(view: AdvancedGraphView) {
+  constructor(view: AdvancedGraph) {
     super();
     this.view = view;
   }
@@ -122,7 +122,8 @@ export class WorkspaceMode extends Component implements IAGMode {
     }));
 
     this.windowEvent = async (evt: KeyboardEvent) => {
-      if (!(this.view.workspace.activeLeaf === this.view.leaf)) {
+      // TODO: Find a better way to ensure focus...
+      if (!(this.view.workspace.activeLeaf instanceof AdvancedGraphView)) {
         return;
       }
       if (!(document.activeElement === document.body)) {

@@ -1,10 +1,10 @@
 import type {IncomingMessage, Server, ServerResponse} from 'http';
 import {Component, FileSystemAdapter, Notice, TFile} from 'obsidian';
-import type {IAdvancedGraphSettings} from './settings';
+import type {IAGPluginSettings} from './settings';
 import type AdvancedGraphPlugin from './main';
 
 export class ImageServer extends Component {
-    settings: IAdvancedGraphSettings;
+    settings: IAGPluginSettings;
     plugin: AdvancedGraphPlugin;
     imgServer: Server;
 

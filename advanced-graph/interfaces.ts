@@ -4,6 +4,7 @@ import type {EdgeDefinition, NodeCollection, NodeDefinition} from 'cytoscape';
 import type {Menu} from 'obsidian';
 import type {NodeSingular} from 'cytoscape';
 import type {TFile} from 'obsidian';
+import type {AdvancedGraph} from './viz/visualization';
 
 export interface INoteProperties {
     SMD_community: number;
@@ -37,7 +38,7 @@ export interface IDataStore extends Component {
 
     getNeighbourhood(nodeId: VizId[]): Promise<NodeDefinition[]>;
 
-    connectNodes(allNodes: NodeCollection, newNodes: NodeCollection): Promise<EdgeDefinition[]>;
+    connectNodes(allNodes: NodeCollection, newNodes: NodeCollection, graph: AdvancedGraph): Promise<EdgeDefinition[]>;
 
     // Prefix of id of nodes from this store
     storeId(): string;

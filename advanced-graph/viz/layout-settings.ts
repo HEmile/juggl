@@ -1,4 +1,3 @@
-import type {AdvancedGraphView} from './visualization';
 import type {Layouts} from 'cytoscape';
 import {
   CLASS_ACTIVE_FILE, CLASS_EXPANDED,
@@ -7,15 +6,17 @@ import {
   LAYOUT_ANIMATION_TIME,
 } from '../constants';
 import type {NodeSingular} from 'cytoscape';
+import type {AdvancedGraph} from './visualization';
+import type {AGLayouts} from '../settings';
 
 export interface LayoutSettings {
 
-    startLayout(view: AdvancedGraphView): Layouts;
+    startLayout(view: AdvancedGraph): Layouts;
 
 }
 
 export class ColaGlobalLayout implements LayoutSettings {
-  startLayout(view: AdvancedGraphView): Layouts {
+  startLayout(view: AdvancedGraph): Layouts {
     return view.viz.layout( {
       name: 'cola',
       // @ts-ignore
@@ -39,7 +40,7 @@ export class ColaGlobalLayout implements LayoutSettings {
 }
 
 export class GridGlobalLayout implements LayoutSettings {
-  startLayout(view: AdvancedGraphView): Layouts {
+  startLayout(view: AdvancedGraph): Layouts {
     return view.viz.layout( {
       name: 'grid',
       animate: true, // whether to show the layout as it's running (should this be end?
@@ -56,7 +57,7 @@ export class GridGlobalLayout implements LayoutSettings {
 }
 
 export class DagreGlobalLayout implements LayoutSettings {
-  startLayout(view: AdvancedGraphView): Layouts {
+  startLayout(view: AdvancedGraph): Layouts {
     return view.viz.layout( {
       name: 'dagre',
       // @ts-ignore
@@ -74,7 +75,7 @@ export class DagreGlobalLayout implements LayoutSettings {
 }
 
 export class AVSDFGlobalLayout implements LayoutSettings {
-  startLayout(view: AdvancedGraphView): Layouts {
+  startLayout(view: AdvancedGraph): Layouts {
     console.log('asvasdfsdf');
     return view.viz.layout( {
       name: 'avsdf',
@@ -91,25 +92,9 @@ export class AVSDFGlobalLayout implements LayoutSettings {
   }
 }
 
-export class AVSDFlocalLayout implements LayoutSettings {
-  startLayout(view: AdvancedGraphView): Layouts {
-    return view.viz.layout( {
-      name: 'avsdf',
-      // @ts-ignore
-      animate: 'end', // whether to show the layout as it's running (should this be end?
-      animationDuration: DISCRETE_LAYOUT_ANIMATION_TIME,
-      // animationEasing // Should probably add something here
-      fit: false, // on every layout reposition of nodes, fit the viewport
-      padding: 30, // padding around the simulation
-      nodeDimensionsIncludeLabels: true, // whether labels should be included in determining the space used by a node
-      // positioning options
-      avoidOverlap: true, // if true, prevents overlap of node bounding boxes
-    }).start();
-  }
-}
 
 export class ConcentricLayout implements LayoutSettings {
-  startLayout(view: AdvancedGraphView): Layouts {
+  startLayout(view: AdvancedGraph): Layouts {
     return view.viz.layout( {
       name: 'concentric',
       // @ts-ignore
@@ -139,3 +124,13 @@ export class ConcentricLayout implements LayoutSettings {
     }).start();
   }
 }
+
+
+export const getLayoutSetting = function(layoutType: AGLayouts) {
+  switch (layoutType) {
+    case 'circle': return new ConcentricLayout();
+    case 'force-directed': return new ColaGlobalLayout();
+    case 'hierarchy': return new DagreGlobalLayout();
+    case 'grid': return new GridGlobalLayout();
+  }
+};

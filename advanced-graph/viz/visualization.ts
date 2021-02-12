@@ -1,5 +1,16 @@
-import type {IAdvancedGraphSettings} from '../settings';
-import {EventRef, Events, ItemView, MarkdownRenderer, Menu, TFile, Vault, Workspace, WorkspaceLeaf} from 'obsidian';
+import type {IAdvancedGraphSettings, IAGPluginSettings} from '../settings';
+import {
+  Component,
+  EventRef,
+  Events,
+  ItemView,
+  MarkdownRenderer,
+  Menu,
+  TFile,
+  Vault,
+  Workspace,
+  WorkspaceLeaf,
+} from 'obsidian';
 import type AdvancedGraphPlugin from '../main';
 import cytoscape, {
   Collection,
@@ -28,7 +39,7 @@ import {
 } from '../constants';
 import {LocalMode} from './local-mode';
 import type {LayoutSettings} from './layout-settings';
-import {ColaGlobalLayout} from './layout-settings';
+import {ColaGlobalLayout, getLayoutSetting} from './layout-settings';
 import {filter} from './query-builder';
 
 export const AG_VIEW_TYPE = 'advanced_graph_view';
@@ -36,7 +47,8 @@ export const MD_VIEW_TYPE = 'markdown';
 
 let VIEW_COUNTER = 0;
 
-export class AdvancedGraphView extends ItemView {
+export class AdvancedGraph extends Component {
+    element: Element;
     workspace: Workspace;
     settings: IAdvancedGraphSettings;
     initialNode: string;
@@ -54,40 +66,38 @@ export class AdvancedGraphView extends ItemView {
     vizReady = false;
     activeFilter: string = '';
 
-    constructor(leaf: WorkspaceLeaf, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[]) {
-      super(leaf);
-      // TODO: Maybe make this configurable
-      leaf.setPinned(true);
-      this.settings = plugin.settings;
-      this.workspace = this.app.workspace;
+    constructor(element: Element, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[], settings: IAdvancedGraphSettings) {
+      super();
+      this.element = element;
+      this.settings = settings;
+      this.workspace = plugin.app.workspace;
       this.initialNode = initialNode;
-      this.vault = this.app.vault;
+      this.vault = plugin.app.vault;
       this.plugin = plugin;
       this.datastores = dataStores;
       this.events = new Events();
-      this.layoutSettings = new ColaGlobalLayout();
-      if (this.settings.defaultMode === 'local') {
+      this.layoutSettings = getLayoutSetting(settings.layout);
+      if (this.settings.mode === 'local') {
         this.mode = new LocalMode(this);
-      } else if (this.settings.defaultMode === 'workspace') {
+      } else if (this.settings.mode === 'workspace') {
         this.mode = new WorkspaceMode(this);
       }
       this.addChild(this.mode);
     }
 
-    async onOpen() {
-      const viewContent = this.containerEl.children[1];
-      viewContent.addClass('cy-content');
+    async onload() {
+      this.element.addClass('cy-content');
       // Ensure the canvas fits the whole container
-      viewContent.setAttr('style', 'padding: 0');
+      this.element.setAttr('style', 'padding: 0');
 
       const toolbarDiv = document.createElement('div');
       toolbarDiv.addClass('cy-toolbar');
-      viewContent.appendChild(toolbarDiv);
+      this.element.appendChild(toolbarDiv);
       this.mode.createToolbar(toolbarDiv);
 
       const div = document.createElement('div');
       div.id = 'cy' + VIEW_COUNTER;
-      viewContent.appendChild(div);
+      this.element.appendChild(div);
       div.setAttr('style', 'height: 100%; width:100%');
       div.setAttr('tabindex', '0');
 
@@ -133,7 +143,7 @@ export class AdvancedGraphView extends ItemView {
       this.viz.add(edges);
       this.onGraphChanged(true);
 
-      if (this.settings.debug) {
+      if (this.plugin.settings.debug) {
         console.log(nodes);
         console.log(edges);
       }
@@ -153,7 +163,7 @@ export class AdvancedGraphView extends ItemView {
         if (!(id.storeId === 'core')) {
           return;
         }
-        const file = this.app.metadataCache.getFirstLinkpathDest(id.id, '');
+        const file = this.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
         if (file) {
           await this.plugin.openFile(file);
         } else {
@@ -247,10 +257,10 @@ export class AdvancedGraphView extends ItemView {
         if (!(e.target === this.viz) && e.target.group() === 'nodes') {
           const id = VizId.fromNode(e.target);
           e.target.select();
-          const file = this.app.metadataCache.getFirstLinkpathDest(id.id, '');
+          const file = this.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
           if (!(file === undefined)) {
             // hook for plugins to populate menu with "file-aware" menu items
-            this.app.workspace.trigger('file-menu', fileMenu, file, 'my-context-menu', null);
+            this.plugin.app.workspace.trigger('file-menu', fileMenu, file, 'my-context-menu', null);
           }
         }
         this.mode.fillMenu(fileMenu);
@@ -346,7 +356,7 @@ export class AdvancedGraphView extends ItemView {
     async buildEdges(newNodes: NodeCollection): Promise<EdgeDefinition[]> {
       const edges: EdgeDefinition[] = [];
       for (const store of this.datastores) {
-        edges.push(...await store.connectNodes(this.viz.nodes(), newNodes));
+        edges.push(...await store.connectNodes(this.viz.nodes(), newNodes, this));
       }
       return edges;
     }
@@ -380,7 +390,7 @@ export class AdvancedGraphView extends ItemView {
       return await sheet.getStylesheet();
     }
 
-    protected async onClose(): Promise<void> {
+    onunload(): void {
     }
 
     // updateWithCypher(cypher: string) {
@@ -500,7 +510,7 @@ export class AdvancedGraphView extends ItemView {
         this.mode = new WorkspaceMode(this);
       }
       this.addChild(this.mode);
-      this.mode.createToolbar(this.containerEl.children[1].children[0]);
+      this.mode.createToolbar(this.element.children[1].children[0]);
     }
 
     searchFilter(query: string) {
@@ -512,16 +522,6 @@ export class AdvancedGraphView extends ItemView {
       this.activeFilter = query;
       this.restartLayout();
     }
-
-
-    getDisplayText(): string {
-      return 'Advanced Graph';
-    }
-
-    getViewType(): string {
-      return AG_VIEW_TYPE;
-    }
-
 
     public getPinned() {
       return this.viz.nodes(`.${CLASS_PINNED}`);

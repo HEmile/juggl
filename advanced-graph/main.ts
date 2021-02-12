@@ -4,10 +4,11 @@ import {
   Plugin, ReferenceCache, TFile, Vault,
 } from 'obsidian';
 import {
-  IAdvancedGraphSettings,
+  IAGPluginSettings,
   AdvancedGraphSettingTab,
-  DefaultAdvancedGraphSettings} from './settings';
-import {AdvancedGraphView, AG_VIEW_TYPE, MD_VIEW_TYPE} from './viz/visualization';
+  DefaultAdvancedGraphSettings, AGLayouts, LAYOUTS, DefaultAdvancedGraphEmbedSettings,
+} from './settings';
+import {AdvancedGraph, AG_VIEW_TYPE, MD_VIEW_TYPE} from './viz/visualization';
 import type {Editor} from 'codemirror';
 import {ImageServer} from './image-server';
 import type {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
@@ -22,6 +23,8 @@ import dagre from 'cytoscape-dagre';
 import dblclick from 'cytoscape-dblclick';
 import {addIcons} from './ui/icons';
 import {STYLESHEET_PATH} from './viz/stylesheet';
+import {AdvancedGraphView} from './viz/ag-view';
+import YAML from 'yaml';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -36,10 +39,9 @@ export default class AdvancedGraphPlugin extends Plugin {
     static CAT_DANGLING = 'dangling';
     static nameRegex = '[^\\W\\d]\\w*';
 
-    settings: IAdvancedGraphSettings;
+    settings: IAGPluginSettings;
     path: string;
     // statusBar: HTMLElement;
-    agView: AdvancedGraphView;//
     // neo4jStream: Neo4jStream;
     vault: Vault;
     metadata: MetadataCache
@@ -66,7 +68,8 @@ export default class AdvancedGraphPlugin extends Plugin {
       this.addChild(obsidianStore);
       this.registerCoreStore(obsidianStore, OBSIDIAN_STORE_NAME);
 
-      this.settings = Object.assign(DefaultAdvancedGraphSettings, await this.loadData());
+      this.settings = Object.assign({}, DefaultAdvancedGraphSettings, await this.loadData());
+      this.settings.graphSettings = Object.assign({}, DefaultAdvancedGraphSettings.graphSettings, this.settings.graphSettings);
 
       // this.statusBar = this.addStatusBarItem();
       // this.statusBar.setText(STATUS_OFFLINE);
@@ -152,7 +155,6 @@ export default class AdvancedGraphPlugin extends Plugin {
         });
       }));
       const path = (this.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
-      console.log(path);
 
       // If this doesn't work nicely,
       // The Obsidian-way is this.registerEvent( this.app.vault.on("raw", {} );
@@ -160,11 +162,33 @@ export default class AdvancedGraphPlugin extends Plugin {
       require('original-fs').watch(path,
           async (curr:any, prev:any) => {
             console.log('Updating graph stylesheet');
-            for (const view of this.activeViews()) {
+            for (const view of this.activeGraphs()) {
               const style = await view.createStylesheet();
               view.viz.style(style);
             }
           });
+      this.registerMarkdownCodeBlockProcessor('advanced-graph', (src, el, context) => {
+        const parsed = YAML.parse(src);
+        try {
+          const localNote = parsed.local;
+          const settings = Object.assign({}, DefaultAdvancedGraphEmbedSettings, parsed);
+          if (!(LAYOUTS.contains(settings.layout))) {
+            throw `Invalid layout. Choose one from ${LAYOUTS}`;
+          }
+          setTimeout(() => {
+            el.style.width = settings.width;
+            el.style.height = settings.height;
+          }, 200);
+          console.log(settings);
+          this.addChild(new AdvancedGraph(el, this, localNote, [this.coreStores[settings.coreStore]].concat(this.stores), settings));
+        } catch (error) {
+          // taken from https://github.com/jplattel/obsidian-query-language/blob/main/src/renderer.ts
+          const errorElement = document.createElement('div');
+          errorElement.addClass('ag-error');
+          errorElement.innerText = error;
+          el.appendChild(errorElement);
+        }
+      });
     }
 
     public async openFile(file: TFile) {
@@ -180,7 +204,7 @@ export default class AdvancedGraphPlugin extends Plugin {
     async openLocalGraph(name: string) {
       const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
       // const query = this.localNeighborhoodCypher(name);
-      const neovisView = new AdvancedGraphView(leaf, this, name, [this.coreStores[this.settings.coreStore]].concat(this.stores));
+      const neovisView = new AdvancedGraphView(leaf, this, name);
       await leaf.open(neovisView);
     }
 
@@ -348,10 +372,11 @@ export default class AdvancedGraphPlugin extends Plugin {
     //   }
     // }
 
-    public activeViews(): AdvancedGraphView[] {
+    public activeGraphs(): AdvancedGraph[] {
+      // TODO: This is not a great method, no way to find back the inline graphs!
       return this.app.workspace
           .getLeavesOfType(AG_VIEW_TYPE)
-          .map((l) => l.view as AdvancedGraphView);
+          .map((l) => (l.view as AdvancedGraphView).advancedGraph);
     }
 
     async onunload() {

@@ -59,6 +59,7 @@
     "cytoscape-popper": "^2.0.0",
     "path": "^0.12.7",
     "search-query-parser": "^1.5.5",
-    "svelte": "^3.32.1"
+    "svelte": "^3.32.1",
+    "yaml": "^1.10.0"
   }
 }

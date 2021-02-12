@@ -1,6 +1,6 @@
 import type {IAGMode} from '../interfaces';
 import type {EventNames, EventObject, NodeSingular} from 'cytoscape';
-import type {AdvancedGraphView} from './visualization';
+import type {AdvancedGraph} from './visualization';
 import type {NodeCollection} from 'cytoscape';
 import type {Menu} from 'obsidian';
 import ToolbarLocal from '../ui/ToolbarLocal.svelte';
@@ -35,7 +35,7 @@ export class LocalMode extends Component implements IAGMode {
     events: EventRec[] = [];
     windowEvent: any;
     toolbar: SvelteComponent;
-    constructor(view: AdvancedGraphView) {
+    constructor(view: AdvancedGraph) {
       super();
       this.view = view;
     }
@@ -58,7 +58,7 @@ export class LocalMode extends Component implements IAGMode {
         if (!(id.storeId === 'core')) {
           return;
         }
-        const file = this.view.app.metadataCache.getFirstLinkpathDest(id.id, '');
+        const file = this.view.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
         if (file) {
           await this.onOpenFile(file);
         }

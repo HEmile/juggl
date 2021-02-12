@@ -16,7 +16,7 @@ import type {
   NodeCollection,
   EdgeDataDefinition, Collection,
 } from 'cytoscape';
-import type {AdvancedGraphView} from './viz/visualization';
+import type {AdvancedGraph} from './viz/visualization';
 import {CLASS_EXPANDED} from './constants';
 import {VizId} from './interfaces';
 
@@ -39,7 +39,7 @@ export class ObsidianStore extends Component implements IDataStore {
       return this.events;
     }
 
-    async createEdges(srcFile: TFile, srcId: string, toNodes: NodeCollection): Promise<EdgeDefinition[]> {
+    async createEdges(srcFile: TFile, srcId: string, toNodes: NodeCollection, graph: AdvancedGraph): Promise<EdgeDefinition[]> {
       const cache = this.metadata.getFileCache(srcFile);
       if (!cache) {
         return [];
@@ -80,7 +80,7 @@ export class ObsidianStore extends Component implements IDataStore {
           }
         }
       });
-      if (this.plugin.settings.mergeEdges) {
+      if (graph.settings.mergeEdges) {
         // Merges inline edges.
         const returnEdges: EdgeDefinition[] = [];
         for (const edgeId of Object.keys(edges)) {
@@ -115,7 +115,7 @@ ${edge.data.context}`;
       return [].concat(...Object.values(edges));
     }
 
-    async connectNodes(allNodes: NodeCollection, newNodes: NodeCollection): Promise<EdgeDefinition[]> {
+    async connectNodes(allNodes: NodeCollection, newNodes: NodeCollection, graph: AdvancedGraph): Promise<EdgeDefinition[]> {
       const edges: EdgeDefinition[] = [];
       // Find edges from newNodes to other nodes
       // @ts-ignore
@@ -126,7 +126,7 @@ ${edge.data.context}`;
           if (file) {
             const srcId = id.toId();
 
-            edges.push(...await this.createEdges(file, srcId, allNodes));
+            edges.push(...await this.createEdges(file, srcId, allNodes, graph));
           }
         }
       }
@@ -140,7 +140,7 @@ ${edge.data.context}`;
             const srcId = id.toId();
 
             // Connect only to newNodes!
-            edges.push(...await this.createEdges(file, srcId, newNodes));
+            edges.push(...await this.createEdges(file, srcId, newNodes, graph));
           }
         }
       }
@@ -292,7 +292,7 @@ ${edge.data.context}`;
       return Promise.resolve(this.nodeFromFile(file));
     }
 
-    async refreshNode(view: AdvancedGraphView, id: VizId) {
+    async refreshNode(view: AdvancedGraph, id: VizId) {
       const idS = id.toId();
       let correctEdges: Collection;
       let node = view.viz.$id(idS);
@@ -320,7 +320,7 @@ ${edge.data.context}`;
       this.registerEvent(
           this.metadata.on('changed', (file) => {
             console.log('changed');
-            store.plugin.activeViews().forEach(async (v) => {
+            store.plugin.activeGraphs().forEach(async (v) => {
               await store.refreshNode(v, VizId.fromFile(file));
             });
           }));
@@ -329,7 +329,7 @@ ${edge.data.context}`;
             if (file instanceof TFile) {
               const id = VizId.fromFile(file);
               const oldId = VizId.fromPath(oldPath);
-              store.plugin.activeViews().forEach(async (v) => {
+              store.plugin.activeGraphs().forEach(async (v) => {
                 setTimeout(async ()=> {
                   // Changing the ID of a node in Cytoscape is not allowed, so remove and then restore.
                   // Put in setTimeout because Obsidian doesn't immediately update the metadata on rename...
@@ -342,7 +342,7 @@ ${edge.data.context}`;
       this.registerEvent(
           this.vault.on('delete', (file) => {
             if (file instanceof TFile) {
-              store.plugin.activeViews().forEach((v) => {
+              store.plugin.activeGraphs().forEach((v) => {
                 v.viz.$id(VizId.fromFile(file).toId()).remove();
               });
             }
