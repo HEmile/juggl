@@ -70,8 +70,11 @@ const _parseAtomicQuery = function(query: string, nodes: NodeCollection): NodeCo
   };
   const parsedQuery = searchQuery.parse(query, options) as ISearchParserDictionary;
   let filteredNodes = nodes.filter(_selectorFromAtomic(parsedQuery));
-  if ('exclude' in Object.keys(parsedQuery)) {
-    filteredNodes = filteredNodes.not(_selectorFromAtomic(parsedQuery.exclude));
+  if (parsedQuery.exclude) {
+    const notQuery = _selectorFromAtomic(parsedQuery.exclude);
+    if (!(notQuery === 'node')) {
+      filteredNodes = filteredNodes.not(notQuery);
+    }
   }
   return filteredNodes;
 };
