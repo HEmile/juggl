@@ -159,11 +159,11 @@ ${edge.data.context}`;
       return new VizId(name, this.storeId());
     }
 
-    getNodeFromLink(link: ReferenceCache, sourcePath: string) : NodeDefinition {
+    async getNodeFromLink(link: ReferenceCache, sourcePath: string) : Promise<NodeDefinition> {
       const path = getLinkpath(link.link);
       const file = this.metadata.getFirstLinkpathDest(path, sourcePath);
       if (file) {
-        return this.nodeFromFile(file);
+        return await this.nodeFromFile(file);
       } else {
         return this.nodeDangling(path);
       }
@@ -173,7 +173,7 @@ ${edge.data.context}`;
       return this.metadata.getFirstLinkpathDest(nodeId.id, '');
     }
 
-    fillWithBacklinks(nodes: Record<string, NodeDefinition>, nodeId: VizId) {
+    async fillWithBacklinks(nodes: Record<string, NodeDefinition>, nodeId: VizId) {
       // Could be an expensive operation... No cached backlinks implementation is available in the Obsidian API though.
       if (nodeId.storeId === 'core') {
         const path = this.getFile(nodeId).path;
@@ -184,14 +184,14 @@ ${edge.data.context}`;
             const file = this.vault.getAbstractFileByPath(otherPath) as TFile;
             const id = VizId.fromFile(file).toId();
             if (!(id in nodes)) {
-              nodes[id] = this.nodeFromFile(file);
+              nodes[id] = await this.nodeFromFile(file);
             }
           }
         }
       }
     }
 
-    nodeFromFile(file: TFile) : NodeDefinition {
+    async nodeFromFile(file: TFile) : Promise<NodeDefinition> {
       const cache = this.metadata.getFileCache(file);
       const name = file.extension === 'md' ? file.basename : file.name;
       const classes = this.plugin.getClasses(file).join(' ');
@@ -199,10 +199,12 @@ ${edge.data.context}`;
       const data = {
         id: VizId.toId(name, this.storeId()),
         name: name,
+        path: file.path,
         resource_url: `http://localhost:${this.plugin.settings.imgServerPort}/${encodeURI(file.path)}`,
       } as NodeDataDefinition;
       const frontmatter = cache?.frontmatter;
       if (frontmatter) {
+        data['content'] = await this.vault.cachedRead(file);
         Object.keys(frontmatter).forEach((k) => {
           if (!(k === 'position')) {
             if (k === 'image') {
@@ -252,15 +254,21 @@ ${edge.data.context}`;
             continue;
           }
           if (!(nodeId.toId() in nodes)) {
-            nodes[nodeId.toId()] = this.nodeFromFile(file);
+            nodes[nodeId.toId()] = await this.nodeFromFile(file);
           }
+          const promiseNodes: Record<string, Promise<NodeDefinition>> = {};
           iterateCacheRefs(cache, (ref) => {
             const id = this.getOtherId(ref, file.path).toId();
             if (!(id in nodes)) {
-              nodes[id] = this.getNodeFromLink(ref, file.path);
+              promiseNodes[id] = this.getNodeFromLink(ref, file.path);
             }
           });
-          this.fillWithBacklinks(nodes, nodeId);
+          for (const id of Object.keys(promiseNodes)) {
+            if (!(id in nodes)) {
+              nodes[id] = await promiseNodes[id];
+            }
+          }
+          await this.fillWithBacklinks(nodes, nodeId);
         }
       }
       return Object.values(nodes);

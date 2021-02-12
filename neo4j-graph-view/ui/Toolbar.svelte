@@ -2,11 +2,10 @@
     import {icons} from "./icons";
     import {Core} from "cytoscape";
     import ToolbarButton from "./ToolbarButton.svelte";
-
     export let viz: Core;
-    export let fdgdClick;
+    export let fdgdClick;//
     export let concentricClick;
-    export let gridClick;
+    export let gridClick;//
     export let hierarchyClick;
     export let expandClick;
     export let collapseClick;
@@ -18,6 +17,7 @@
     export let unlockClick;
     export let fitClick;
     export let localModeClick;
+    export let filterInput;
 
     let disableOnNoneSelected = false;
     let disableOnAllPinned = false;
@@ -35,6 +35,7 @@
     }
 
 </script>
+
 
 <!--<div class="cy-toolbar">-->
 <div class="cy-toolbar-section">
@@ -69,3 +70,4 @@
                    disabled="{disableOnNonePinned}" title="Unlock selected nodes in place (U)"/>
 </div>
 <!--</div>-->
+<br /><label for="ag-filter">Filter: </label><input type="text" id="ag-filter" name="ag-filter" on:input={filterInput}>

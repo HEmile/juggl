@@ -91,9 +91,17 @@ div.cy-navigator {
     margin: 1px;
     padding: 1px;
     border-color: var(--background-modifier-border);
+    border-radius: 4px;
     border-width: 1px;
     border-style: solid;
 }
+.cy-toolbar > input[type='text'] {
+    font-size: var(--font-small);
+    background-color: var(--background-secondary);
+    height: 30px;
+    padding: 5px 7px;
+}
+
 
 button.advanced-graph-button {
     width: 27px;

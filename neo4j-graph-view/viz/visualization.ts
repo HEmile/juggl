@@ -20,7 +20,7 @@ import {VizId} from '../interfaces';
 import {
   CLASS_ACTIVE_FILE,
   CLASS_CONNECTED_HOVER,
-  CLASS_EXPANDED,
+  CLASS_EXPANDED, CLASS_FILTERED,
   CLASS_HOVER,
   CLASS_PINNED, CLASS_PROTECTED,
   CLASS_UNHOVER, CLASSES,
@@ -29,7 +29,7 @@ import {
 import {LocalMode} from './local-mode';
 import type {LayoutSettings} from './layout-settings';
 import {ColaGlobalLayout} from './layout-settings';
-
+import {filter} from './query-builder';
 
 export const AG_VIEW_TYPE = 'advanced_graph_view';
 export const MD_VIEW_TYPE = 'markdown';
@@ -52,6 +52,7 @@ export class AdvancedGraphView extends ItemView {
     hoverTimeout: Record<string, Timeout> = {};
     mode: IAGMode;
     vizReady = false;
+    activeFilter: string = '';
 
     constructor(leaf: WorkspaceLeaf, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[]) {
       super(leaf);
@@ -499,6 +500,16 @@ export class AdvancedGraphView extends ItemView {
       }
       this.addChild(this.mode);
       this.mode.createToolbar(this.containerEl.children[1].children[0]);
+    }
+
+    searchFilter(query: string) {
+      // The query here is in approximately the format of Obsidian search queries
+      // This is much less efficient than using selectors, so only use this if you need to parse user input.
+      this.viz.nodes().removeClass(CLASS_FILTERED);
+      const filteredNodes = filter(query, this.viz.nodes());
+      this.viz.nodes().difference(filteredNodes).addClass(CLASS_FILTERED);
+      this.activeFilter = query;
+      this.restartLayout();
     }
 
 

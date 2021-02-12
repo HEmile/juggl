@@ -125,6 +125,9 @@ export class WorkspaceMode extends Component implements IAGMode {
       if (!(this.view.workspace.activeLeaf === this.view.leaf)) {
         return;
       }
+      if (!evt.metaKey) {
+        return;
+      }
       if (evt.key === 'e') {
         await this.expandSelection();
       } else if (evt.key === 'h' || evt.key === 'Backspace') {
@@ -254,6 +257,10 @@ export class WorkspaceMode extends Component implements IAGMode {
         unlockClick: this.unpinSelection.bind(this),
         fitClick: this.view.fitView.bind(this.view),
         localModeClick: () => this.view.setMode('local'),
+        filterInput: (handler: InputEvent) => {
+          // @ts-ignore
+          this.view.searchFilter(handler.target.value);
+        },
       },
     });
     this.view.on('selectChange', this.toolbar.onSelect.bind(this.toolbar));

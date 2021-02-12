@@ -58,6 +58,7 @@
     "cytoscape-navigator": "^2.0.1",
     "cytoscape-popper": "^2.0.0",
     "path": "^0.12.7",
+    "search-query-parser": "^1.5.5",
     "svelte": "^3.32.1"
   }
 }

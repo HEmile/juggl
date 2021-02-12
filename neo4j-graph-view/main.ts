@@ -254,12 +254,13 @@ export default class AdvancedGraphPlugin extends Plugin {
         } else if (file.extension === 'pdf') {
           classes.push('pdf');
         }
-        if (!(file.parent.name === '/' || file.parent.name === '')) {
-          classes.push(`folder-${file.parent.name
-              .replace(' ', '_')}`);
-        } else {
-          classes.push('root');
-        }
+        // This is replaced by the 'path' data attribute.
+        // if (!(file.parent.name === '/' || file.parent.name === '')) {
+        //   classes.push(`folder-${file.parent.name
+        //       .replace(' ', '_')}`);
+        // } else {
+        //   classes.push('root');
+        // }
         if (file.extension === 'md') {
           classes.push('note');
           const cache = this.app.metadataCache.getFileCache(file);

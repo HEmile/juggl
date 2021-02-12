@@ -3,14 +3,14 @@
   "compilerOptions": {
     "baseUrl": ".",
     "module": "ESNext",
-    "target": "es2015",
+    "target": "es2020",
     "noImplicitAny": true,
     "importHelpers": true,
     "lib": [
       "dom",
       "es5",
       "scripthost",
-      "es2015",
+      "es2020",
       "dom.iterable"
     ],
     "esModuleInterop": true,

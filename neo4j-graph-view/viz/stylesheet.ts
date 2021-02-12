@@ -211,6 +211,9 @@ node.protected {
     ghost-offset-y: 1px;
     ghost-opacity: 0.5;
 }
+node.filtered {
+    display: none;
+}
 `;
     }
 
