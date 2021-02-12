@@ -125,7 +125,7 @@ export class WorkspaceMode extends Component implements IAGMode {
       if (!(this.view.workspace.activeLeaf === this.view.leaf)) {
         return;
       }
-      if (!evt.metaKey) {
+      if (!(document.activeElement === document.body)) {
         return;
       }
       if (evt.key === 'e') {

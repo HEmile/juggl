@@ -100,7 +100,7 @@ export class AdvancedGraphView extends ItemView {
         container: div,
         elements: nodes,
         minZoom: 8e-1,
-        maxZoom: 1.3e1,
+        maxZoom: 6.3e4,
       });
       this.viz.dblclick();
 
@@ -483,8 +483,9 @@ export class AdvancedGraphView extends ItemView {
         this.viz.endBatch();
       }
 
-      this.restartLayout();
       this.trigger('elementsChange');
+      this.searchFilter(this.activeFilter);
+      this.restartLayout();
     }
 
     public getViz(): Core {

@@ -9,6 +9,7 @@
     export let hierarchyClick;
     export let fitClick;
     export let workspaceModeClick;
+    export let filterInput;
 
 </script>
 
@@ -22,3 +23,4 @@
     <ToolbarButton icon={icons.ag_fit} onClick={fitClick} title="Fit view"/>
     <ToolbarButton icon={icons.ag_workspace} onClick={workspaceModeClick} title="Workspace mode"/>
 </div>
+<br /><label for="ag-filter">Filter: </label><input type="text" id="ag-filter" name="ag-filter" on:input={filterInput}>

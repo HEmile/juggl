@@ -40,6 +40,7 @@ export class LocalMode extends Component implements IAGMode {
       this.view = view;
     }
 
+
     onload() {
       if (this.view.vizReady) {
         this._onLoad();
@@ -139,6 +140,10 @@ export class LocalMode extends Component implements IAGMode {
           gridClick: () => this.view.setLayout(new GridGlobalLayout()),
           hierarchyClick: () => this.view.setLayout(new DagreGlobalLayout()),
           workspaceModeClick: () => view.setMode('workspace'),
+          filterInput: (handler: InputEvent) => {
+            // @ts-ignore
+            this.view.searchFilter(handler.target.value);
+          },
         },
       });
       // this.view.on('vizReady', (viz) => {
