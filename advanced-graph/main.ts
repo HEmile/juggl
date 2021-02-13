@@ -6,9 +6,9 @@ import {
 import {
   IAGPluginSettings,
   AdvancedGraphSettingTab,
-  DefaultAdvancedGraphSettings, AGLayouts, LAYOUTS, DefaultAdvancedGraphEmbedSettings,
+  DefaultAdvancedGraphSettings, LAYOUTS, DefaultAdvancedGraphEmbedSettings,
 } from './settings';
-import {AdvancedGraph, AG_VIEW_TYPE, MD_VIEW_TYPE} from './viz/visualization';
+import {AdvancedGraph, MD_VIEW_TYPE} from './viz/visualization';
 import type {Editor} from 'codemirror';
 import {ImageServer} from './image-server';
 import type {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
@@ -25,6 +25,7 @@ import {addIcons} from './ui/icons';
 import {STYLESHEET_PATH} from './viz/stylesheet';
 import {AdvancedGraphView} from './viz/ag-view';
 import YAML from 'yaml';
+import {AG_VIEW_TYPE} from './constants';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts

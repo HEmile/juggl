@@ -136,7 +136,7 @@ button.advanced-graph-button:disabled > svg > path {
 
 button[data-tooltip] {
     position: relative;
-    z-index: 2;
+    z-index: 1010;
     /*display: block;*/
 }
 
@@ -168,7 +168,7 @@ button[data-tooltip]:before {
     text-align: center;
     font-size: 14px;
     line-height: 1.2;
-    transition: .2s ease-out
+    transition: .2s ease-out;
 }
 
 button[data-tooltip]:after {

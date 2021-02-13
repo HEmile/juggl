@@ -1,7 +1,7 @@
 import {ItemView, WorkspaceLeaf} from 'obsidian';
 import type AdvancedGraphPlugin from '../main';
-import type {IDataStore} from '../interfaces';
-import {AdvancedGraph, AG_VIEW_TYPE} from './visualization';
+import {AdvancedGraph} from './visualization';
+import {AG_VIEW_TYPE} from '../constants';
 
 export class AdvancedGraphView extends ItemView {
      advancedGraph: AdvancedGraph;

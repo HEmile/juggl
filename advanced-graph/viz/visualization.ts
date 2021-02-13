@@ -42,7 +42,6 @@ import type {LayoutSettings} from './layout-settings';
 import {ColaGlobalLayout, getLayoutSetting} from './layout-settings';
 import {filter} from './query-builder';
 
-export const AG_VIEW_TYPE = 'advanced_graph_view';
 export const MD_VIEW_TYPE = 'markdown';
 
 let VIEW_COUNTER = 0;
@@ -76,6 +75,7 @@ export class AdvancedGraph extends Component {
       this.plugin = plugin;
       this.datastores = dataStores;
       this.events = new Events();
+      this.activeFilter = settings.filter;
       this.layoutSettings = getLayoutSetting(settings.layout);
       if (this.settings.mode === 'local') {
         this.mode = new LocalMode(this);
@@ -89,11 +89,14 @@ export class AdvancedGraph extends Component {
       this.element.addClass('cy-content');
       // Ensure the canvas fits the whole container
       this.element.setAttr('style', 'padding: 0');
+      this.element.setAttr('tabindex', 0);
 
-      const toolbarDiv = document.createElement('div');
-      toolbarDiv.addClass('cy-toolbar');
-      this.element.appendChild(toolbarDiv);
-      this.mode.createToolbar(toolbarDiv);
+      if (this.settings.toolbar) {
+        const toolbarDiv = document.createElement('div');
+        toolbarDiv.addClass('cy-toolbar');
+        this.element.appendChild(toolbarDiv);
+        this.mode.createToolbar(toolbarDiv);
+      }
 
       const div = document.createElement('div');
       div.id = 'cy' + VIEW_COUNTER;
@@ -157,6 +160,10 @@ export class AdvancedGraph extends Component {
       console.log('Visualization ready');
 
       const view = this;
+      this.viz.on('tap', async (e) => {
+        // @ts-ignore
+        this.element.focus();
+      });
 
       this.viz.on('tap', 'node', async (e) => {
         const id = VizId.fromNode(e.target);
@@ -362,6 +369,9 @@ export class AdvancedGraph extends Component {
     }
 
     async expand(toExpand: NodeCollection, batch=true, triggerGraphChanged=true): Promise<Collection> {
+      if (toExpand.length === 0) {
+        return null;
+      }
       if (batch) {
         this.viz.startBatch();
       }
@@ -510,7 +520,9 @@ export class AdvancedGraph extends Component {
         this.mode = new WorkspaceMode(this);
       }
       this.addChild(this.mode);
-      this.mode.createToolbar(this.element.children[1].children[0]);
+      if (this.settings.toolbar) {
+        this.mode.createToolbar(this.element.children[1].children[0]);
+      }
     }
 
     searchFilter(query: string) {

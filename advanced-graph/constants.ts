@@ -17,3 +17,5 @@ export const VIEWPORT_ANIMATION_TIME = 250;
 export const LAYOUT_ANIMATION_TIME = 1500;
 export const DISCRETE_LAYOUT_ANIMATION_TIME = 500;
 export const DISCRETE_SPACING_FACTOR = 0.5;
+
+export const AG_VIEW_TYPE = 'advanced_graph_view';

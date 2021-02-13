@@ -7,6 +7,7 @@ import Toolbar from '../ui/Toolbar.svelte';
 import {Component} from 'obsidian';
 import {VizId} from '../interfaces';
 import {
+  AG_VIEW_TYPE,
   CLASS_ACTIVE_FILE,
   CLASS_CONNECTED_ACTIVE_FILE, CLASS_EXPANDED,
   CLASS_INACTIVE_FILE, CLASS_PINNED, CLASS_PROTECTED,
@@ -20,7 +21,6 @@ import {
   DagreGlobalLayout,
   GridGlobalLayout,
 } from './layout-settings';
-import {AdvancedGraphView} from './ag-view';
 
 
 class EventRec {
@@ -42,7 +42,6 @@ export class WorkspaceMode extends Component implements IAGMode {
   }
 
   onload() {
-    console.log('oon load');
     if (this.view.vizReady) {
       this._onLoad();
     } else {
@@ -72,6 +71,9 @@ export class WorkspaceMode extends Component implements IAGMode {
 
     // Register on file open event
     this.registerEvent(this.view.workspace.on('file-open', async (file) => {
+      if (!this.view.settings.autoAddNodes) {
+        return;
+      }
       if (file && this.view.settings.autoAddNodes) {
         const name = file.basename;
         const id = new VizId(name, 'core');
@@ -122,11 +124,7 @@ export class WorkspaceMode extends Component implements IAGMode {
     }));
 
     this.windowEvent = async (evt: KeyboardEvent) => {
-      // TODO: Find a better way to ensure focus...
-      if (!(this.view.workspace.activeLeaf instanceof AdvancedGraphView)) {
-        return;
-      }
-      if (!(document.activeElement === document.body)) {
+      if (!(document.activeElement === this.view.element)) {
         return;
       }
       if (evt.key === 'e') {
@@ -149,7 +147,7 @@ export class WorkspaceMode extends Component implements IAGMode {
     };
     // // Register keypress event
     // Note: Registered on window because it wouldn't fire on the div...
-    window.addEventListener('keydown', this.windowEvent, true);
+    document.on('keydown', '.cy-content', this.windowEvent, true);
   }
 
   registerCyEvent(name: EventNames, selector: string, callback: any) {
@@ -170,7 +168,7 @@ export class WorkspaceMode extends Component implements IAGMode {
       }
     }
     this.events = [];
-    window.removeEventListener('keydown', this.windowEvent);
+    document.off('keydown', '.cy-content', this.windowEvent, true);
     this.toolbar.$destroy();
   }
 

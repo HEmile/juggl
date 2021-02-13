@@ -10,6 +10,7 @@ export type AGLayouts = 'force-directed' | 'circle' | 'grid' | 'hierarchy';
 export interface IAdvancedGraphSettings {
     autoAddNodes: boolean;
     navigator: boolean;
+    toolbar: boolean;
     coreStore: string;
     mergeEdges: boolean;
     mode: string;
@@ -17,6 +18,7 @@ export interface IAdvancedGraphSettings {
     autoExpand: boolean;
     layout: AGLayouts;
     limit: number;
+    filter: string;
 }
 
 export interface IAGEmbedSettings extends IAdvancedGraphSettings {
@@ -45,6 +47,7 @@ export const DefaultAdvancedGraphSettings: IAGPluginSettings = {
     autoAddNodes: true,
     autoExpand: false,
     navigator: true,
+    toolbar: true,
     hoverEdges: false,
     mergeEdges: true,
     coreStore: OBSIDIAN_STORE_NAME,
@@ -52,12 +55,14 @@ export const DefaultAdvancedGraphSettings: IAGPluginSettings = {
     layout: 'force-directed',
     // TODO: Not currently used anywhere
     limit: 10000,
+    filter: '',
   },
 };
 
 export const DefaultAdvancedGraphEmbedSettings: IAGEmbedSettings = {
   autoAddNodes: false,
   autoExpand: false,
+  toolbar: false,
   coreStore: OBSIDIAN_STORE_NAME,
   hoverEdges: false,
   mergeEdges: true,
@@ -65,6 +70,7 @@ export const DefaultAdvancedGraphEmbedSettings: IAGEmbedSettings = {
   navigator: false,
   layout: 'force-directed',
   limit: 1000,
+  filter: '',
   width: '100%',
   height: '500px',
 };

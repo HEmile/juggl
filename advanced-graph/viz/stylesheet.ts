@@ -146,6 +146,10 @@ node:selected[degree] {
   background-clip: node;
 }
 
+.image.note {
+  font-size: mapData(degree, 0, 60, 5, 11);
+}
+
 edge {
   line-color: ${lineColor};
   loop-sweep: -50deg;
