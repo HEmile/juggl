@@ -208,39 +208,6 @@ export default class AdvancedGraphPlugin extends Plugin {
       const neovisView = new AdvancedGraphView(leaf, this, name);
       await leaf.open(neovisView);
     }
-
-    getLinesOffsetToGoal(start: number, goal: string, step = 1, cm: Editor): number {
-      // Code taken from https://github.com/mrjackphil/obsidian-text-expand/blob/0.6.4/main.ts
-      const lineCount = cm.lineCount();
-      let offset = 0;
-
-      while (!isNaN(start + offset) && start + offset < lineCount && start + offset >= 0) {
-        const result = goal === cm.getLine(start + offset);
-        if (result) {
-          return offset;
-        }
-        offset += step;
-      }
-
-      return start;
-    }
-
-    getContentBetweenLines(fromLineNum: number, startLine: string, endLine: string, cm: Editor) {
-      // Code taken from https://github.com/mrjackphil/obsidian-text-expand/blob/0.6.4/main.ts
-      const topOffset = this.getLinesOffsetToGoal(fromLineNum, startLine, -1, cm);
-      const botOffset = this.getLinesOffsetToGoal(fromLineNum, endLine, 1, cm);
-
-      const topLine = fromLineNum + topOffset + 1;
-      const botLine = fromLineNum + botOffset - 1;
-
-      if (!(cm.getLine(topLine - 1) === startLine && cm.getLine(botLine + 1) === endLine)) {
-        return '';
-      }
-
-      return cm.getRange({line: topLine || fromLineNum, ch: 0},
-          {line: botLine || fromLineNum, ch: cm.getLine(botLine)?.length});
-    }
-
     // nodeCypher(label: string): string {
     //   return 'MATCH (n) WHERE n.name="' + label +
     //         '" AND n.' + PROP_VAULT + '="' + this.app.vault.getName() +

@@ -2,6 +2,7 @@
     import {icons} from "./icons";
     import {Core} from "cytoscape";
     import ToolbarButton from "./ToolbarButton.svelte";
+    import {debounce} from "obsidian";
     export let viz: Core;
     export let fdgdClick;//
     export let concentricClick;
@@ -18,6 +19,8 @@
     export let fitClick;
     export let localModeClick;
     export let filterInput;
+
+    filterInput = debounce(filterInput, 500, true);
 
     let disableOnNoneSelected = false;
     let disableOnAllPinned = false;

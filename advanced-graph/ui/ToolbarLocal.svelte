@@ -2,6 +2,7 @@
     import {icons} from "./icons";
     // import {Core} from "cytoscape";
     import ToolbarButton from "./ToolbarButton.svelte";
+    import {debounce} from "obsidian";
 
     export let fdgdClick;
     export let concentricClick;
@@ -10,6 +11,7 @@
     export let fitClick;
     export let workspaceModeClick;
     export let filterInput;
+    filterInput = debounce(filterInput, 500, true);
 
 </script>
 
