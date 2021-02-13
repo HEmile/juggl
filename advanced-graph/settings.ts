@@ -72,7 +72,7 @@ export const DefaultAdvancedGraphEmbedSettings: IAGEmbedSettings = {
   limit: 1000,
   filter: '',
   width: '100%',
-  height: '500px',
+  height: '400px',
 };
 
 
