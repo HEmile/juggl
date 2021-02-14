@@ -1,7 +1,7 @@
 import type AdvancedGraphPlugin from '../main';
 import type {FileSystemAdapter} from 'obsidian';
 import {promises as fs} from 'fs';
-//
+
 export const STYLESHEET_PATH = './.obsidian/plugins/neo4j-graph-view/graph.css';
 
 const YAML_MODIFY_SHEET = `
@@ -140,6 +140,7 @@ node:selected[degree] {
   height: 50;
   background-opacity: 0;
   background-image: data(resource_url);
+  background-image-crossorigin: anonymous;
   background-image-opacity: 1;
   background-fit: contain;
   font-size: 0;

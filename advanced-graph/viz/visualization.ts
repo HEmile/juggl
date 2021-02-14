@@ -523,7 +523,7 @@ export class AdvancedGraph extends Component {
       }
       this.addChild(this.mode);
       if (this.settings.toolbar) {
-        this.mode.createToolbar(this.element.children[1].children[0]);
+        this.mode.createToolbar(this.element.children[0]);
       }
     }
 
