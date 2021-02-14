@@ -6,20 +6,21 @@ import {
 import {
   IAGPluginSettings,
   AdvancedGraphSettingTab,
-  DefaultAdvancedGraphSettings, LAYOUTS, DefaultAdvancedGraphEmbedSettings,
+  DefaultAdvancedGraphSettings, LAYOUTS,
 } from './settings';
 import {AdvancedGraph, MD_VIEW_TYPE} from './viz/visualization';
 import type {Editor} from 'codemirror';
 import {ImageServer} from './image-server';
 import type {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
-import cytoscape from 'cytoscape';
+import cytoscape from 'cytoscape';//
 // import coseBilkent from 'cytoscape-cose-bilkent';
 import navigator from 'cytoscape-navigator';
 import popper from 'cytoscape-popper';
 import cola from 'cytoscape-cola';
 import avsdf from 'cytoscape-avsdf';
 import dagre from 'cytoscape-dagre';
+import d3Force from 'cytoscape-d3-force';
 import dblclick from 'cytoscape-dblclick';
 import {addIcons} from './ui/icons';
 import {STYLESHEET_PATH} from './viz/stylesheet';
@@ -58,6 +59,7 @@ export default class AdvancedGraphPlugin extends Plugin {
       cytoscape.use(cola);
       cytoscape.use(dagre);
       cytoscape.use(avsdf);
+      cytoscape.use(d3Force);
       cytoscape.use(dblclick);
 
       addIcons();
@@ -71,6 +73,7 @@ export default class AdvancedGraphPlugin extends Plugin {
 
       this.settings = Object.assign({}, DefaultAdvancedGraphSettings, await this.loadData());
       this.settings.graphSettings = Object.assign({}, DefaultAdvancedGraphSettings.graphSettings, this.settings.graphSettings);
+      this.settings.embedSettings = Object.assign({}, DefaultAdvancedGraphSettings.embedSettings, this.settings.embedSettings);
 
       // this.statusBar = this.addStatusBarItem();
       // this.statusBar.setText(STATUS_OFFLINE);
@@ -172,7 +175,7 @@ export default class AdvancedGraphPlugin extends Plugin {
         const parsed = YAML.parse(src);
         try {
           const localNote = parsed.local;
-          const settings = Object.assign({}, DefaultAdvancedGraphEmbedSettings, parsed);
+          const settings = Object.assign({}, this.settings.embedSettings, parsed);
           if (!(LAYOUTS.contains(settings.layout))) {
             throw `Invalid layout. Choose one from ${LAYOUTS}`;
           }

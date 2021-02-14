@@ -18,7 +18,7 @@ import {
   AVSDFGlobalLayout,
   ColaGlobalLayout,
   ConcentricLayout,
-  DagreGlobalLayout,
+  DagreGlobalLayout, getLayoutSetting,
   GridGlobalLayout,
 } from './layout-settings';
 
@@ -138,10 +138,10 @@ export class LocalMode extends Component implements IAGMode {
         props: {
           viz: this.viz,
           fitClick: this.view.fitView.bind(view),
-          fdgdClick: () => this.view.setLayout(new ColaGlobalLayout()),
-          concentricClick: () => this.view.setLayout(new ConcentricLayout()),
-          gridClick: () => this.view.setLayout(new GridGlobalLayout()),
-          hierarchyClick: () => this.view.setLayout(new DagreGlobalLayout()),
+          fdgdClick: () => this.view.setLayout(getLayoutSetting('force-directed'), this.view.settings),
+          concentricClick: () => this.view.setLayout(getLayoutSetting('circle')),
+          gridClick: () => this.view.setLayout(getLayoutSetting('grid')),
+          hierarchyClick: () => this.view.setLayout(getLayoutSetting('hierarchy')),
           workspaceModeClick: () => view.setMode('workspace'),
           filterInput: (handler: InputEvent) => {
             // @ts-ignore

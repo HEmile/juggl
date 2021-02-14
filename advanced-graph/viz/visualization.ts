@@ -76,7 +76,8 @@ export class AdvancedGraph extends Component {
       this.datastores = dataStores;
       this.events = new Events();
       this.activeFilter = settings.filter;
-      this.layoutSettings = getLayoutSetting(settings.layout);
+      // TODO: On changge of layout, this.settings should be updated
+      this.layoutSettings = getLayoutSetting(settings.layout, this.settings);
       if (this.settings.mode === 'local') {
         this.mode = new LocalMode(this);
       } else if (this.settings.mode === 'workspace') {
@@ -114,6 +115,7 @@ export class AdvancedGraph extends Component {
         elements: nodes,
         minZoom: 8e-1,
         maxZoom: 6.3e4,
+        wheelSensitivity: 0.5,
       });
       this.viz.dblclick();
 
@@ -160,7 +162,7 @@ export class AdvancedGraph extends Component {
       console.log('Visualization ready');
 
       const view = this;
-      this.viz.on('tap', async (e) => {
+      this.viz.on('tap boxselect', async (e) => {
         // @ts-ignore
         this.element.focus();
       });

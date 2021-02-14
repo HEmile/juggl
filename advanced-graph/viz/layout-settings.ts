@@ -7,7 +7,7 @@ import {
 } from '../constants';
 import type {NodeSingular} from 'cytoscape';
 import type {AdvancedGraph} from './visualization';
-import type {AGLayouts} from '../settings';
+import type {AGLayouts, IAdvancedGraphSettings} from '../settings';
 
 export interface LayoutSettings {
 
@@ -35,6 +35,57 @@ export class ColaGlobalLayout implements LayoutSettings {
       nodeSpacing: function( node: NodeSingular ) {
         return 10;
       }, // extra spacing around nodes
+    }).start();
+  }
+}
+
+export class D3GlobalLayout implements LayoutSettings {
+  startLayout(view: AdvancedGraph): Layouts {
+    console.log(view.viz);
+    return view.viz.layout({
+      name: 'd3-force',
+      // @ts-ignore
+      animate: 'end', // whether to show the layout as it's running; special 'end' value makes the layout animate like a discrete layout
+      maxIterations: 0, // max iterations before the layout will bail out
+      maxSimulationTime: LAYOUT_ANIMATION_TIME, // max length in ms to run the layout
+      ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
+      fixedAfterDragging: false, // fixed node after dragging
+      fit: false, // on every layout reposition of nodes, fit the viewport
+      padding: 30, // padding around the simulation
+      /** d3-force API**/
+      alpha: 1, // sets the current alpha to the specified number in the range [0,1]
+      alphaMin: 0.001, // sets the minimum alpha to the specified number in the range [0,1]
+      alphaDecay: 1 - Math.pow(0.001, 1 / 300), // sets the alpha decay rate to the specified number in the range [0,1]
+      alphaTarget: 0, // sets the current target alpha to the specified number in the range [0,1]
+      velocityDecay: 0.4, // sets the velocity decay factor to the specified number in the range [0,1]
+      collideRadius: (n) => {
+        console.log(n);
+        return 60;
+      }, // sets the radius accessor to the specified number or function
+      collideStrength: 0.9, // sets the force strength to the specified number in the range [0,1]
+      collideIterations: 1, // sets the number of iterations per application to the specified number
+      linkId: function id(d: any) {
+        return d.id;
+      }, // sets the node id accessor to the specified function
+      linkDistance: 150, // sets the distance accessor to the specified number or function
+      linkStrength: 0.7, // sets the strength accessor to the specified number or function. Could do something smart here
+      linkIterations: 1, // sets the number of iterations per application to the specified number
+      manyBodyStrength: -600,
+      manyBodyDistanceMin: 5,
+      xStrength: 0.1, // sets the strength accessor to the specified number or function
+      xX: 0, // sets the x-coordinate accessor to the specified number or function
+      yStrength: 0.1, // sets the strength accessor to the specified number or function
+      yY: 0, // sets the y-coordinate accessor to the specified number or function
+      radialStrength: 0.1,
+      radialX: 0, // sets the x-coordinate of the circle center to the specified number
+      radialY: 0, // sets the y-coordinate of the circle center to the specified number
+      radialRadius: 10,
+      // positioning optsions
+      randomize: false, // use random node positions at beginning of layout
+      // infinite layout options
+      infinite: false, // overrides all other options for a forces-all-the-time mode
+      ready: (e) => console.log(e),
+      stop: (e) => console.log(e),
     }).start();
   }
 }
@@ -126,11 +177,17 @@ export class ConcentricLayout implements LayoutSettings {
 }
 
 
-export const getLayoutSetting = function(layoutType: AGLayouts) {
+export const getLayoutSetting = function(layoutType: AGLayouts, settings?: IAdvancedGraphSettings) {
   switch (layoutType) {
     case 'circle': return new ConcentricLayout();
-    case 'force-directed': return new ColaGlobalLayout();
+    case 'force-directed': if (settings && settings.fdgdLayout === 'd3-force') {
+      return new D3GlobalLayout();
+    } else {
+      return new ColaGlobalLayout();
+    }
     case 'hierarchy': return new DagreGlobalLayout();
     case 'grid': return new GridGlobalLayout();
+    case 'cola': return new ColaGlobalLayout();
+    case 'd3-force': return new D3GlobalLayout();
   }
 };

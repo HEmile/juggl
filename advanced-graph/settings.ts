@@ -4,8 +4,9 @@ import type AdvancedGraphPlugin from './main';
 import {OBSIDIAN_STORE_NAME} from './obsidian-store';
 import AppearanceSettings from './ui/settings/AppearanceSettings.svelte';
 
-export const LAYOUTS = ['force-directed', 'circle', 'grid', 'hierarchy'];
-export type AGLayouts = 'force-directed' | 'circle' | 'grid' | 'hierarchy';
+export const LAYOUTS = ['force-directed', 'circle', 'grid', 'hierarchy', 'cola'];
+export type FDGDLayouts = 'cola'| 'd3-force';
+export type AGLayouts = 'force-directed' | 'circle' | 'grid' | 'hierarchy' | FDGDLayouts;
 
 export interface IAdvancedGraphSettings {
     autoAddNodes: boolean;
@@ -17,6 +18,7 @@ export interface IAdvancedGraphSettings {
     hoverEdges: boolean;
     autoExpand: boolean;
     layout: AGLayouts;
+    fdgdLayout: FDGDLayouts;
     limit: number;
     filter: string;
 }
@@ -34,6 +36,7 @@ export interface IAGPluginSettings {
     imgServerPort: number;
     debug: boolean;
     graphSettings: IAdvancedGraphSettings;
+    embedSettings: IAGEmbedSettings;
 }
 
 
@@ -53,26 +56,27 @@ export const DefaultAdvancedGraphSettings: IAGPluginSettings = {
     coreStore: OBSIDIAN_STORE_NAME,
     mode: 'local',
     layout: 'force-directed',
+    fdgdLayout: 'cola',
     // TODO: Not currently used anywhere
     limit: 10000,
     filter: '',
   },
-};
-
-export const DefaultAdvancedGraphEmbedSettings: IAGEmbedSettings = {
-  autoAddNodes: false,
-  autoExpand: false,
-  toolbar: false,
-  coreStore: OBSIDIAN_STORE_NAME,
-  hoverEdges: false,
-  mergeEdges: true,
-  mode: 'local',
-  navigator: false,
-  layout: 'force-directed',
-  limit: 1000,
-  filter: '',
-  width: '100%',
-  height: '400px',
+  embedSettings: {
+    autoAddNodes: false,
+    autoExpand: false,
+    toolbar: false,
+    coreStore: OBSIDIAN_STORE_NAME,
+    hoverEdges: false,
+    mergeEdges: true,
+    mode: 'local',
+    navigator: false,
+    layout: 'force-directed',
+    fdgdLayout: 'cola',
+    limit: 1000,
+    filter: '',
+    width: '100%',
+    height: '400px',
+  },
 };
 
 
@@ -147,6 +151,21 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
                 });
           });
 
+      new Setting(containerEl)
+          .setName('Force-directed algorithm')
+          .setDesc('The default force-directed graph drawing algorithm to use. ' +
+                'Cola is nice, but unstable in some use cases. Obsidian uses D3')
+          .addDropdown((dropdown) => {
+            dropdown.addOption('cola', 'Cola');
+            dropdown.addOption('d3-force', 'D3');
+            dropdown.setValue(this.plugin.settings.graphSettings.fdgdLayout)
+                .onChange((newValue: FDGDLayouts) => {
+                  this.plugin.settings.graphSettings.fdgdLayout = newValue;
+                  this.plugin.settings.embedSettings.fdgdLayout = newValue;
+                  this.plugin.saveData(this.plugin.settings);
+                });
+          });
+
 
       new Setting(containerEl)
           .setName('Data store')
@@ -159,6 +178,7 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
             dropdown.setValue(this.plugin.settings.graphSettings.coreStore)
                 .onChange((newValue) => {
                   this.plugin.settings.graphSettings.coreStore = newValue;
+                  this.plugin.settings.embedSettings.coreStore = newValue;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
@@ -185,6 +205,7 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
             toggle.setValue(this.plugin.settings.graphSettings.hoverEdges)
                 .onChange((new_value) => {
                   this.plugin.settings.graphSettings.hoverEdges = new_value;
+                  this.plugin.settings.embedSettings.hoverEdges = new_value;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });

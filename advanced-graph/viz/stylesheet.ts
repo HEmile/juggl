@@ -174,6 +174,7 @@ edge:selected {
 }
 
 :loop {
+  display: none;
   width: mapData(edgeCount, 1, 30, 0.1, 1);
 }
 
