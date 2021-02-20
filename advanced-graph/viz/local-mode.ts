@@ -170,8 +170,8 @@ export class LocalMode extends Component implements IAGMode {
           .connectedNodes()
           .addClass(CLASS_CONNECTED_ACTIVE_NODE)
           .union(node);
-      this.viz.one('tap', (e) => {
-        e.cy.elements().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
-      });
+      // this.viz.one('tap', (e) => {
+      //   e.cy.elements().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
+      // });
     }
 }

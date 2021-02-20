@@ -57,7 +57,7 @@ export class D3GlobalLayout implements LayoutSettings {
       alphaDecay: 1 - Math.pow(0.001, 1 / 300), // sets the alpha decay rate to the specified number in the range [0,1]
       alphaTarget: 0, // sets the current target alpha to the specified number in the range [0,1]
       velocityDecay: 0.4, // sets the velocity decay factor to the specified number in the range [0,1]
-      collideRadius: (n) => {
+      collideRadius: (n: any) => {
         return 60;
       }, // sets the radius accessor to the specified number or function
       collideStrength: 0.9, // sets the force strength to the specified number in the range [0,1]

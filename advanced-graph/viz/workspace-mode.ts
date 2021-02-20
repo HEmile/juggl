@@ -403,7 +403,7 @@ export class WorkspaceMode extends Component implements IAGMode {
       });
     }
     this.viz.one('tap', (e) => {
-      e.cy.elements().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
+      e.cy.elements().removeClass([CLASS_CONNECTED_ACTIVE_NODE, CLASS_ACTIVE_NODE, CLASS_INACTIVE_NODE]);
     });
   }
 
