@@ -111,6 +111,7 @@ node {
   shape: ellipse;
   border-width: 0;
   text-wrap: wrap;
+  min-zoomed-font-size: 10;
 }
 
 node[degree] {
@@ -182,11 +183,11 @@ edge:selected {
 edge[type] {
   label: data(type);
 }
-.inactive-file,
+.inactive-node,
 .unhover {
     opacity: 0.3;
 }
-node.active-file,
+node.active-node,
 node.hover {
     background-color: ${fillHighlightColor};
     font-weight: bold;
@@ -195,7 +196,7 @@ node.hover {
     opacity: 1;
 }
 edge.hover,
-edge.connected-active-file,
+edge.connected-active-node,
 edge.connected-hover {
     width: 1;
     opacity: 1;

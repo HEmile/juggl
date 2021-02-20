@@ -1,18 +1,11 @@
-div.vis-tooltip {
-    white-space: pre-line;
-    font-family: inherit;
-    font-size: inherit;
-    width: fit-content;
-    max-width: 500px;
-    border: 0;
-    padding: 15px;
-    background-color: white;
-
-}
-
 div.neovis_setting {
     width: content-box;
 }
+
+div.cxtmenu-item {
+    opacity: 0.8;
+}
+
 /*.cytoscape-navigatorView,*/
 div.cy-navigator {
     width: 150px;

@@ -1,6 +1,6 @@
 import type {IAdvancedGraphSettings, IAGPluginSettings} from '../settings';
 import {
-  Component,
+  Component, debounce,
   EventRef,
   Events,
   ItemView,
@@ -29,12 +29,12 @@ import Timeout = NodeJS.Timeout;
 import {WorkspaceMode} from './workspace-mode';
 import {VizId} from '../interfaces';
 import {
-  CLASS_ACTIVE_FILE,
+  CLASS_ACTIVE_NODE,
   CLASS_CONNECTED_HOVER,
   CLASS_EXPANDED, CLASS_FILTERED,
   CLASS_HOVER,
   CLASS_PINNED, CLASS_PROTECTED,
-  CLASS_UNHOVER, CLASSES,
+  CLASS_UNHOVER, CLASSES, DEBOUNCE_FOLLOW, DEBOUNCE_LAYOUT,
   VIEWPORT_ANIMATION_TIME,
 } from '../constants';
 import {LocalMode} from './local-mode';
@@ -64,6 +64,8 @@ export class AdvancedGraph extends Component {
     mode: IAGMode;
     vizReady = false;
     activeFilter: string = '';
+    destroyHover: () => void = null;
+    debouncedRestartLayout: () => void;
 
     constructor(element: Element, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[], settings: IAdvancedGraphSettings) {
       super();
@@ -84,6 +86,7 @@ export class AdvancedGraph extends Component {
         this.mode = new WorkspaceMode(this);
       }
       this.addChild(this.mode);
+      this.debouncedRestartLayout = debounce(this.restartLayout, DEBOUNCE_LAYOUT, true);
     }
 
     async onload() {
@@ -113,8 +116,8 @@ export class AdvancedGraph extends Component {
       this.viz = cytoscape({
         container: div,
         elements: nodes,
-        minZoom: 8e-1,
-        maxZoom: 6.3e4,
+        minZoom: 0.3,
+        maxZoom: 10,
         wheelSensitivity: 0.5,
       });
       this.viz.dblclick();
@@ -172,19 +175,10 @@ export class AdvancedGraph extends Component {
         if (!(id.storeId === 'core')) {
           return;
         }
-        const file = this.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
-        if (file) {
-          await this.plugin.openFile(file);
-        } else {
-          // Create dangling file
-          // TODO: Add default folder
-          const filename = id.id + '.md';
-          const createdFile = await this.vault.create(filename, '');
-          await this.plugin.openFile(createdFile);
-        }
+        // TODO THIS SHOULD BE MOVED TO LOCAL MODE!
       });
       this.viz.on('tap', 'edge', async (e) => {
-        // TODO: Move to correct spot in the file.
+        // todo: move to correct spot in the file.
       });
       this.viz.on('mouseover', 'node', async (e) => {
         e.target.unlock();
@@ -275,30 +269,26 @@ export class AdvancedGraph extends Component {
         this.mode.fillMenu(fileMenu);
         fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
       });
-      this.viz.on('layoutstop', (e: EventObject) => {
-        let fitNodes: NodeCollection = null;
-        const activeFile = this.viz.nodes(`.${CLASS_ACTIVE_FILE}`);
+      this.viz.on('layoutstop', debounce((e: EventObject) => {
+        if (!this.settings.autoZoom) {
+          return;
+        }
+        let fitNodes: NodeCollection;
+        const activeFile = this.viz.nodes(`.${CLASS_ACTIVE_NODE}`);
         if (activeFile.length > 0) {
           fitNodes = activeFile.closedNeighborhood();
         } else {
           fitNodes = this.viz.nodes();
         }
-        const delayedAnimation = setTimeout(() => {
-          e.cy.animate({
-            fit: {
-              eles: fitNodes,
-              padding: 0,
-            },
-            duration: VIEWPORT_ANIMATION_TIME,
-            queue: false,
-          });
-        }, 300);
-
-        this.viz.one('layoutstart layoutstop', (e) => {
-          // This prevents janky animations happening because of many consecutive restartLayout()
-          clearTimeout(delayedAnimation);
+        e.cy.animate({
+          fit: {
+            eles: fitNodes,
+            padding: 0,
+          },
+          duration: VIEWPORT_ANIMATION_TIME,
+          queue: false,
         });
-      });
+      }, DEBOUNCE_FOLLOW, true));
       this.vizReady = true;
       this.trigger('vizReady', this.viz);
     }
@@ -340,15 +330,17 @@ export class AdvancedGraph extends Component {
       newDiv.addEventListener('mouseenter', (e) => {
         newDiv.addClass('popover-hovered');
       });
-      newDiv.addEventListener('mouseleave', (e) => {
+      this.destroyHover = () => {
         popper.destroy();
         newDiv.remove();
-      });
+        this.destroyHover = null;
+      };
+      newDiv.addEventListener('mouseleave', this.destroyHover);
+      const destroyHover = this.destroyHover;
       this.viz.one('mouseout', (e) => {
         setTimeout(function() {
           if (!newDiv.hasClass('popover-hovered')) {
-            popper.destroy();
-            newDiv.remove();
+            destroyHover();
           }
         }, 300);
       });
@@ -424,7 +416,7 @@ export class AdvancedGraph extends Component {
             .intersection(nodes.neighborhood())
             .removeClass('expanded');
         removed = nodes.remove();
-        this.onGraphChanged(false);
+        this.onGraphChanged(false, true);
       });
       return removed;
     }
@@ -493,7 +485,7 @@ export class AdvancedGraph extends Component {
       return mergedCollection;
     }
 
-    onGraphChanged(batch:boolean=true) {
+    onGraphChanged(batch:boolean=true, debounceLayout=false) {
       if (batch) {
         this.viz.startBatch();
       }
@@ -507,7 +499,13 @@ export class AdvancedGraph extends Component {
 
       this.trigger('elementsChange');
       this.searchFilter(this.activeFilter);
-      this.restartLayout();
+      console.log(debounceLayout);
+      console.log(new Date().getSeconds(), new Date().getMilliseconds());
+      if (debounceLayout) {
+        this.debouncedRestartLayout();
+      } else {
+        this.restartLayout();
+      }
     }
 
     public getViz(): Core {
@@ -534,7 +532,6 @@ export class AdvancedGraph extends Component {
       const filteredNodes = filter(query, this.viz.nodes());
       this.viz.nodes().difference(filteredNodes).addClass(CLASS_FILTERED);
       this.activeFilter = query;
-      this.restartLayout();
     }
 
     public getPinned() {

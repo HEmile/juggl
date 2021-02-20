@@ -1,6 +1,6 @@
 import type {Layouts} from 'cytoscape';
 import {
-  CLASS_ACTIVE_FILE, CLASS_EXPANDED,
+  CLASS_ACTIVE_NODE, CLASS_EXPANDED,
   DISCRETE_LAYOUT_ANIMATION_TIME,
   DISCRETE_SPACING_FACTOR,
   LAYOUT_ANIMATION_TIME,
@@ -41,7 +41,6 @@ export class ColaGlobalLayout implements LayoutSettings {
 
 export class D3GlobalLayout implements LayoutSettings {
   startLayout(view: AdvancedGraph): Layouts {
-    console.log(view.viz);
     return view.viz.layout({
       name: 'd3-force',
       // @ts-ignore
@@ -59,7 +58,6 @@ export class D3GlobalLayout implements LayoutSettings {
       alphaTarget: 0, // sets the current target alpha to the specified number in the range [0,1]
       velocityDecay: 0.4, // sets the velocity decay factor to the specified number in the range [0,1]
       collideRadius: (n) => {
-        console.log(n);
         return 60;
       }, // sets the radius accessor to the specified number or function
       collideStrength: 0.9, // sets the force strength to the specified number in the range [0,1]
@@ -84,8 +82,6 @@ export class D3GlobalLayout implements LayoutSettings {
       randomize: false, // use random node positions at beginning of layout
       // infinite layout options
       infinite: false, // overrides all other options for a forces-all-the-time mode
-      ready: (e) => console.log(e),
-      stop: (e) => console.log(e),
     }).start();
   }
 }
@@ -127,7 +123,6 @@ export class DagreGlobalLayout implements LayoutSettings {
 
 export class AVSDFGlobalLayout implements LayoutSettings {
   startLayout(view: AdvancedGraph): Layouts {
-    console.log('asvasdfsdf');
     return view.viz.layout( {
       name: 'avsdf',
       // @ts-ignore
@@ -153,11 +148,7 @@ export class ConcentricLayout implements LayoutSettings {
       animationDuration: DISCRETE_LAYOUT_ANIMATION_TIME,
       concentric: (n) =>{
         // @ts-ignore
-        console.log(n.classes());
-        // @ts-ignore
-        console.log(n.hasClass(CLASS_ACTIVE_FILE));
-        // @ts-ignore
-        if (n.hasClass(CLASS_ACTIVE_FILE)) {
+        if (n.hasClass(CLASS_ACTIVE_NODE)) {
           return 1000;
         }
         // @ts-ignore

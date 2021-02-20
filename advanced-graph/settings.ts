@@ -17,6 +17,7 @@ export interface IAdvancedGraphSettings {
     mode: string;
     hoverEdges: boolean;
     autoExpand: boolean;
+    autoZoom: boolean;
     layout: AGLayouts;
     fdgdLayout: FDGDLayouts;
     limit: number;
@@ -49,6 +50,7 @@ export const DefaultAdvancedGraphSettings: IAGPluginSettings = {
   graphSettings: {
     autoAddNodes: true,
     autoExpand: false,
+    autoZoom: false,
     navigator: true,
     toolbar: true,
     hoverEdges: false,
@@ -64,6 +66,7 @@ export const DefaultAdvancedGraphSettings: IAGPluginSettings = {
   embedSettings: {
     autoAddNodes: false,
     autoExpand: false,
+    autoZoom: false,
     toolbar: false,
     coreStore: OBSIDIAN_STORE_NAME,
     hoverEdges: false,
@@ -182,8 +185,28 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
-
-      containerEl.createEl('h3');
+      containerEl.createEl('h4', {text: 'Workspace mode'});
+      new Setting(containerEl)
+          .setName('Automatically add nodes')
+          .setDesc('This will automatically add nodes to the graph whenever a note is opened.')
+          .addToggle((toggle) => {
+            toggle.setValue(this.plugin.settings.graphSettings.autoAddNodes)
+                .onChange((new_value) => {
+                  this.plugin.settings.graphSettings.autoAddNodes = new_value;
+                  this.plugin.saveData(this.plugin.settings);
+                });
+          });
+      new Setting(containerEl)
+          .setName('Automatically zoom on active nodes')
+          .setDesc('This will automatically keep fitting the viewport on the currently active node. ' +
+                'In particular, this happens when you open a file.')
+          .addToggle((toggle) => {
+            toggle.setValue(this.plugin.settings.graphSettings.autoZoom)
+                .onChange((new_value) => {
+                  this.plugin.settings.graphSettings.autoZoom = new_value;
+                  this.plugin.saveData(this.plugin.settings);
+                });
+          });
       containerEl.createEl('h3', {text: 'Advanced'});
 
       // Not currently implemented
@@ -210,16 +233,6 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
                 });
           });
 
-      new Setting(containerEl)
-          .setName('Automatically add nodes')
-          .setDesc('This will automatically add nodes to the graph whenever a note is opened in workspace mode.')
-          .addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.graphSettings.autoAddNodes)
-                .onChange((new_value) => {
-                  this.plugin.settings.graphSettings.autoAddNodes = new_value;
-                  this.plugin.saveData(this.plugin.settings);
-                });
-          });
 
       // new Setting(containerEl)
       //     .setName('Index note content')

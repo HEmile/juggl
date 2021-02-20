@@ -9,7 +9,6 @@ import {
   DefaultAdvancedGraphSettings, LAYOUTS,
 } from './settings';
 import {AdvancedGraph, MD_VIEW_TYPE} from './viz/visualization';
-import type {Editor} from 'codemirror';
 import {ImageServer} from './image-server';
 import type {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
@@ -22,6 +21,7 @@ import avsdf from 'cytoscape-avsdf';
 import dagre from 'cytoscape-dagre';
 import d3Force from 'cytoscape-d3-force';
 import dblclick from 'cytoscape-dblclick';
+import cxtmenu from '../../cytoscape.js-cxtmenu/cytoscape-cxtmenu';
 import {addIcons} from './ui/icons';
 import {STYLESHEET_PATH} from './viz/stylesheet';
 import {AdvancedGraphView} from './viz/ag-view';
@@ -61,6 +61,8 @@ export default class AdvancedGraphPlugin extends Plugin {
       cytoscape.use(avsdf);
       cytoscape.use(d3Force);
       cytoscape.use(dblclick);
+      // @ts-ignore
+      cytoscape.use(cxtmenu);
 
       addIcons();
 
@@ -195,13 +197,13 @@ export default class AdvancedGraphPlugin extends Plugin {
       });
     }
 
-    public async openFile(file: TFile) {
+    public async openFile(file: TFile, newLeaf=false) {
       const mdLeaves = this.app.workspace.getLeavesOfType(MD_VIEW_TYPE).concat(this.app.workspace.getLeavesOfType('image'));
       // this.app.workspace.iterateAllLeaves(leaf => console.log(leaf.view.getViewType()));
-      if (mdLeaves.length > 0) {
+      if (!newLeaf && mdLeaves.length > 0) {
         await mdLeaves[0].openFile(file);//
       } else {
-        await this.app.workspace.getLeaf(true).openFile(file);
+        await this.app.workspace.getLeaf(newLeaf).openFile(file);
       }
     }
 

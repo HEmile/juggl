@@ -2,7 +2,7 @@
 import {addIcon} from 'obsidian';
 import * as mdiIcons from '@mdi/js';
 
-function pathToSvg(icon: string) {
+export function pathToSvg(icon: string) {
   return `
     <svg style= "width:24px;height:24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path fill="currentcolor" d="${icon}" />
@@ -25,6 +25,8 @@ export const icons: Record<string, string> = {
   ag_concentric: mdiIcons.mdiGraphql,
   ag_grid: mdiIcons.mdiDotsGrid,
   ag_hierarchy: mdiIcons.mdiGraph,
+  ag_file: mdiIcons.mdiFileOutline,
+  ag_filter: mdiIcons.mdiFilterOutline,
 };
 
 export const addIcons = (): void => {

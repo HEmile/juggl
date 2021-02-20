@@ -297,7 +297,7 @@ ${edge.data.context}`;
       let correctEdges: Collection;
       let node = view.viz.$id(idS);
       if (node.length > 0 && node.hasClass(CLASS_EXPANDED)) {
-        correctEdges = await view.expand(node);
+        correctEdges = await view.expand(node, true, false);
       } else {
         const nodeDef = [await this.get(id)];
         view.mergeToGraph(nodeDef, true, false);
@@ -309,7 +309,7 @@ ${edge.data.context}`;
       node.connectedEdges()
           .difference(correctEdges)
           .remove();
-      view.onGraphChanged();
+      view.onGraphChanged(true, true);
       // TODO: I don't think this one here was correct / should be needed.
       // view.updateActiveFile(node.nodes() as NodeSingular, true);
     }

@@ -15,6 +15,9 @@ export default {
   },
   external: ['obsidian'],
   plugins: [
+    commonjs({
+      include: ['node_modules/**', '../../cytoscape.js-cxtmenu/**'],
+    }),
     svelte({
       emitCss: false,
       preprocess: autoPreprocess(),
@@ -22,9 +25,6 @@ export default {
     typescript(),
     nodeResolve({browser: true,
       dedupe: ['svelte']}),
-    commonjs({
-      include: 'node_modules/**',
-    }),
     copy({
       targets: [
         {src: 'main.js', dest: '../../semantic-obsidian/Semantic Obsidian/.obsidian/plugins/neo4j-graph-view'},

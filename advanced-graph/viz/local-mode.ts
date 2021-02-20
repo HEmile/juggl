@@ -7,19 +7,14 @@ import ToolbarLocal from '../ui/ToolbarLocal.svelte';
 import {Component, TFile} from 'obsidian';
 import {VizId} from '../interfaces';
 import {
-  CLASS_ACTIVE_FILE,
-  CLASS_CONNECTED_ACTIVE_FILE,
-  CLASS_INACTIVE_FILE, CLASS_PINNED, CLASS_PROTECTED,
-  VIEWPORT_ANIMATION_TIME,
+  CLASS_ACTIVE_NODE,
+  CLASS_CONNECTED_ACTIVE_NODE,
+  CLASS_INACTIVE_NODE, CLASS_PINNED, CLASS_PROTECTED,
 } from '../constants';
 import type {Core} from 'cytoscape';
 import type {SvelteComponent} from 'svelte';
 import {
-  AVSDFGlobalLayout,
-  ColaGlobalLayout,
-  ConcentricLayout,
   DagreGlobalLayout, getLayoutSetting,
-  GridGlobalLayout,
 } from './layout-settings';
 
 
@@ -58,7 +53,16 @@ export class LocalMode extends Component implements IAGMode {
         if (!(id.storeId === 'core')) {
           return;
         }
-        const file = this.view.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
+        let file = this.view.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
+        if (file) {
+          await this.view.plugin.openFile(file);
+        } else {
+          // create dangling file
+          // todo: add default folder
+          const filename = id.id + '.md';
+          file = await this.view.vault.create(filename, '');
+          await this.view.plugin.openFile(file);
+        }
         if (file) {
           await this.onOpenFile(file);
         }
@@ -91,9 +95,8 @@ export class LocalMode extends Component implements IAGMode {
       } else {
         node = this.viz.$id(id.toId());
       }
-      console.log('Here');
       await this.view.expand(node, false);
-      node.addClass(CLASS_ACTIVE_FILE);
+      node.addClass(CLASS_ACTIVE_NODE);
       this.viz.nodes()
           .difference(node.closedNeighborhood())
           .remove();
@@ -138,7 +141,7 @@ export class LocalMode extends Component implements IAGMode {
         props: {
           viz: this.viz,
           fitClick: this.view.fitView.bind(view),
-          fdgdClick: () => this.view.setLayout(getLayoutSetting('force-directed'), this.view.settings),
+          fdgdClick: () => this.view.setLayout(getLayoutSetting('force-directed', this.view.settings)),
           concentricClick: () => this.view.setLayout(getLayoutSetting('circle')),
           gridClick: () => this.view.setLayout(getLayoutSetting('grid')),
           hierarchyClick: () => this.view.setLayout(getLayoutSetting('hierarchy')),
@@ -146,6 +149,7 @@ export class LocalMode extends Component implements IAGMode {
           filterInput: (handler: InputEvent) => {
             // @ts-ignore
             this.view.searchFilter(handler.target.value);
+            this.view.restartLayout();
           },
         },
       });
@@ -157,14 +161,14 @@ export class LocalMode extends Component implements IAGMode {
 
     updateActiveFile(node: NodeCollection) {
       this.viz.elements()
-          .removeClass([CLASS_CONNECTED_ACTIVE_FILE, CLASS_ACTIVE_FILE, CLASS_INACTIVE_FILE])
+          .removeClass([CLASS_CONNECTED_ACTIVE_NODE, CLASS_ACTIVE_NODE, CLASS_INACTIVE_NODE])
           .difference(node.closedNeighborhood())
-          .addClass(CLASS_INACTIVE_FILE);
-      node.addClass(CLASS_ACTIVE_FILE);
+          .addClass(CLASS_INACTIVE_NODE);
+      node.addClass(CLASS_ACTIVE_NODE);
       node.connectedEdges()
-          .addClass(CLASS_CONNECTED_ACTIVE_FILE)
+          .addClass(CLASS_CONNECTED_ACTIVE_NODE)
           .connectedNodes()
-          .addClass(CLASS_CONNECTED_ACTIVE_FILE)
+          .addClass(CLASS_CONNECTED_ACTIVE_NODE)
           .union(node);
       this.viz.one('tap', (e) => {
         e.cy.elements().removeClass(['connected-active-file', 'active-file', 'inactive-file']);

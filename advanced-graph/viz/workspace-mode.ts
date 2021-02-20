@@ -8,19 +8,17 @@ import {Component} from 'obsidian';
 import {VizId} from '../interfaces';
 import {
   AG_VIEW_TYPE,
-  CLASS_ACTIVE_FILE,
-  CLASS_CONNECTED_ACTIVE_FILE, CLASS_EXPANDED,
-  CLASS_INACTIVE_FILE, CLASS_PINNED, CLASS_PROTECTED,
+  CLASS_ACTIVE_NODE,
+  CLASS_CONNECTED_ACTIVE_NODE, CLASS_EXPANDED,
+  CLASS_INACTIVE_NODE, CLASS_PINNED, CLASS_PROTECTED,
   VIEWPORT_ANIMATION_TIME,
 } from '../constants';
 import type {Core} from 'cytoscape';
 import type {SvelteComponent} from 'svelte';
 import {
-  ColaGlobalLayout,
-  ConcentricLayout,
-  DagreGlobalLayout, getLayoutSetting,
-  GridGlobalLayout,
+  getLayoutSetting,
 } from './layout-settings';
+import {icons, pathToSvg} from '../ui/icons';
 
 
 class EventRec {
@@ -36,6 +34,7 @@ export class WorkspaceMode extends Component implements IAGMode {
   windowEvent: any;
   toolbar: SvelteComponent;
   recursionPreventer = false;
+  menu: any;
   constructor(view: AdvancedGraph) {
     super();
     this.view = view;
@@ -53,12 +52,122 @@ export class WorkspaceMode extends Component implements IAGMode {
 
   _onLoad() {
     this.viz = this.view.viz;
-    this.registerCyEvent('tap', 'node', async (e: EventObject) => {
-      const id = VizId.fromNode(e.target);
-      if (!(id.storeId === 'core')) {
-        return;
+
+    const mode = this;
+    const view = this.view;
+    const style = getComputedStyle(document.body);
+    const selectColor = style.getPropertyValue('--text-selection');
+    const backgroundColor = style.getPropertyValue('--background-secondary');
+    const textColor = style.getPropertyValue('--text-normal');
+    const font = style.getPropertyValue('--text');
+    console.log(selectColor);
+    // the default values of each option are outlined below:
+    const defaults = {
+      menuRadius: 70, // the outer radius (node center to the end of the menu) in pixels. It is added to the rendered size of the node. Can either be a number or function as in the example.
+      selector: 'node', // elements matching this Cytoscape.js selector will trigger cxtmenus
+      commands: (n: NodeSingular) => {
+        const commands = [];
+        const id = VizId.fromNode(n);
+        if (id.storeId === 'core') {
+          commands.push({
+            content: pathToSvg(icons.ag_file),
+            select: async function(ele: NodeSingular, event: Event) {
+              mode.updateActiveFile(ele, true);
+              const file = mode.view.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
+              if (file) {
+                // @ts-ignore
+                await mode.view.plugin.openFile(file, event.originalEvent.metaKey);
+              } else {
+                // Create dangling file
+                // TODO: Add default folder
+                const filename = id.id + '.md';
+                const createdFile = await mode.view.vault.create(filename, '');
+                // @ts-ignore
+                await mode.view.plugin.openFile(createdFile, event.originalEvent.metaKey);
+              }
+            },
+            enabled: true,
+          });
+        }
+
+        commands.push(
+            {
+              content: pathToSvg(icons.ag_hide),
+              select: function(ele: NodeSingular) {
+                mode.removeNodes(ele);
+              },
+              enabled: true,
+            },
+            {
+              content: pathToSvg(icons.ag_fit),
+              select: function(ele: NodeSingular) {
+                mode.updateActiveFile(ele, true);
+              },
+              enabled: true, // whether the command is selectable
+            });
+        if (n.hasClass(CLASS_PINNED)) {
+          commands.push({
+            content: pathToSvg(icons.ag_unlock),
+            select: function(ele: NodeSingular) {
+              mode.unpin(ele);
+            },
+            enabled: true, // whether the command is selectable
+          });
+        } else {
+          commands.push({
+            content: pathToSvg(icons.ag_lock),
+            select: function(ele: NodeSingular) {
+              mode.pin(ele);
+            },
+            enabled: true, // whether the command is selectable
+          });
+        }
+        if (n.hasClass(CLASS_EXPANDED)) {
+          commands.push({
+            content: pathToSvg(icons.ag_collapse),
+            select: function(ele: NodeSingular) {
+              view.removeNodes(ele);
+            },
+            enabled: true, // whether the command is selectable
+          });
+        } else {
+          commands.push({
+            content: pathToSvg(icons.ag_expand),
+            select: function(ele: NodeSingular) {
+              view.expand(ele);
+            },
+            enabled: true, // whether the command is selectable
+          });
+        }
+        console.log(commands);
+        return commands;
+      }, // function( ele ){ return [ /*...*/ ] }, // a function that returns commands or a promise of commands
+      fillColor: `${backgroundColor}`, // the background colour of the menu
+      activeFillColor: `${selectColor}`, // the colour used to indicate the selected command
+      activePadding: 20, // additional size in pixels for the active command
+      indicatorSize: 24, // the size in pixels of the pointer to the active command, will default to the node size if the node size is smaller than the indicator size,
+      separatorWidth: 3, // the empty spacing in pixels between successive commands
+      spotlightPadding: 0, // extra spacing in pixels between the element and the spotlight
+      adaptativeNodeSpotlightRadius: true, // specify whether the spotlight radius should adapt to the node size
+      // minSpotlightRadius: 12, // the minimum radius in pixels of the spotlight (ignored for the node if adaptativeNodeSpotlightRadius is enabled but still used for the edge & background)
+      // maxSpotlightRadius: 28, // the maximum radius in pixels of the spotlight (ignored for the node if adaptativeNodeSpotlightRadius is enabled but still used for the edge & background)
+      openMenuEvents: 'taphold', // space-separated cytoscape events that will open the menu; only `cxttapstart` and/or `taphold` work here
+      itemColor: `${textColor}`, // the colour of text in the command's content
+      itemTextShadowColor: 'transparent', // the text shadow colour of the command's content
+      zIndex: 9999, // the z-index of the ui div
+      atMouse: false, // draw menu at mouse position
+      outsideMenuCancel: 15,
+    };
+
+    // @ts-ignore
+    this.menu = this.viz.cxtmenu( defaults );
+    console.log(this.menu);
+
+
+    this.registerCyEvent('taphold', 'node', (e: EventObject) => {
+      if (this.view.destroyHover) {
+        this.view.destroyHover();
       }
-      this.updateActiveFile(e.target, true);
     });
 
     this.registerCyEvent('dblclick', 'node', async (e: EventObject) => {
@@ -87,7 +196,7 @@ export class WorkspaceMode extends Component implements IAGMode {
               this.viz.add(node).addClass(CLASS_PROTECTED);
               const edges = await this.view.buildEdges(this.viz.$id(id.toId()));
               this.viz.add(edges);
-              this.view.onGraphChanged(false);
+              this.view.onGraphChanged(false, true);
               this.viz.endBatch();
               followImmediate = false;
               break;
@@ -105,23 +214,24 @@ export class WorkspaceMode extends Component implements IAGMode {
       this.updateActiveFile(expanded, false);
     }));
 
-    this.registerEvent(this.view.on('elementsChange', () => {
-      if (this.recursionPreventer) {
-        return;
-      }
-      // Remove nodes that are not protected and not connected to expanded nodes
-      this.viz.nodes()
-          .difference(this.viz.nodes(`.${CLASS_PROTECTED}`))
-          .filter((ele) => {
-            // If none in the closed neighborhood are expanded.
-            // Note that the closed neighborhood includes the current note.
-            return ele.closedNeighborhood(`node.${CLASS_PROTECTED}`).length === 0;
-          })
-          .remove();
-      this.recursionPreventer = true;
-      this.view.onGraphChanged();
-      this.recursionPreventer = false;
-    }));
+    // TODO: What to do with this?
+    // this.registerEvent(this.view.on('elementsChange', () => {
+    //   if (this.recursionPreventer) {
+    //     return;
+    //   }
+    //   // Remove nodes that are not protected and not connected to expanded nodes
+    //   this.viz.nodes()
+    //       .difference(this.viz.nodes(`.${CLASS_PROTECTED}`))
+    //       .filter((ele) => {
+    //         // If none in the closed neighborhood are expanded.
+    //         // Note that the closed neighborhood includes the current note.
+    //         return ele.closedNeighborhood(`node.${CLASS_PROTECTED}`).length === 0;
+    //       })
+    //       .remove();
+    //   this.recursionPreventer = true;
+    //   this.view.onGraphChanged();
+    //   this.recursionPreventer = false;
+    // }));
 
     this.windowEvent = async (evt: KeyboardEvent) => {
       if (!(document.activeElement === this.view.element)) {
@@ -170,6 +280,7 @@ export class WorkspaceMode extends Component implements IAGMode {
     this.events = [];
     document.off('keydown', '.cy-content', this.windowEvent, true);
     this.toolbar.$destroy();
+    this.menu.destroy();
   }
 
   getName(): string {
@@ -243,7 +354,7 @@ export class WorkspaceMode extends Component implements IAGMode {
       props: {
         viz: this.viz,
         expandClick: this.expandSelection.bind(this),
-        fdgdClick: () => this.view.setLayout(getLayoutSetting('force-directed'), , this.view.settings),
+        fdgdClick: () => this.view.setLayout(getLayoutSetting('force-directed', this.view.settings)),
         concentricClick: () => this.view.setLayout(getLayoutSetting('circle')),
         gridClick: () => this.view.setLayout(getLayoutSetting('grid')),
         hierarchyClick: () => this.view.setLayout(getLayoutSetting('hierarchy')),
@@ -259,6 +370,7 @@ export class WorkspaceMode extends Component implements IAGMode {
         filterInput: (handler: InputEvent) => {
           // @ts-ignore
           this.view.searchFilter(handler.target.value);
+          this.view.restartLayout();
         },
       },
     });
@@ -271,16 +383,16 @@ export class WorkspaceMode extends Component implements IAGMode {
 
   updateActiveFile(node: NodeCollection, followImmediate: boolean) {
     this.viz.elements()
-        .removeClass([CLASS_CONNECTED_ACTIVE_FILE, CLASS_ACTIVE_FILE, CLASS_INACTIVE_FILE])
+        .removeClass([CLASS_CONNECTED_ACTIVE_NODE, CLASS_ACTIVE_NODE, CLASS_INACTIVE_NODE])
         .difference(node.closedNeighborhood())
-        .addClass(CLASS_INACTIVE_FILE);
-    node.addClass(CLASS_ACTIVE_FILE);
+        .addClass(CLASS_INACTIVE_NODE);
+    node.addClass(CLASS_ACTIVE_NODE);
     const neighbourhood = node.connectedEdges()
-        .addClass(CLASS_CONNECTED_ACTIVE_FILE)
+        .addClass(CLASS_CONNECTED_ACTIVE_NODE)
         .connectedNodes()
-        .addClass(CLASS_CONNECTED_ACTIVE_FILE)
+        .addClass(CLASS_CONNECTED_ACTIVE_NODE)
         .union(node);
-    if (followImmediate) {
+    if (this.view.settings.autoZoom && followImmediate) {
       this.viz.animate({
         fit: {
           eles: neighbourhood,
@@ -312,14 +424,16 @@ export class WorkspaceMode extends Component implements IAGMode {
         .remove();
     // can this cause race conditions with on elementsChange?
     this.recursionPreventer = true;
-    this.view.onGraphChanged();
+    this.view.onGraphChanged(true, true);
     this.recursionPreventer = false;
   }
-
-  removeSelection() {
-    const removed = this.view.removeNodes(this.viz.nodes(':selected'));
-    this.view.trigger('hide', removed);
+  removeNodes(nodes: NodeCollection) {
+    this.view.removeNodes(nodes);
+    this.view.trigger('hide', nodes);
     this.view.trigger('selectChange');
+  }
+  removeSelection() {
+    this.removeNodes(this.viz.nodes(':selected'));
   }
 
   selectAll() {
@@ -344,19 +458,27 @@ export class WorkspaceMode extends Component implements IAGMode {
     this.view.trigger('selectChange');
   }
 
-  unpinSelection() {
-    const unlocked = this.viz.nodes(':selected')
+  unpin(nodes: NodeCollection) {
+    const unlocked = nodes
         .unlock()
         .removeClass(CLASS_PINNED);
     this.view.restartLayout();
     this.view.trigger('unpin', unlocked);
   }
 
-  pinSelection() {
-    const locked = this.viz.nodes(':selected')
+  unpinSelection() {
+    this.unpin(this.viz.nodes(':selected'));
+  }
+
+  pin(nodes: NodeCollection) {
+    const locked = nodes
         .lock()
         .addClass(CLASS_PINNED);
     this.view.restartLayout();
     this.view.trigger('pin', locked);
+  }
+
+  pinSelection() {
+    this.pin(this.viz.nodes(':selected'));
   }
 }
