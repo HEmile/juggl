@@ -160,7 +160,7 @@ edge {
   target-arrow-shape: vee;
   target-arrow-fill: filled;
   target-arrow-color: ${lineColor};
-  arrow-scale: 0.5;
+  arrow-scale: mapData(edgeCount, 1, 50, 0.35, 1.5);
   font-size: 6;
   font-family: ${font};
   color: ${textColor};

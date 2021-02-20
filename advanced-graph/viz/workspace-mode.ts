@@ -72,19 +72,8 @@ export class WorkspaceMode extends Component implements IAGMode {
           commands.push({
             content: pathToSvg(icons.ag_file),
             select: async function(ele: NodeSingular, event: Event) {
-              mode.updateActiveFile(ele, true);
-              const file = mode.view.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
-              if (file) {
-                // @ts-ignore
-                await mode.view.plugin.openFile(file, event.originalEvent.metaKey);
-              } else {
-                // Create dangling file
-                // TODO: Add default folder
-                const filename = id.id + '.md';
-                const createdFile = await mode.view.vault.create(filename, '');
-                // @ts-ignore
-                await mode.view.plugin.openFile(createdFile, event.originalEvent.metaKey);
-              }
+              // @ts-ignore
+              await mode.openFile(ele, event.originalEvent.metaKey);
             },
             enabled: true,
           });
@@ -163,6 +152,13 @@ export class WorkspaceMode extends Component implements IAGMode {
     this.menu = this.viz.cxtmenu( defaults );
     console.log(this.menu);
 
+    this.registerCyEvent('tap', 'node', async (e: EventObject) => {
+      if (e.originalEvent.metaKey) {
+        await this.openFile(e.target, true);
+      } else if (e.originalEvent.shiftKey) {
+        await this.openFile(e.target, false);
+      }
+    });
 
     this.registerCyEvent('taphold', 'node', (e: EventObject) => {
       if (this.view.destroyHover) {
@@ -253,6 +249,10 @@ export class WorkspaceMode extends Component implements IAGMode {
         this.unpinSelection();
       } else if (evt.key === 'c') {
         this.collapseSelection();
+      } else if (evt.key === 'v') {
+        this.view.fitView();
+      } else if (evt.key === 'f') {
+        this.view.fitView(this.viz.nodes(':selected'));
       }
     };
     // // Register keypress event
@@ -379,6 +379,25 @@ export class WorkspaceMode extends Component implements IAGMode {
       this.toolbar.$set({viz: viz});
       this.toolbar.onSelect.bind(this.toolbar)();
     });
+  }
+  async openFile(node: NodeSingular, newLeaf: boolean) {
+    this.updateActiveFile(node, true);
+    const id = VizId.fromNode(node);
+    if (!(id.storeId === 'core')) {
+      return;
+    }
+    const file = this.view.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
+    if (file) {
+    // @ts-ignore
+      await this.view.plugin.openFile(file, newLeaf);
+    } else {
+    // Create dangling file
+    // TODO: Add default folder
+      const filename = id.id + '.md';
+      const createdFile = await this.view.vault.create(filename, '');
+      // @ts-ignore
+      await mode.view.plugin.openFile(createdFile, newLeaf);
+    }
   }
 
   updateActiveFile(node: NodeCollection, followImmediate: boolean) {

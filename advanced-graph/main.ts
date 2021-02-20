@@ -1,6 +1,6 @@
 import {
   FileSystemAdapter,
-  MarkdownView, MetadataCache, parseFrontMatterTags,
+  MarkdownView, MetadataCache, parseFrontMatterStringArray, parseFrontMatterTags,
   Plugin, ReferenceCache, TFile, Vault,
 } from 'obsidian';
 import {
@@ -267,6 +267,9 @@ export default class AdvancedGraphPlugin extends Plugin {
             }
             if ('tags' in cache.frontmatter) {
               classes.push(...this._parseTags(parseFrontMatterTags(cache.frontmatter)));
+            }
+            if ('cssclass' in cache.frontmatter) {
+              classes.push(...parseFrontMatterStringArray(cache.frontmatter, 'cssclass'));
             }
           }
           if (cache?.tags) {

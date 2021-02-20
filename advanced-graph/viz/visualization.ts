@@ -118,7 +118,7 @@ export class AdvancedGraph extends Component {
         elements: nodes,
         minZoom: 0.3,
         maxZoom: 10,
-        wheelSensitivity: 0.5,
+        wheelSensitivity: this.settings.zoomSpeed,
       });
       this.viz.dblclick();
 
@@ -199,7 +199,7 @@ export class AdvancedGraph extends Component {
             const content = await view.vault.cachedRead(file);
             this.hoverTimeout[e.target.id()] = setTimeout(async () =>
               await this.popover(content, file.path, e.target, 'advanced-graph-preview-node'),
-            500);
+            400);
           }
         }
       });
@@ -218,7 +218,7 @@ export class AdvancedGraph extends Component {
           this.hoverTimeout[e.target.id()] = setTimeout(async () =>
           // @ts-ignore
             await this.popover(edge.data()['context'], '', edge, 'advanced-graph-preview-edge'),
-          500);
+          800);
         }
       });
       this.viz.on('mouseout', (e) => {
@@ -422,8 +422,12 @@ export class AdvancedGraph extends Component {
     }
 
 
-    fitView() {
-      this.viz.fit();
+    fitView(nodes?: NodeCollection) {
+      if (nodes) {
+        this.viz.fit(nodes);
+      } else {
+        this.viz.fit();
+      }
     }
 
     // getInQuery(nodes: IdType[]): string {

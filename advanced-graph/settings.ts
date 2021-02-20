@@ -22,6 +22,7 @@ export interface IAdvancedGraphSettings {
     fdgdLayout: FDGDLayouts;
     limit: number;
     filter: string;
+    zoomSpeed: number;
 }
 
 export interface IAGEmbedSettings extends IAdvancedGraphSettings {
@@ -62,6 +63,7 @@ export const DefaultAdvancedGraphSettings: IAGPluginSettings = {
     // TODO: Not currently used anywhere
     limit: 10000,
     filter: '',
+    zoomSpeed: 1,
   },
   embedSettings: {
     autoAddNodes: false,
@@ -79,6 +81,7 @@ export const DefaultAdvancedGraphSettings: IAGPluginSettings = {
     filter: '',
     width: '100%',
     height: '400px',
+    zoomSpeed: 1,
   },
 };
 
@@ -208,7 +211,21 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
                 });
           });
       containerEl.createEl('h3', {text: 'Advanced'});
-
+      new Setting(containerEl)
+          .setName('Zoom speed')
+          .setDesc('Speed with which zooming in and out happens. ' +
+              'A value of 1 is recommended, but can be too quick for some mice.')
+          .addSlider((slider) => {
+            slider
+                .setDynamicTooltip()
+                .setLimits(0.01, 1.5, 0.01)
+                .setValue(this.plugin.settings.graphSettings.zoomSpeed)
+                .onChange((newValue ) =>{
+                  this.plugin.settings.graphSettings.zoomSpeed = newValue;
+                  this.plugin.settings.embedSettings.zoomSpeed = newValue;
+                  this.plugin.saveData(this.plugin.settings);
+                });
+          });
       // Not currently implemented
       // new Setting(containerEl)
       //     .setName('Automatic expand')
