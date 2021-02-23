@@ -9,7 +9,7 @@ import {VizId} from '../interfaces';
 import {
   AG_VIEW_TYPE,
   CLASS_ACTIVE_NODE,
-  CLASS_CONNECTED_ACTIVE_NODE, CLASS_EXPANDED,
+  CLASS_CONNECTED_ACTIVE_NODE, CLASS_EXPANDED, CLASS_HARD_FILTERED,
   CLASS_INACTIVE_NODE, CLASS_PINNED, CLASS_PROTECTED,
   VIEWPORT_ANIMATION_TIME,
 } from '../constants';
@@ -60,7 +60,6 @@ export class WorkspaceMode extends Component implements IAGMode {
     const backgroundColor = style.getPropertyValue('--background-secondary');
     const textColor = style.getPropertyValue('--text-normal');
     const font = style.getPropertyValue('--text');
-    console.log(selectColor);
     // the default values of each option are outlined below:
     const defaults = {
       menuRadius: 70, // the outer radius (node center to the end of the menu) in pixels. It is added to the rendered size of the node. Can either be a number or function as in the example.
@@ -115,7 +114,7 @@ export class WorkspaceMode extends Component implements IAGMode {
           commands.push({
             content: pathToSvg(icons.ag_collapse),
             select: function(ele: NodeSingular) {
-              view.removeNodes(ele);
+              mode.removeNodes(ele);
             },
             enabled: true, // whether the command is selectable
           });
@@ -153,10 +152,8 @@ export class WorkspaceMode extends Component implements IAGMode {
     console.log(this.menu);
 
     this.registerCyEvent('tap', 'node', async (e: EventObject) => {
-      if (e.originalEvent.metaKey) {
-        await this.openFile(e.target, true);
-      } else if (e.originalEvent.shiftKey) {
-        await this.openFile(e.target, false);
+      if (e.originalEvent.shiftKey) {
+        await this.openFile(e.target, e.originalEvent.metaKey);
       }
     });
 
@@ -211,23 +208,23 @@ export class WorkspaceMode extends Component implements IAGMode {
     }));
 
     // TODO: What to do with this?
-    // this.registerEvent(this.view.on('elementsChange', () => {
-    //   if (this.recursionPreventer) {
-    //     return;
-    //   }
-    //   // Remove nodes that are not protected and not connected to expanded nodes
-    //   this.viz.nodes()
-    //       .difference(this.viz.nodes(`.${CLASS_PROTECTED}`))
-    //       .filter((ele) => {
-    //         // If none in the closed neighborhood are expanded.
-    //         // Note that the closed neighborhood includes the current note.
-    //         return ele.closedNeighborhood(`node.${CLASS_PROTECTED}`).length === 0;
-    //       })
-    //       .remove();
-    //   this.recursionPreventer = true;
-    //   this.view.onGraphChanged();
-    //   this.recursionPreventer = false;
-    // }));
+    this.registerEvent(this.view.on('elementsChange', () => {
+      if (this.recursionPreventer) {
+        return;
+      }
+      // Remove nodes that are not protected and not connected to expanded nodes
+      this.viz.nodes()
+          .difference(this.viz.nodes(`.${CLASS_PROTECTED}`))
+          .filter((ele) => {
+            // If none in the closed neighborhood are expanded.
+            // Note that the closed neighborhood includes the current note.
+            return ele.closedNeighborhood(`node.${CLASS_PROTECTED}`).length === 0;
+          })
+          .remove();
+      this.recursionPreventer = true;
+      this.view.onGraphChanged();
+      this.recursionPreventer = false;
+    }));
 
     this.windowEvent = async (evt: KeyboardEvent) => {
       if (!(document.activeElement === this.view.element)) {
@@ -447,7 +444,7 @@ export class WorkspaceMode extends Component implements IAGMode {
     this.recursionPreventer = false;
   }
   removeNodes(nodes: NodeCollection) {
-    this.view.removeNodes(nodes);
+    nodes.addClass(CLASS_HARD_FILTERED);
     this.view.trigger('hide', nodes);
     this.view.trigger('selectChange');
   }
