@@ -19,6 +19,7 @@
     export let fitClick;
     export let localModeClick;
     export let filterInput;
+    export let saveClick;
 
     filterInput = debounce(filterInput, 500, true);
 
@@ -50,6 +51,9 @@
 <div class="cy-toolbar-section">
     <ToolbarButton icon={icons.ag_fit} onClick={fitClick} title="Fit view"/>
     <ToolbarButton icon={icons.ag_local} onClick={localModeClick} title="Local mode"/>
+</div>
+<div class="cy-toolbar-section">
+    <ToolbarButton icon={icons.ag_save} onClick={saveClick} title="Manage workspace graphs" />
 </div>
 <div class="cy-toolbar-section">
     <ToolbarButton icon={icons.ag_expand} onClick={expandClick}

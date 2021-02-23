@@ -27,6 +27,7 @@ export const icons: Record<string, string> = {
   ag_hierarchy: mdiIcons.mdiGraph,
   ag_file: mdiIcons.mdiFileOutline,
   ag_filter: mdiIcons.mdiFilterOutline,
+  ag_save: mdiIcons.mdiContentSave,
 };
 
 export const addIcons = (): void => {

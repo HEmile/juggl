@@ -19,6 +19,7 @@ import {
   getLayoutSetting,
 } from './layout-settings';
 import {icons, pathToSvg} from '../ui/icons';
+import {WorkspaceModal} from '../ui/workspace-modal';
 
 
 class EventRec {
@@ -368,6 +369,9 @@ export class WorkspaceMode extends Component implements IAGMode {
           // @ts-ignore
           this.view.searchFilter(handler.target.value);
           this.view.restartLayout();
+        },
+        saveClick: () => {
+          new WorkspaceModal(this.view.plugin.app).open();
         },
       },
     });
