@@ -151,6 +151,7 @@ export class LocalMode extends Component implements IAGMode {
             this.view.searchFilter(handler.target.value);
             this.view.restartLayout();
           },
+          filterValue: this.view.settings.filter,
         },
       });
       // this.view.on('vizReady', (viz) => {

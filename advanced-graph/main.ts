@@ -27,6 +27,7 @@ import {STYLESHEET_PATH} from './viz/stylesheet';
 import {AdvancedGraphView} from './viz/ag-view';
 import YAML from 'yaml';
 import {AG_VIEW_TYPE} from './constants';
+import {WorkspaceManager} from './viz/workspaces/workspace-manager';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -49,6 +50,7 @@ export default class AdvancedGraphPlugin extends Plugin {
     metadata: MetadataCache
     coreStores: Record<string, IDataStore> = {};
     stores: IDataStore[] = [];
+    workspaceManager: WorkspaceManager;
 
     async onload(): Promise<void> {
       super.onload();
@@ -71,6 +73,8 @@ export default class AdvancedGraphPlugin extends Plugin {
       this.path = this.vault.getRoot().path;
       const obsidianStore = new ObsidianStore(this);
       this.addChild(obsidianStore);
+      this.workspaceManager = new WorkspaceManager(this);
+      this.addChild(this.workspaceManager);
       this.registerCoreStore(obsidianStore, OBSIDIAN_STORE_NAME);
 
       this.settings = Object.assign({}, DefaultAdvancedGraphSettings, await this.loadData());

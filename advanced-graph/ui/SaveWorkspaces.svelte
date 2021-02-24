@@ -2,6 +2,7 @@
     import SaveWorkspaceItem from "./SaveWorkspaceItem.svelte";
     export let onLoad;
     export let onSave;
+    export let onDelete;
     export let savedGraphs: string[];
     let saveName = '';
 </script>
@@ -12,7 +13,7 @@
 <hr>
 <div>
     {#each savedGraphs as graphName}
-        <SaveWorkspaceItem name={graphName} onClick={onLoad}>
+        <SaveWorkspaceItem name={graphName} onClick={onLoad} onDelete={onDelete}>
         </SaveWorkspaceItem>
     {/each}
 </div>

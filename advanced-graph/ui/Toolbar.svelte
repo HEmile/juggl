@@ -4,6 +4,7 @@
     import ToolbarButton from "./ToolbarButton.svelte";
     import {debounce} from "obsidian";
     export let viz: Core;
+    export let filterValue: string;
     export let fdgdClick;//
     export let concentricClick;
     export let gridClick;//
@@ -77,4 +78,5 @@
                    disabled="{disableOnNonePinned}" title="Unlock selected nodes in place (U)"/>
 </div>
 <!--</div>-->
-<br /><label for="ag-filter">Filter: </label><input type="text" id="ag-filter" name="ag-filter" on:input={filterInput}>
+<br /><label for="ag-filter">Filter: </label><input type="text" id="ag-filter"
+                                                    name="ag-filter" on:input={filterInput} value={filterValue}>

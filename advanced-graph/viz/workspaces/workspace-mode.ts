@@ -1,25 +1,25 @@
-import type {IAGMode} from '../interfaces';
+import type {IAGMode} from '../../interfaces';
 import type {EventNames, EventObject, NodeSingular} from 'cytoscape';
-import type {AdvancedGraph} from './visualization';
+import type {AdvancedGraph} from '../visualization';
 import type {NodeCollection} from 'cytoscape';
 import type {Menu} from 'obsidian';
-import Toolbar from '../ui/Toolbar.svelte';
+import Toolbar from '../../ui/Toolbar.svelte';
 import {Component} from 'obsidian';
-import {VizId} from '../interfaces';
+import {VizId} from '../../interfaces';
 import {
   AG_VIEW_TYPE,
   CLASS_ACTIVE_NODE,
   CLASS_CONNECTED_ACTIVE_NODE, CLASS_EXPANDED, CLASS_HARD_FILTERED,
   CLASS_INACTIVE_NODE, CLASS_PINNED, CLASS_PROTECTED,
   VIEWPORT_ANIMATION_TIME,
-} from '../constants';
+} from '../../constants';
 import type {Core} from 'cytoscape';
 import type {SvelteComponent} from 'svelte';
 import {
   getLayoutSetting,
-} from './layout-settings';
-import {icons, pathToSvg} from '../ui/icons';
-import {WorkspaceModal} from '../ui/workspace-modal';
+} from '../layout-settings';
+import {icons, pathToSvg} from '../../ui/icons';
+import {WorkspaceModal} from '../../ui/workspace-modal';
 
 
 class EventRec {
@@ -351,6 +351,7 @@ export class WorkspaceMode extends Component implements IAGMode {
       target: element,
       props: {
         viz: this.viz,
+        filterValue: this.view.settings.filter,
         expandClick: this.expandSelection.bind(this),
         fdgdClick: () => this.view.setLayout(getLayoutSetting('force-directed', this.view.settings)),
         concentricClick: () => this.view.setLayout(getLayoutSetting('circle')),
@@ -371,7 +372,7 @@ export class WorkspaceMode extends Component implements IAGMode {
           this.view.restartLayout();
         },
         saveClick: () => {
-          new WorkspaceModal(this.view.plugin.app).open();
+          new WorkspaceModal(this.view.plugin.app, this.view.plugin.workspaceManager, this.view).open();
         },
       },
     });

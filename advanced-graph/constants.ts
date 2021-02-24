@@ -21,4 +21,5 @@ export const DISCRETE_SPACING_FACTOR = 0.5;
 export const DEBOUNCE_FOLLOW = 500;
 export const DEBOUNCE_LAYOUT = 2300;
 
-export const AG_VIEW_TYPE = 'advanced_graph_view';
+export const AG_VIEW_TYPE = 'juggl_view';
+export const DATA_FOLDER = '.obsidian/juggl/';

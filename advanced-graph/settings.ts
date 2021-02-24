@@ -3,6 +3,7 @@ import {App, PluginSettingTab, Setting, SplitDirection} from 'obsidian';
 import type AdvancedGraphPlugin from './main';
 import {OBSIDIAN_STORE_NAME} from './obsidian-store';
 import AppearanceSettings from './ui/settings/AppearanceSettings.svelte';
+import type {LayoutOptions} from 'cytoscape';
 
 export const LAYOUTS = ['force-directed', 'circle', 'grid', 'hierarchy', 'cola'];
 export type FDGDLayouts = 'cola'| 'd3-force';
@@ -18,8 +19,8 @@ export interface IAdvancedGraphSettings {
     hoverEdges: boolean;
     autoExpand: boolean;
     autoZoom: boolean;
-    layout: AGLayouts;
-    fdgdLayout: FDGDLayouts;
+    layout: AGLayouts | LayoutOptions;
+    fdgdLayout: FDGDLayouts ;
     limit: number;
     filter: string;
     zoomSpeed: number;

@@ -26,7 +26,7 @@ import type {IAGMode, IDataStore} from '../interfaces';
 import {GraphStyleSheet} from './stylesheet';
 import Timeout = NodeJS.Timeout;
 
-import {WorkspaceMode} from './workspace-mode';
+import {WorkspaceMode} from './workspaces/workspace-mode';
 import {VizId} from '../interfaces';
 import {
   CLASS_ACTIVE_NODE,
@@ -39,7 +39,7 @@ import {
 } from '../constants';
 import {LocalMode} from './local-mode';
 import type {LayoutSettings} from './layout-settings';
-import {ColaGlobalLayout, getLayoutSetting} from './layout-settings';
+import {ColaGlobalLayout, getLayoutSetting, parseLayoutSettings} from './layout-settings';
 import {filter} from './query-builder';
 
 export const MD_VIEW_TYPE = 'markdown';
@@ -59,11 +59,9 @@ export class AdvancedGraph extends Component {
     events: Events;
     datastores: IDataStore[];
     activeLayout: Layouts;
-    layoutSettings: LayoutSettings;
     hoverTimeout: Record<string, Timeout> = {};
     mode: IAGMode;
     vizReady = false;
-    activeFilter: string = '';
     destroyHover: () => void = null;
     debouncedRestartLayout: () => void;
 
@@ -77,9 +75,6 @@ export class AdvancedGraph extends Component {
       this.plugin = plugin;
       this.datastores = dataStores;
       this.events = new Events();
-      this.activeFilter = settings.filter;
-      // TODO: On changge of layout, this.settings should be updated
-      this.layoutSettings = getLayoutSetting(settings.layout, this.settings);
       if (this.settings.mode === 'local') {
         this.mode = new LocalMode(this);
       } else if (this.settings.mode === 'workspace') {
@@ -160,7 +155,7 @@ export class AdvancedGraph extends Component {
       this.viz.style(styleSheet);
 
       // Shouldn'' this just call restartLayout?
-      this.activeLayout = this.layoutSettings.startLayout(this);
+      this.restartLayout();
 
       console.log('Visualization ready');
 
@@ -450,11 +445,12 @@ export class AdvancedGraph extends Component {
       if (this.activeLayout) {
         this.activeLayout.stop();
       }
-      this.activeLayout = this.layoutSettings.startLayout(this);
+      const layoutSettings = parseLayoutSettings(this.settings);
+      this.activeLayout = layoutSettings.startLayout(this);
     }
 
     setLayout(settings: LayoutSettings) {
-      this.layoutSettings = settings;
+      this.settings.layout = settings.options;
       this.restartLayout();
     }
 
@@ -502,7 +498,7 @@ export class AdvancedGraph extends Component {
       }
 
       this.trigger('elementsChange');
-      this.searchFilter(this.activeFilter);
+      this.searchFilter(this.settings.filter);
       console.log(debounceLayout);
       console.log(new Date().getSeconds(), new Date().getMilliseconds());
       if (debounceLayout) {
@@ -535,7 +531,7 @@ export class AdvancedGraph extends Component {
       this.viz.nodes().removeClass(CLASS_FILTERED);
       const filteredNodes = filter(query, this.viz.nodes());
       this.viz.nodes().difference(filteredNodes).addClass(CLASS_FILTERED);
-      this.activeFilter = query;
+      this.settings.filter = query;
     }
 
     public getPinned() {

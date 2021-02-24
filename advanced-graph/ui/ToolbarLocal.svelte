@@ -11,6 +11,7 @@
     export let fitClick;
     export let workspaceModeClick;
     export let filterInput;
+    export let filterValue;
     filterInput = debounce(filterInput, 500, true);
 
 </script>
@@ -25,4 +26,4 @@
     <ToolbarButton icon={icons.ag_fit} onClick={fitClick} title="Fit view"/>
     <ToolbarButton icon={icons.ag_workspace} onClick={workspaceModeClick} title="Workspace mode"/>
 </div>
-<br /><label for="ag-filter">Filter: </label><input type="text" id="ag-filter" name="ag-filter" on:input={filterInput}>
+<br /><label for="ag-filter">Filter: </label><input type="text" id="ag-filter" name="ag-filter" on:input={filterInput} value={filterValue}>
