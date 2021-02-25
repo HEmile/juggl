@@ -90,7 +90,7 @@ export class WorkspaceMode extends Component implements IAGMode {
             {
               content: pathToSvg(icons.ag_fit),
               select: function(ele: NodeSingular) {
-                mode.updateActiveFile(ele, true);
+                mode.updateActiveNode(ele, true);
               },
               enabled: true, // whether the command is selectable
             });
@@ -200,12 +200,12 @@ export class WorkspaceMode extends Component implements IAGMode {
         const node = this.viz.$id(id.toId()) as NodeSingular;
         node.addClass(CLASS_PROTECTED);
 
-        this.updateActiveFile(node, followImmediate);
+        this.updateActiveNode(node, followImmediate);
       }
     }));
 
     this.registerEvent(this.view.on('expand', (expanded) => {
-      this.updateActiveFile(expanded, false);
+      this.updateActiveNode(expanded, false);
     }));
 
     // TODO: What to do with this?
@@ -222,6 +222,7 @@ export class WorkspaceMode extends Component implements IAGMode {
             return ele.closedNeighborhood(`node.${CLASS_PROTECTED}`).length === 0;
           })
           .remove();
+      this.updateActiveNode(this.viz.nodes(`.${CLASS_ACTIVE_NODE}`), false);
       this.recursionPreventer = true;
       this.view.onGraphChanged();
       this.recursionPreventer = false;
@@ -383,7 +384,7 @@ export class WorkspaceMode extends Component implements IAGMode {
     });
   }
   async openFile(node: NodeSingular, newLeaf: boolean) {
-    this.updateActiveFile(node, true);
+    this.updateActiveNode(node, true);
     const id = VizId.fromNode(node);
     if (!(id.storeId === 'core')) {
       return;
@@ -402,7 +403,7 @@ export class WorkspaceMode extends Component implements IAGMode {
     }
   }
 
-  updateActiveFile(node: NodeCollection, followImmediate: boolean) {
+  updateActiveNode(node: NodeCollection, followImmediate: boolean) {
     this.viz.elements()
         .removeClass([CLASS_CONNECTED_ACTIVE_NODE, CLASS_ACTIVE_NODE, CLASS_INACTIVE_NODE])
         .difference(node.closedNeighborhood())

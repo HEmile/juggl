@@ -5,6 +5,7 @@ import type {Menu} from 'obsidian';
 import type {NodeSingular} from 'cytoscape';
 import type {TFile} from 'obsidian';
 import type {AdvancedGraph} from './viz/visualization';
+import type {Collection} from 'cytoscape';
 
 export interface INoteProperties {
     SMD_community: number;
@@ -99,4 +100,9 @@ export class VizId {
     static toId(id: string, storeId: string) : string {
       return new VizId(id, storeId).toId();
     }
+}
+
+export interface IMergedToGraph {
+    merged: Collection;
+    added: Collection;
 }

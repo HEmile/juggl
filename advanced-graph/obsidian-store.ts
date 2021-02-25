@@ -6,7 +6,7 @@ import {
   TFile,
   Vault,
 } from 'obsidian';
-import type {IDataStore} from './interfaces';
+import type {IDataStore, IMergedToGraph} from './interfaces';
 import {DataStoreEvents} from './events';
 import type AdvancedGraphPlugin from './main';
 import type {
@@ -294,7 +294,7 @@ ${edge.data.context}`;
 
     async refreshNode(view: AdvancedGraph, id: VizId) {
       const idS = id.toId();
-      let correctEdges: Collection;
+      let correctEdges: IMergedToGraph;
       let node = view.viz.$id(idS);
       if (node.length > 0 && node.hasClass(CLASS_EXPANDED)) {
         correctEdges = await view.expand(node, true, false);
@@ -306,12 +306,12 @@ ${edge.data.context}`;
         correctEdges = view.mergeToGraph(edges, true, false);
       }
       // Remove outgoing edges that no longer exist.
-      node.connectedEdges()
-          .difference(correctEdges)
+      const removed = node.connectedEdges()
+          .difference(correctEdges.merged)
           .remove();
-      view.onGraphChanged(true, true);
-      // TODO: I don't think this one here was correct / should be needed.
-      // view.updateActiveFile(node.nodes() as NodeSingular, true);
+      if (removed.length > 0 || correctEdges.added.length > 0) {
+        view.onGraphChanged(true, true);
+      }
     }
 
     onload() {

@@ -45,6 +45,9 @@ export class WorkspaceManager extends Component {
         const settings = JSON.parse(await this.adapter.read(DATA_FOLDER + name + '/settings.json'));
         viz.viz.json(graph);
         viz.settings = settings;
+
+        // After loading in the graph, we have to validate with the datastores that the data is still up-to-date:
+        // This could create race-condition conflicts possibly when a node updates in the meantime.
       } catch (e) {
         console.log(e);
       }

@@ -22,7 +22,7 @@ import cytoscape, {
   NodeDefinition,
   NodeSingular, Singular,
 } from 'cytoscape';
-import type {IAGMode, IDataStore} from '../interfaces';
+import type {IAGMode, IDataStore, IMergedToGraph} from '../interfaces';
 import {GraphStyleSheet} from './stylesheet';
 import Timeout = NodeJS.Timeout;
 
@@ -357,7 +357,7 @@ export class AdvancedGraph extends Component {
       return edges;
     }
 
-    async expand(toExpand: NodeCollection, batch=true, triggerGraphChanged=true): Promise<Collection> {
+    async expand(toExpand: NodeCollection, batch=true, triggerGraphChanged=true): Promise<IMergedToGraph> {
       if (toExpand.length === 0) {
         return null;
       }
@@ -454,7 +454,8 @@ export class AdvancedGraph extends Component {
       this.restartLayout();
     }
 
-    mergeToGraph(elements: ElementDefinition[], batch=true, triggerGraphChanged=true): Collection {
+
+    mergeToGraph(elements: ElementDefinition[], batch=true, triggerGraphChanged=true): IMergedToGraph {
       if (batch) {
         this.viz.startBatch();
       }
@@ -475,14 +476,15 @@ export class AdvancedGraph extends Component {
           mergedCollection.merge(gElement);
         }
       });
-      mergedCollection.merge(this.viz.add(addElements));
+      const addCollection = this.viz.add(addElements);
+      mergedCollection.merge(addCollection);
       if (triggerGraphChanged) {
         this.onGraphChanged(false);
       }
       if (batch) {
         this.viz.endBatch();
       }
-      return mergedCollection;
+      return {merged: mergedCollection, added: addCollection};
     }
 
     onGraphChanged(batch:boolean=true, debounceLayout=false) {
