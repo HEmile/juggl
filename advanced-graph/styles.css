@@ -21,6 +21,11 @@ div.cy-navigator {
     overflow: hidden;
 }
 
+div.ag-error {
+    background-color: red;
+}
+
+
 .cy-navigator > img{
     position: relative;
     top: 0;

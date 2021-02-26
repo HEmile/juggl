@@ -65,7 +65,7 @@ export class AdvancedGraph extends Component {
     destroyHover: () => void = null;
     debouncedRestartLayout: () => void;
 
-    constructor(element: Element, plugin: AdvancedGraphPlugin, initialNode: string, dataStores: IDataStore[], settings: IAdvancedGraphSettings) {
+    constructor(element: Element, plugin: AdvancedGraphPlugin, dataStores: IDataStore[], settings: IAdvancedGraphSettings, initialNode?: string) {
       super();
       this.element = element;
       this.settings = settings;
@@ -100,21 +100,33 @@ export class AdvancedGraph extends Component {
       const div = document.createElement('div');
       div.id = 'cy' + VIEW_COUNTER;
       this.element.appendChild(div);
-      div.setAttr('style', 'height: 100%; width:100%');
+      div.setAttr('style', `height: ${this.settings.height}; width:${this.settings.width}`);
       div.setAttr('tabindex', '0');
 
+      let nodes: NodeDefinition[];
+      let idInitial = null;
+      if (this.initialNode) {
+        idInitial = new VizId(this.initialNode, 'core');
+        nodes = await this.neighbourhood([idInitial]);
+        this.viz = cytoscape({
+          container: div,
+          elements: nodes,
+          minZoom: 0.3,
+          maxZoom: 10,
+          wheelSensitivity: this.settings.zoomSpeed,
+        });
+      } else {
+        console.log(div);
+        this.viz = cytoscape({
+          container: div,
+          elements: [{data: {id: 'a'}}, {data: {id: 'b'}}],
+          minZoom: 0.3,
+          maxZoom: 10,
+          wheelSensitivity: this.settings.zoomSpeed,
+        });
+      }
+      console.log('wtf!');
 
-      const idInitial = new VizId(this.initialNode, 'core');
-
-      const nodes = await this.neighbourhood([idInitial]);
-
-      this.viz = cytoscape({
-        container: div,
-        elements: nodes,
-        minZoom: 0.3,
-        maxZoom: 10,
-        wheelSensitivity: this.settings.zoomSpeed,
-      });
       this.viz.dblclick();
 
       if (this.settings.navigator) {
@@ -135,27 +147,23 @@ export class AdvancedGraph extends Component {
       }
       VIEW_COUNTER += 1;
 
-      const initialNode = this.viz.$id(idInitial.toId());
-      initialNode.addClass(CLASS_EXPANDED);
-      initialNode.addClass(CLASS_PROTECTED);
-
-
-      const nodez = this.viz.nodes();
-      const edges = await this.buildEdges(nodez);
-
-      this.viz.add(edges);
-      this.onGraphChanged(true);
-
-      if (this.plugin.settings.debug) {
-        console.log(nodes);
-        console.log(edges);
+      if (idInitial) {
+        const initialNode = this.viz.$id(idInitial.toId());
+        initialNode.addClass(CLASS_EXPANDED);
+        initialNode.addClass(CLASS_PROTECTED);
+        const nodez = this.viz.nodes();
+        const edges = await this.buildEdges(nodez);
+        this.viz.add(edges);
+        this.onGraphChanged(true);
       }
-
       const styleSheet = await this.createStylesheet();
       this.viz.style(styleSheet);
 
       // Shouldn'' this just call restartLayout?
-      this.restartLayout();
+
+      if (idInitial) {
+        this.restartLayout();
+      }
 
       console.log('Visualization ready');
 

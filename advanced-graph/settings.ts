@@ -24,12 +24,10 @@ export interface IAdvancedGraphSettings {
     limit: number;
     filter: string;
     zoomSpeed: number;
-}
-
-export interface IAGEmbedSettings extends IAdvancedGraphSettings {
     width: string | number;
     height: string | number;
 }
+
 
 export interface IAGPluginSettings {
     // indexContent: boolean; // neo4j
@@ -39,7 +37,7 @@ export interface IAGPluginSettings {
     imgServerPort: number;
     debug: boolean;
     graphSettings: IAdvancedGraphSettings;
-    embedSettings: IAGEmbedSettings;
+    embedSettings: IAdvancedGraphSettings;
 }
 
 
@@ -65,6 +63,8 @@ export const DefaultAdvancedGraphSettings: IAGPluginSettings = {
     limit: 10000,
     filter: '',
     zoomSpeed: 1,
+    width: '100%',
+    height: '100%',
   },
   embedSettings: {
     autoAddNodes: false,

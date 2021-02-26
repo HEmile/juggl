@@ -2,6 +2,7 @@ import {ItemView, WorkspaceLeaf} from 'obsidian';
 import type AdvancedGraphPlugin from '../main';
 import {AdvancedGraph} from './visualization';
 import {AG_VIEW_TYPE} from '../constants';
+import type {IDataStore} from '../interfaces';
 
 export class AdvancedGraphView extends ItemView {
      advancedGraph: AdvancedGraph;
@@ -10,8 +11,8 @@ export class AdvancedGraphView extends ItemView {
        // TODO: Maybe make this configurable
        leaf.setPinned(true);
        const settings = plugin.settings.graphSettings;
-       this.advancedGraph = new AdvancedGraph(this.containerEl.children[1], plugin, initialNode,
-           [plugin.coreStores[settings.coreStore]].concat(plugin.stores), settings);
+       this.advancedGraph = new AdvancedGraph(this.containerEl.children[1], plugin,
+           [plugin.coreStores[settings.coreStore] as IDataStore].concat(plugin.stores), settings, initialNode);
        this.addChild(this.advancedGraph);
      }
 

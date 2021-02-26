@@ -177,27 +177,39 @@ export default class AdvancedGraphPlugin extends Plugin {
               view.viz.style(style);
             }
           });
-      this.registerMarkdownCodeBlockProcessor('advanced-graph', (src, el, context) => {
-        const parsed = YAML.parse(src);
-        try {
-          const localNote = parsed.local;
-          const settings = Object.assign({}, this.settings.embedSettings, parsed);
-          if (!(LAYOUTS.contains(settings.layout))) {
-            throw `Invalid layout. Choose one from ${LAYOUTS}`;
-          }
-          setTimeout(() => {
+      this.registerMarkdownCodeBlockProcessor('advanced-graph', async (src, el, context) => {
+        // Timeout is needed to ensure the div is added to the window. The graph will only load if
+        // it is attached. This will also prevent any annoying hickups while looading the graph.
+        setTimeout(async () => {
+          const parsed = YAML.parse(src);
+          try {
+            const settings = Object.assign({}, this.settings.embedSettings, parsed);
+            if (!(LAYOUTS.contains(settings.layout))) {
+              throw `Invalid layout. Choose one from ${LAYOUTS}`;
+            }
+            const stores = [this.coreStores[settings.coreStore] as IDataStore].concat(this.stores);
             el.style.width = settings.width;
             el.style.height = settings.height;
-          }, 200);
-          console.log(settings);
-          this.addChild(new AdvancedGraph(el, this, localNote, [this.coreStores[settings.coreStore] as IDataStore].concat(this.stores), settings));
-        } catch (error) {
+            if (Object.keys(parsed).contains('local')) {
+              this.addChild(new AdvancedGraph(el, this, stores, settings, parsed.local));
+            } else if (Object.keys(parsed).contains('workspace')) {
+              const graph = new AdvancedGraph(el, this, stores, settings, null);
+              if (!this.workspaceManager.graphs.contains(parsed.workspace)) {
+                throw 'Did not recognize workspace. Did you misspell its name?';
+              }
+              this.addChild(graph);
+              await this.workspaceManager.loadGraph(parsed.workspace, graph);
+            } else {
+              throw 'Invalid query. Specify either the local property or the workspace property.';
+            }
+          } catch (error) {
           // taken from https://github.com/jplattel/obsidian-query-language/blob/main/src/renderer.ts
-          const errorElement = document.createElement('div');
-          errorElement.addClass('ag-error');
-          errorElement.innerText = error;
-          el.appendChild(errorElement);
-        }
+            const errorElement = document.createElement('div');
+            errorElement.addClass('ag-error');
+            errorElement.innerText = error;
+            el.appendChild(errorElement);
+          }
+        }, 200);
       });
     }
 
