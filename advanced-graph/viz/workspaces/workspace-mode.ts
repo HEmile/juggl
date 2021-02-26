@@ -1,4 +1,4 @@
-import type {IAGMode} from '../../interfaces';
+import type {IAGMode, ICoreDataStore} from '../../interfaces';
 import type {EventNames, EventObject, NodeSingular} from 'cytoscape';
 import type {AdvancedGraph} from '../visualization';
 import type {NodeCollection} from 'cytoscape';
@@ -184,7 +184,7 @@ export class WorkspaceMode extends Component implements IAGMode {
         if (this.viz.$id(id.toId()).length === 0) {
           for (const dataStore of this.view.datastores) {
             if (dataStore.storeId() === 'core') {
-              const node = await dataStore.get(id);
+              const node = await (dataStore as ICoreDataStore).get(id);
               this.viz.startBatch();
               // Make sure it doesn't immediately get removed
               this.viz.add(node).addClass(CLASS_PROTECTED);

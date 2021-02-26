@@ -6,7 +6,7 @@ import {
   TFile,
   Vault,
 } from 'obsidian';
-import type {IDataStore, IMergedToGraph} from './interfaces';
+import type {ICoreDataStore, IMergedToGraph} from './interfaces';
 import {DataStoreEvents} from './events';
 import type AdvancedGraphPlugin from './main';
 import type {
@@ -22,7 +22,7 @@ import {VizId} from './interfaces';
 
 export const OBSIDIAN_STORE_NAME = 'Obsidian';
 
-export class ObsidianStore extends Component implements IDataStore {
+export class ObsidianStore extends Component implements ICoreDataStore {
     plugin: AdvancedGraphPlugin;
     events: DataStoreEvents;
     metadata: MetadataCache;
@@ -281,7 +281,6 @@ ${edge.data.context}`;
     get(nodeId: VizId): Promise<NodeDefinition> {
       const file = this.getFile(nodeId);
       if (file === null) {
-        console.log('null file', nodeId);
         return null;
       }
       const cache = this.metadata.getFileCache(file);
@@ -296,11 +295,20 @@ ${edge.data.context}`;
       const idS = id.toId();
       let correctEdges: IMergedToGraph;
       let node = view.viz.$id(idS);
+      if (this.getFile(id) === null) {
+        // File does not exist
+        if (node) {
+          // If a node exists for this file, remove it.
+          node.remove();
+          view.onGraphChanged(true, true);
+        }
+        return;
+      }
       if (node.length > 0 && node.hasClass(CLASS_EXPANDED)) {
         correctEdges = await view.expand(node, true, false);
       } else {
-        const nodeDef = [await this.get(id)];
-        view.mergeToGraph(nodeDef, true, false);
+        const nodeDef = await this.get(id);
+        view.mergeToGraph([nodeDef], true, false);
         node = view.viz.$id(idS);
         const edges = await view.buildEdges(node);
         correctEdges = view.mergeToGraph(edges, true, false);

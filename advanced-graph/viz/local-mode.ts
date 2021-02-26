@@ -5,7 +5,7 @@ import type {NodeCollection} from 'cytoscape';
 import type {Menu} from 'obsidian';
 import ToolbarLocal from '../ui/ToolbarLocal.svelte';
 import {Component, TFile} from 'obsidian';
-import {VizId} from '../interfaces';
+import {ICoreDataStore, VizId} from '../interfaces';
 import {
   CLASS_ACTIVE_NODE,
   CLASS_CONNECTED_ACTIVE_NODE,
@@ -87,7 +87,7 @@ export class LocalMode extends Component implements IAGMode {
       if (this.viz.$id(id.toId()).length === 0) {
         for (const dataStore of this.view.datastores) {
           if (dataStore.storeId() === 'core') {
-            const nodeDef = await dataStore.get(id);
+            const nodeDef = await (dataStore as ICoreDataStore).get(id);
             node = this.viz.add(nodeDef);
             break;
           }

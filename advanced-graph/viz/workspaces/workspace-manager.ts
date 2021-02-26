@@ -3,6 +3,7 @@ import type AdvancedGraphPlugin from '../../main';
 import type {AdvancedGraph} from '../visualization';
 import {DATA_FOLDER} from '../../constants';
 import path from 'path';
+import {VizId} from '../../interfaces';
 
 export class WorkspaceManager extends Component {
     plugin: AdvancedGraphPlugin;
@@ -48,10 +49,24 @@ export class WorkspaceManager extends Component {
 
         // After loading in the graph, we have to validate with the datastores that the data is still up-to-date:
         // This could create race-condition conflicts possibly when a node updates in the meantime.
+        const nodes = viz.viz.nodes();
+        for (let i=1; i < nodes.length; i++ ) {
+          if (!nodes[i]) {
+            continue;
+          }
+          const vId = VizId.fromNode(nodes[i]);
+
+          for (const store of viz.datastores) {
+            if (store.storeId() === vId.storeId) {
+              await store.refreshNode(viz, vId);
+              break;
+            }
+          }
+        }
       } catch (e) {
         console.log(e);
       }
-    }
+    };
 
     async deleteGraph(name: string, view: AdvancedGraph) {
       try {

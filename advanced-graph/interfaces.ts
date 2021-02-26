@@ -35,15 +35,21 @@ export interface IDataStore extends Component {
 
     getEvents(): DataStoreEvents;
 
-    get(nodeId: VizId): Promise<NodeDefinition>;
 
     getNeighbourhood(nodeId: VizId[]): Promise<NodeDefinition[]>;
 
     connectNodes(allNodes: NodeCollection, newNodes: NodeCollection, graph: AdvancedGraph): Promise<EdgeDefinition[]>;
 
+    refreshNode(view: AdvancedGraph, id: VizId): void | Promise<void>;
+
     // Prefix of id of nodes from this store
     storeId(): string;
 
+}
+
+export interface ICoreDataStore extends IDataStore {
+
+    get(nodeId: VizId): Promise<NodeDefinition>;
 }
 
 export interface IAGMode extends Component {

@@ -10,7 +10,7 @@ import {
 } from './settings';
 import {AdvancedGraph, MD_VIEW_TYPE} from './viz/visualization';
 import {ImageServer} from './image-server';
-import type {IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
+import type {ICoreDataStore, IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
 import cytoscape from 'cytoscape';//
 // import coseBilkent from 'cytoscape-cose-bilkent';
@@ -48,7 +48,7 @@ export default class AdvancedGraphPlugin extends Plugin {
     // neo4jStream: Neo4jStream;
     vault: Vault;
     metadata: MetadataCache
-    coreStores: Record<string, IDataStore> = {};
+    coreStores: Record<string, ICoreDataStore> = {};
     stores: IDataStore[] = [];
     workspaceManager: WorkspaceManager;
 
@@ -190,7 +190,7 @@ export default class AdvancedGraphPlugin extends Plugin {
             el.style.height = settings.height;
           }, 200);
           console.log(settings);
-          this.addChild(new AdvancedGraph(el, this, localNote, [this.coreStores[settings.coreStore]].concat(this.stores), settings));
+          this.addChild(new AdvancedGraph(el, this, localNote, [this.coreStores[settings.coreStore] as IDataStore].concat(this.stores), settings));
         } catch (error) {
           // taken from https://github.com/jplattel/obsidian-query-language/blob/main/src/renderer.ts
           const errorElement = document.createElement('div');
@@ -368,7 +368,7 @@ export default class AdvancedGraphPlugin extends Plugin {
       this.stores.push(store);
     }
 
-    public registerCoreStore(store: IDataStore, name: string) {
+    public registerCoreStore(store: ICoreDataStore, name: string) {
       if (!(store.storeId() === 'core')) {
         throw new Error('Can only register IDataStores as core if their storeId is core');
       }
