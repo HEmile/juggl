@@ -2,9 +2,9 @@
     import {FileSystemAdapter} from "obsidian";
     import {STYLESHEET_PATH, GraphStyleSheet} from "../../viz/stylesheet";
     import {promises as fs} from "fs";
-    import type AdvancedGraphPlugin from "../../main";
+    import type JugglPlugin from "../../main";
 
-    export let plugin: AdvancedGraphPlugin;
+    export let plugin: JugglPlugin;
     let openGraphCSS = async function() {
         const shell = require('electron').shell;
         let fullPath = (plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
@@ -21,10 +21,10 @@
     Appearance
 </h3>
 <p>
-    You can fully style the graph with .css. This is done through the graph.css file.
+    You can style the graph with css. This is done in the .obsidian/juggl/style.css file.
     See <a href="https://publish.obsidian.md/semantic-obsidian/Node+styling">this page</a> for help with styling.
 </p>
 
 <button on:click={openGraphCSS}>
-    Open graph.css in default editor.
+    Open style.css in default editor.
 </button>

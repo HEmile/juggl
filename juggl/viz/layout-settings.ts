@@ -6,13 +6,13 @@ import {
   LAYOUT_ANIMATION_TIME,
 } from '../constants';
 import type {NodeSingular} from 'cytoscape';
-import type {AdvancedGraph} from './visualization';
-import type {AGLayouts, IAdvancedGraphSettings} from '../settings';
+import type {Juggl} from './visualization';
+import type {JugglLayouts, IJugglSettings} from '../settings';
 import type {LayoutOptions} from 'cytoscape';
 
 export interface LayoutSettings {
 
-    startLayout(view: AdvancedGraph): Layouts;
+    startLayout(view: Juggl): Layouts;
 
     options: LayoutOptions;
 
@@ -41,7 +41,7 @@ export class ColaGlobalLayout implements LayoutSettings {
     this.options = Object.assign({}, ColaGlobalLayout.DEFAULT, options);
   }
 
-  startLayout(view: AdvancedGraph): Layouts {
+  startLayout(view: Juggl): Layouts {
     return view.viz.layout(this.options).start();
   }
 }
@@ -51,7 +51,7 @@ export class D3GlobalLayout implements LayoutSettings {
     constructor(options?: LayoutOptions) {
       this.options = Object.assign({}, D3GlobalLayout.DEFAULT, options);
     }
-    startLayout(view: AdvancedGraph): Layouts {
+    startLayout(view: Juggl): Layouts {
       return view.viz.layout(Object.assign(this.options, {linkId: function id(d: any) {
         return d.id;
       }, // sets the node id accessor to the specified function
@@ -102,7 +102,7 @@ export class GridGlobalLayout implements LayoutSettings {
   constructor(options?: LayoutOptions) {
     this.options = Object.assign({}, GridGlobalLayout.DEFAULT, options);
   }
-  startLayout(view: AdvancedGraph): Layouts {
+  startLayout(view: Juggl): Layouts {
     return view.viz.layout(this.options).start();
   }
 
@@ -125,7 +125,7 @@ export class DagreGlobalLayout implements LayoutSettings {
   constructor(options?: LayoutOptions) {
     this.options = Object.assign({}, DagreGlobalLayout.DEFAULT, options);
   }
-  startLayout(view: AdvancedGraph): Layouts {
+  startLayout(view: Juggl): Layouts {
     return view.viz.layout(this.options).start();
   }
   options: cytoscape.LayoutOptions;
@@ -148,7 +148,7 @@ export class AVSDFGlobalLayout implements LayoutSettings {
   constructor(options?: LayoutOptions) {
     this.options = Object.assign({}, AVSDFGlobalLayout.DEFAULT, options);
   }
-  startLayout(view: AdvancedGraph): Layouts {
+  startLayout(view: Juggl): Layouts {
     return view.viz.layout( this.options).start();
   }
   options: cytoscape.LayoutOptions;
@@ -171,7 +171,7 @@ export class ConcentricLayout implements LayoutSettings {
   constructor(options?: LayoutOptions) {
     this.options = Object.assign({}, ConcentricLayout.DEFAULT, options);
   }
-  startLayout(view: AdvancedGraph): Layouts {
+  startLayout(view: Juggl): Layouts {
     return view.viz.layout(Object.assign(this.options, {concentric: (n: NodeSingular) =>{
       // @ts-ignore
       if (n.hasClass(CLASS_ACTIVE_NODE)) {
@@ -200,7 +200,7 @@ export class ConcentricLayout implements LayoutSettings {
 }
 
 
-export const getLayoutSetting = function(layoutType: AGLayouts, settings?: IAdvancedGraphSettings, options?: LayoutOptions) {
+export const getLayoutSetting = function(layoutType: JugglLayouts, settings?: IJugglSettings, options?: LayoutOptions) {
   switch (layoutType) {
     case 'circle': return new ConcentricLayout(options);
     case 'force-directed': if (settings && settings.fdgdLayout === 'd3-force') {
@@ -215,11 +215,11 @@ export const getLayoutSetting = function(layoutType: AGLayouts, settings?: IAdva
   }
 };
 
-export const parseLayoutSettings = function(settings: IAdvancedGraphSettings) {
+export const parseLayoutSettings = function(settings: IJugglSettings) {
   console.log(settings);
   if (typeof settings.layout === 'string' || settings.layout instanceof String) {
-    return getLayoutSetting(settings.layout as AGLayouts, settings );
+    return getLayoutSetting(settings.layout as JugglLayouts, settings );
   } else {
-    return getLayoutSetting(settings.layout.name as AGLayouts, settings, settings.layout);
+    return getLayoutSetting(settings.layout.name as JugglLayouts, settings, settings.layout);
   }
 };

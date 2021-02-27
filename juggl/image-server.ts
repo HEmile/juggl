@@ -1,14 +1,14 @@
 import type {IncomingMessage, Server, ServerResponse} from 'http';
 import {Component, FileSystemAdapter, Notice, TFile} from 'obsidian';
-import type {IAGPluginSettings} from './settings';
-import type AdvancedGraphPlugin from './main';
+import type {IJugglPluginSettings} from './settings';
+import type JugglPlugin from './main';
 
 export class ImageServer extends Component {
-    settings: IAGPluginSettings;
-    plugin: AdvancedGraphPlugin;
+    settings: IJugglPluginSettings;
+    plugin: JugglPlugin;
     imgServer: Server;
 
-    constructor(plugin: AdvancedGraphPlugin) {
+    constructor(plugin: JugglPlugin) {
       super();
       this.settings = plugin.settings;
       this.plugin = plugin;

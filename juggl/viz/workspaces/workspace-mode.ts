@@ -1,13 +1,13 @@
 import type {IAGMode, ICoreDataStore} from '../../interfaces';
 import type {EventNames, EventObject, NodeSingular} from 'cytoscape';
-import type {AdvancedGraph} from '../visualization';
+import type {Juggl} from '../visualization';
 import type {NodeCollection} from 'cytoscape';
 import type {Menu} from 'obsidian';
 import Toolbar from '../../ui/Toolbar.svelte';
 import {Component} from 'obsidian';
 import {VizId} from '../../interfaces';
 import {
-  AG_VIEW_TYPE,
+  JUGGL_VIEW_TYPE,
   CLASS_ACTIVE_NODE,
   CLASS_CONNECTED_ACTIVE_NODE, CLASS_EXPANDED, CLASS_HARD_FILTERED,
   CLASS_INACTIVE_NODE, CLASS_PINNED, CLASS_PROTECTED,
@@ -36,7 +36,7 @@ export class WorkspaceMode extends Component implements IAGMode {
   toolbar: SvelteComponent;
   recursionPreventer = false;
   menu: any;
-  constructor(view: AdvancedGraph) {
+  constructor(view: Juggl) {
     super();
     this.view = view;
   }

@@ -8,7 +8,7 @@ import {
 } from 'obsidian';
 import type {ICoreDataStore, IMergedToGraph} from './interfaces';
 import {DataStoreEvents} from './events';
-import type AdvancedGraphPlugin from './main';
+import type JugglPlugin from './main';
 import type {
   NodeDefinition,
   EdgeDefinition,
@@ -16,18 +16,18 @@ import type {
   NodeCollection,
   EdgeDataDefinition, Collection,
 } from 'cytoscape';
-import type {AdvancedGraph} from './viz/visualization';
+import type {Juggl} from './viz/visualization';
 import {CLASS_EXPANDED} from './constants';
 import {VizId} from './interfaces';
 
 export const OBSIDIAN_STORE_NAME = 'Obsidian';
 
 export class ObsidianStore extends Component implements ICoreDataStore {
-    plugin: AdvancedGraphPlugin;
+    plugin: JugglPlugin;
     events: DataStoreEvents;
     metadata: MetadataCache;
     vault: Vault
-    constructor(plugin: AdvancedGraphPlugin) {
+    constructor(plugin: JugglPlugin) {
       super();
       this.plugin = plugin;
       this.events = new DataStoreEvents();
@@ -39,7 +39,7 @@ export class ObsidianStore extends Component implements ICoreDataStore {
       return this.events;
     }
 
-    async createEdges(srcFile: TFile, srcId: string, toNodes: NodeCollection, graph: AdvancedGraph): Promise<EdgeDefinition[]> {
+    async createEdges(srcFile: TFile, srcId: string, toNodes: NodeCollection, graph: Juggl): Promise<EdgeDefinition[]> {
       const cache = this.metadata.getFileCache(srcFile);
       if (!cache) {
         return [];
@@ -115,7 +115,7 @@ ${edge.data.context}`;
       return [].concat(...Object.values(edges));
     }
 
-    async connectNodes(allNodes: NodeCollection, newNodes: NodeCollection, graph: AdvancedGraph): Promise<EdgeDefinition[]> {
+    async connectNodes(allNodes: NodeCollection, newNodes: NodeCollection, graph: Juggl): Promise<EdgeDefinition[]> {
       const edges: EdgeDefinition[] = [];
       // Find edges from newNodes to other nodes
       // @ts-ignore
@@ -291,7 +291,7 @@ ${edge.data.context}`;
       return Promise.resolve(this.nodeFromFile(file));
     }
 
-    async refreshNode(view: AdvancedGraph, id: VizId) {
+    async refreshNode(view: Juggl, id: VizId) {
       const idS = id.toId();
       let correctEdges: IMergedToGraph;
       let node = view.viz.$id(idS);

@@ -14,93 +14,43 @@
             alt="chat on Discord" width="120"></a>
 </p>
 
-## Neo4j Graph View
-![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/styled_screenshot.png)
+## Juggl 
 
-Documentation at https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin. 
+This branch is for the complete rewrite of the Neo4j Graph View Plugin, which will be called 'Juggl'. 
+If you would like to help with testing, please join the Discord server  https://discord.gg/sAmSGpaPgM
 
-Join the new Discord server to discuss the plugin: https://discord.gg/sAmSGpaPgM
+Documentation of this version is of high priority, and will be done soon!
 
-Adds a new and much more functional graph view to Obsidian. It does so by connecting
-to a [Neo4j](https://neo4j.com/) database. Features:
-- Selectively style nodes and edges by tags, folders and link types
-- Selective expansion and hiding of nodes
-- View images within the graph
-- [Cypher](https://neo4j.com/developer/cypher/) querying
-- Typed links using `- linkType [[note 1]], [[note 2|alias]]`
-- Hierarchical layout
+Adds a completely interactive, stylable and expandable graph view to Obsidian. 
+It is designed as an advanced 'local' graph view called the 'workspace', where you can juggle all your thoughts with ease.
+The goal of Juggl is to help you be productive by turning Obsidian into an app that's primarily navigated through a graph!
 
-Next up:
-- [x] Remove the need to install Neo4j and Python 
-- [ ] Different and more stable front end
-- [x] Standardize style sheet using CSS instead of JSON
+For example, you can select what parts of the graph to expand, to make sure there is never too much information on the screen.
+Furthermore, because it uses the powerful Cytoscape.js library, you have complete control over styling your graph.
+You can use rules to style nodes and edges with colors, shapes, sizes, and even images.
+This helps you get an immediate overview over what the content of each node is.
+
+
+Some features:
+- Use CSS, YAML and styling groups for complete control with styling your graph.
+- Workspace mode that helps you build up your graph with all nodes that are relevant to your current project.
+  - Selectively browse and hide nodes, and pin their location so you never lose where they are
+  - Save your graph so you can continue working on it later!
+- 4 different layouts to get different kinds of insights 
+- A code fence that displays the graph within Obsidian notes 
+- Juggl is full of advanced features that will allow you to make 
+- Unlike Neo4j Graph View, there's no need to install Python or Neo4j!
+
 
 A [Roadmap](https://publish.obsidian.md/semantic-obsidian/Roadmap) with planned features is also available.
 
-![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/obsidian%20neo4j%20plugin.gif)
-
-### Installation
-Detailed installation instructions is at https://publish.obsidian.md/semantic-obsidian/Installation+of+Neo4j+Graph+View+Plugin
-1. Make sure you have [Python 3.6+](https://www.python.org/downloads/) installed. It needs the system-installed Python. Make sure to add Python to PATH!
-2. Make sure you have [Neo4j desktop](https://neo4j.com/download/) installed
-4. Create a new database in Neo4j desktop and start it. Record the password you use!
-5. In the settings of the plugin, enter the password. Then run the restart command.
-
-If installing Python seems daunting, you can wait a couple of weeks. The goal is to port that code to Javascript.
-
-### Use
-Detailed getting started guide is at https://publish.obsidian.md/semantic-obsidian/Using+the+Neo4j+Graph+View
-
-On an open note, use the command "Neo4j Graph View: Open local graph of note". You can run commands using ctrl/cmd+p. Alternatively, you can bind this command to a hotkey in the settings.
-
-The settings contains several options, such as coloring based on folders and a hierarchical layout. 
-
-#### Cypher Querying
-Create code blocks with language `cypher`. In this code block, create your Cypher query. Then, when the cursor is on this
-code block, use the Obsidian command 'Neo4j Graph View: Execute Cypher query'. Example: 
-
-![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/cypher_querying.png)
-
-
-### Possible problems
-All changes made in obsidian should be automatically reflected in Neo4j, but this is still very buggy. 
-
-If you are running into issues, see https://publish.obsidian.md/semantic-obsidian/Installation+of+Neo4j+Graph+View+Plugin#troubleshooting
 ### Semantics
 The plugin collects all notes with extension .md in the input directory (default: `markdown/`). Each note is interpreted as follows:
-- Interprets tags as entity types
-- Interprets YAML frontmatter as entity properties
-- Interprets wikilinks as links with type `inline`, and adds content
+- Interprets tags as CSS classes
+- Interprets YAML frontmatter as CSS attributes
+- Interprets wikilinks as links with link type `inline`, and adds content
 - Lines of the format `"- linkType [[note 1]], [[note 2|alias]]"` creates links with type `linkType` from the current note to `note 1` and `note 2`.
-- The name of the note is stored in the property `name`
-- The content of the note (everything except YAML frontmatter and typed links) is stored in the property `content`
+- The name of the note is stored in the attribute `name`
+- The content of the note (everything except YAML frontmatter and typed links) is stored in the attribute `content`
 - Links to notes that do not exist yet are created without any types.
 
-
-## Other visualization and querying options
-Another use case for this plugin is to use your Obsidian vault in one of the many apps in the Neo4j desktop
-Graph Apps Store. Using with this plugin active will automatically connect it to your vault. Here are some suggestions:
-### Neo4j Bloom
-[Neo4j bloom](https://neo4j.com/product/bloom/) is very powerful graph visualization software. Compared to the embedded
-graph view in Obsidian, it offers much more freedom in customization.
-
-![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/bloom_screenshot.jpg)
-
-  
-### GraphXR
-[GraphXR](https://www.kineviz.com/) is a 3D graph view, which looks quite gorgeous!
-
-![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/graphxr.gif)
-
-
-### Neo4j Browser
-A query browser that uses the Cypher language to query your vault. Can be used for advanced queries or data anlysis of
-your vault. 
-
-![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/browser_screenshot.png)
-
-
-## Python code: Semantic Markdown to Neo4j
-This Obsidian plugin uses the Python package `semantic-markdown-converter`, which is also in this repo. 
-It creates an active data stream from a folder of Markdown notes to a Neo4j database. 
-For documentation, see https://publish.obsidian.md/semantic-obsidian/Semantic+Markdown+Converter

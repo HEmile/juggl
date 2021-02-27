@@ -4,11 +4,11 @@ import {
   Plugin, ReferenceCache, TFile, Vault,
 } from 'obsidian';
 import {
-  IAGPluginSettings,
-  AdvancedGraphSettingTab,
-  DefaultAdvancedGraphSettings, LAYOUTS,
+  IJugglPluginSettings,
+  JugglGraphSettingsTab,
+  DefaultJugglSettings, LAYOUTS,
 } from './settings';
-import {AdvancedGraph, MD_VIEW_TYPE} from './viz/visualization';
+import {Juggl, MD_VIEW_TYPE} from './viz/visualization';
 import {ImageServer} from './image-server';
 import type {ICoreDataStore, IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
@@ -24,9 +24,9 @@ import dblclick from 'cytoscape-dblclick';
 import cxtmenu from '../../cytoscape.js-cxtmenu/cytoscape-cxtmenu';
 import {addIcons} from './ui/icons';
 import {STYLESHEET_PATH} from './viz/stylesheet';
-import {AdvancedGraphView} from './viz/ag-view';
+import {JugglView} from './viz/juggl-view';
 import YAML from 'yaml';
-import {AG_VIEW_TYPE} from './constants';
+import {JUGGL_VIEW_TYPE} from './constants';
 import {WorkspaceManager} from './viz/workspaces/workspace-manager';
 
 
@@ -35,14 +35,14 @@ import {WorkspaceManager} from './viz/workspaces/workspace-manager';
 // const STATUS_OFFLINE = 'Neo4j stream offline';
 
 
-export default class AdvancedGraphPlugin extends Plugin {
+export default class JugglPlugin extends Plugin {
     // Match around [[ and ]], and ensure content isn't a wikilnk closure
 // This doesn't explicitly parse aliases.
     static wikilinkRegex = '\\[\\[([^\\]\\r\\n]+?)\\]\\]';//
     static CAT_DANGLING = 'dangling';
     static nameRegex = '[^\\W\\d]\\w*';
 
-    settings: IAGPluginSettings;
+    settings: IJugglPluginSettings;
     path: string;
     // statusBar: HTMLElement;
     // neo4jStream: Neo4jStream;
@@ -77,9 +77,9 @@ export default class AdvancedGraphPlugin extends Plugin {
       this.addChild(this.workspaceManager);
       this.registerCoreStore(obsidianStore, OBSIDIAN_STORE_NAME);
 
-      this.settings = Object.assign({}, DefaultAdvancedGraphSettings, await this.loadData());
-      this.settings.graphSettings = Object.assign({}, DefaultAdvancedGraphSettings.graphSettings, this.settings.graphSettings);
-      this.settings.embedSettings = Object.assign({}, DefaultAdvancedGraphSettings.embedSettings, this.settings.embedSettings);
+      this.settings = Object.assign({}, DefaultJugglSettings, await this.loadData());
+      this.settings.graphSettings = Object.assign({}, DefaultJugglSettings.graphSettings, this.settings.graphSettings);
+      this.settings.embedSettings = Object.assign({}, DefaultJugglSettings.embedSettings, this.settings.embedSettings);
 
       // this.statusBar = this.addStatusBarItem();
       // this.statusBar.setText(STATUS_OFFLINE);
@@ -150,7 +150,7 @@ export default class AdvancedGraphPlugin extends Plugin {
       //   },
       // });
 
-      this.addSettingTab(new AdvancedGraphSettingTab(this.app, this));
+      this.addSettingTab(new JugglGraphSettingsTab(this.app, this));
 
       this.registerEvent(this.app.workspace.on('file-menu', (menu, file: TFile) => {
         menu.addItem((item) => {
@@ -169,16 +169,19 @@ export default class AdvancedGraphPlugin extends Plugin {
       // If this doesn't work nicely,
       // The Obsidian-way is this.registerEvent( this.app.vault.on("raw", {} );
       // But that'll fire on every file change.
-      require('original-fs').watch(path,
-          async (curr:any, prev:any) => {
-            console.log('Updating graph stylesheet');
-            for (const view of this.activeGraphs()) {
-              const style = await view.createStylesheet();
-              view.viz.style(style);
-            }
-          });
-      this.registerMarkdownCodeBlockProcessor('advanced-graph', async (src, el, context) => {
-        // Timeout is needed to ensure the div is added to the window. The graph will only load if
+      const fs = require('original-fs');
+      if (fs.existsSync(path)) {
+        require('original-fs').watch(path,
+            async (curr:any, prev:any) => {
+              console.log(`Updating stylesheet from ${path}`);
+              for (const view of this.activeGraphs()) {
+                const style = await view.createStylesheet();
+                view.viz.style(style);
+              }
+            });
+      }
+      this.registerMarkdownCodeBlockProcessor('juggl', async (src, el, context) => {
+        // timeout is needed to ensure the div is added to the window. The graph will only load if
         // it is attached. This will also prevent any annoying hickups while looading the graph.
         setTimeout(async () => {
           const parsed = YAML.parse(src);
@@ -191,9 +194,9 @@ export default class AdvancedGraphPlugin extends Plugin {
             el.style.width = settings.width;
             el.style.height = settings.height;
             if (Object.keys(parsed).contains('local')) {
-              this.addChild(new AdvancedGraph(el, this, stores, settings, parsed.local));
+              this.addChild(new Juggl(el, this, stores, settings, parsed.local));
             } else if (Object.keys(parsed).contains('workspace')) {
-              const graph = new AdvancedGraph(el, this, stores, settings, null);
+              const graph = new Juggl(el, this, stores, settings, null);
               if (!this.workspaceManager.graphs.contains(parsed.workspace)) {
                 throw 'Did not recognize workspace. Did you misspell its name?';
               }
@@ -205,7 +208,7 @@ export default class AdvancedGraphPlugin extends Plugin {
           } catch (error) {
           // taken from https://github.com/jplattel/obsidian-query-language/blob/main/src/renderer.ts
             const errorElement = document.createElement('div');
-            errorElement.addClass('ag-error');
+            errorElement.addClass('juggl-error');
             errorElement.innerText = error;
             el.appendChild(errorElement);
           }
@@ -226,7 +229,7 @@ export default class AdvancedGraphPlugin extends Plugin {
     async openLocalGraph(name: string) {
       const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
       // const query = this.localNeighborhoodCypher(name);
-      const neovisView = new AdvancedGraphView(leaf, this, name);
+      const neovisView = new JugglView(leaf, this, name);
       await leaf.open(neovisView);
     }
     // nodeCypher(label: string): string {
@@ -296,7 +299,7 @@ export default class AdvancedGraphPlugin extends Plugin {
         }
         return classes;
       }
-      return [AdvancedGraphPlugin.CAT_DANGLING];
+      return [JugglPlugin.CAT_DANGLING];
     }
 
     regexEscape(str: string) {
@@ -306,7 +309,7 @@ export default class AdvancedGraphPlugin extends Plugin {
     public parseTypedLink(link: ReferenceCache, line: string): ITypedLink {
     // TODO: This is something specific I use, but shouldn't keep being in this repo.
       const regexPublishedIn = new RegExp(
-          `^${this.regexEscape(this.settings.typedLinkPrefix)} (publishedIn) (\\d\\d\\d\\d) (${AdvancedGraphPlugin.wikilinkRegex},? *)+$`);
+          `^${this.regexEscape(this.settings.typedLinkPrefix)} (publishedIn) (\\d\\d\\d\\d) (${JugglPlugin.wikilinkRegex},? *)+$`);
       const matchPI = regexPublishedIn.exec(line);
       if (!(matchPI === null)) {
         return {
@@ -323,7 +326,7 @@ export default class AdvancedGraphPlugin extends Plugin {
       // Intuition: Start with the typed link prefix. Then a neo4j name (nameRegex).
       // Then one or more of the wikilink group: wikilink regex separated by optional comma and multiple spaces
       const regex = new RegExp(
-          `^${this.regexEscape(this.settings.typedLinkPrefix)} (${AdvancedGraphPlugin.nameRegex}) (${AdvancedGraphPlugin.wikilinkRegex},? *)+$`);
+          `^${this.regexEscape(this.settings.typedLinkPrefix)} (${JugglPlugin.nameRegex}) (${JugglPlugin.wikilinkRegex},? *)+$`);
       const match = regex.exec(line);
       if (!(match === null)) {
         return {
@@ -364,11 +367,11 @@ export default class AdvancedGraphPlugin extends Plugin {
     //   }
     // }
 
-    public activeGraphs(): AdvancedGraph[] {
+    public activeGraphs(): Juggl[] {
       // TODO: This is not a great method, no way to find back the inline graphs!
       return this.app.workspace
-          .getLeavesOfType(AG_VIEW_TYPE)
-          .map((l) => (l.view as AdvancedGraphView).advancedGraph);
+          .getLeavesOfType(JUGGL_VIEW_TYPE)
+          .map((l) => (l.view as JugglView).juggl);
     }
 
     async onunload() {

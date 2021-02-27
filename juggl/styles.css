@@ -21,7 +21,7 @@ div.cy-navigator {
     overflow: hidden;
 }
 
-div.ag-error {
+div.juggl-error {
     background-color: red;
 }
 
@@ -58,11 +58,11 @@ div.ag-error {
     height: 100%;
 }
 
-.advanced-graph-hover {
+.juggl-hover {
     opacity: 0.9;
 }
 
-.advanced-graph-preview-edge {
+.juggl-preview-edge {
     height: 140px !important;
 }
 
@@ -105,7 +105,7 @@ div.ag-error {
 }
 
 
-button.advanced-graph-button {
+button.juggl-button {
     width: 27px;
     height: 27px;
     text-align: center;
@@ -120,16 +120,16 @@ button.advanced-graph-button {
     cursor: not-allowed;
 }
 
-button.advanced-graph-button > svg > path {
+button.juggl-button > svg > path {
     fill: var(--text-muted);
     opacity: 0.6;
 }
 
-button.advanced-graph-button:hover > svg > path {
+button.juggl-button:hover > svg > path {
     opacity: 1;
 }
 
-button.advanced-graph-button:disabled > svg > path {
+button.juggl-button:disabled > svg > path {
     opacity: 0.3;
 }
 

@@ -1,15 +1,16 @@
 import {App, PluginSettingTab, Setting, SplitDirection} from 'obsidian';
 
-import type AdvancedGraphPlugin from './main';
+import type JugglPlugin from './main';
 import {OBSIDIAN_STORE_NAME} from './obsidian-store';
 import AppearanceSettings from './ui/settings/AppearanceSettings.svelte';
 import type {LayoutOptions} from 'cytoscape';
 
 export const LAYOUTS = ['force-directed', 'circle', 'grid', 'hierarchy', 'cola'];
 export type FDGDLayouts = 'cola'| 'd3-force';
-export type AGLayouts = 'force-directed' | 'circle' | 'grid' | 'hierarchy' | FDGDLayouts;
+export type JugglLayouts = 'force-directed' | 'circle' | 'grid' | 'hierarchy' | FDGDLayouts;
+import KoFi from './ui/KoFi.svelte';
 
-export interface IAdvancedGraphSettings {
+export interface IJugglSettings {
     autoAddNodes: boolean;
     navigator: boolean;
     toolbar: boolean;
@@ -19,7 +20,7 @@ export interface IAdvancedGraphSettings {
     hoverEdges: boolean;
     autoExpand: boolean;
     autoZoom: boolean;
-    layout: AGLayouts | LayoutOptions;
+    layout: JugglLayouts | LayoutOptions;
     fdgdLayout: FDGDLayouts ;
     limit: number;
     filter: string;
@@ -29,19 +30,19 @@ export interface IAdvancedGraphSettings {
 }
 
 
-export interface IAGPluginSettings {
+export interface IJugglPluginSettings {
     // indexContent: boolean; // neo4j
     password: string; // neo4j
     typedLinkPrefix: string;
     splitDirection: SplitDirection; // 'horizontal';
     imgServerPort: number;
     debug: boolean;
-    graphSettings: IAdvancedGraphSettings;
-    embedSettings: IAdvancedGraphSettings;
+    graphSettings: IJugglSettings;
+    embedSettings: IJugglSettings;
 }
 
 
-export const DefaultAdvancedGraphSettings: IAGPluginSettings = {
+export const DefaultJugglSettings: IJugglPluginSettings = {
   password: '',
   splitDirection: 'vertical',
   typedLinkPrefix: '-',
@@ -87,9 +88,9 @@ export const DefaultAdvancedGraphSettings: IAGPluginSettings = {
 };
 
 
-export class AdvancedGraphSettingTab extends PluginSettingTab {
-    plugin: AdvancedGraphPlugin;
-    constructor(app: App, plugin: AdvancedGraphPlugin) {
+export class JugglGraphSettingsTab extends PluginSettingTab {
+    plugin: JugglPlugin;
+    constructor(app: App, plugin: JugglPlugin) {
       super(app, plugin);
       this.plugin = plugin;
     }
@@ -99,7 +100,9 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
       containerEl.empty();
 
       containerEl.createEl('h3');
-      containerEl.createEl('h3', {text: 'Advanced Graph View'});
+      containerEl.createEl('h3', {text: 'Juggl'});
+
+      new KoFi({target: containerEl});
 
       const doc_link = document.createElement('a');
       doc_link.href = 'https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin';
@@ -112,7 +115,8 @@ export class AdvancedGraphSettingTab extends PluginSettingTab {
       discord_link.innerHTML = 'the Discord server';
 
       const introPar = document.createElement('p');
-      introPar.innerHTML = 'Check out ' + doc_link.outerHTML + ' for guides on how to use the plugin. <br>' +
+      introPar.innerHTML =
+          'Check out ' + doc_link.outerHTML + ' for guides on how to use the plugin. <br>' +
             'Join ' + discord_link.outerHTML + ' for help, nice discussion and insight into development.';
 
       containerEl.appendChild(introPar);

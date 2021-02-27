@@ -1,15 +1,15 @@
 import {Component, DataAdapter} from 'obsidian';
-import type AdvancedGraphPlugin from '../../main';
-import type {AdvancedGraph} from '../visualization';
+import type JugglPlugin from '../../main';
+import type {Juggl} from '../visualization';
 import {DATA_FOLDER} from '../../constants';
 import path from 'path';
 import {VizId} from '../../interfaces';
 
 export class WorkspaceManager extends Component {
-    plugin: AdvancedGraphPlugin;
+    plugin: JugglPlugin;
     adapter: DataAdapter;
     graphs: string[] = [];
-    constructor(plugin: AdvancedGraphPlugin) {
+    constructor(plugin: JugglPlugin) {
       super();
       this.plugin = plugin;
       this.adapter = this.plugin.app.vault.adapter;
@@ -25,7 +25,7 @@ export class WorkspaceManager extends Component {
       }
     }
 
-    async saveGraph(name: string, viz: AdvancedGraph) {
+    async saveGraph(name: string, viz: Juggl) {
       try {
         await this.adapter.mkdir(DATA_FOLDER + name);
         const graphJson = viz.viz.json();
@@ -40,7 +40,7 @@ export class WorkspaceManager extends Component {
       }
     }
 
-    async loadGraph(name: string, viz: AdvancedGraph) {
+    async loadGraph(name: string, viz: Juggl) {
       try {
         const graph = JSON.parse(await this.adapter.read(DATA_FOLDER + name + '/graph.json'));
         const settings = JSON.parse(await this.adapter.read(DATA_FOLDER + name + '/settings.json'));
@@ -68,7 +68,7 @@ export class WorkspaceManager extends Component {
       }
     };
 
-    async deleteGraph(name: string, view: AdvancedGraph) {
+    async deleteGraph(name: string, view: Juggl) {
       try {
         await this.adapter.rmdir(DATA_FOLDER + name, true);
         this.graphs.remove(name);

@@ -1,6 +1,6 @@
 import type {IAGMode} from '../interfaces';
 import type {EventNames, EventObject, NodeSingular} from 'cytoscape';
-import type {AdvancedGraph} from './visualization';
+import type {Juggl} from './visualization';
 import type {NodeCollection} from 'cytoscape';
 import type {Menu} from 'obsidian';
 import ToolbarLocal from '../ui/ToolbarLocal.svelte';
@@ -30,7 +30,7 @@ export class LocalMode extends Component implements IAGMode {
     events: EventRec[] = [];
     windowEvent: any;
     toolbar: SvelteComponent;
-    constructor(view: AdvancedGraph) {
+    constructor(view: Juggl) {
       super();
       this.view = view;
     }

@@ -1,12 +1,12 @@
 import {App, Modal} from 'obsidian';
 import SaveWorkspaces from './SaveWorkspaces.svelte';
 import type {WorkspaceManager} from '../viz/workspaces/workspace-manager';
-import type {AdvancedGraph} from '../viz/visualization';
+import type {Juggl} from '../viz/visualization';
 
 export class WorkspaceModal extends Modal {
   manager: WorkspaceManager;
-  view: AdvancedGraph;
-  constructor(app: App, workspaceManager: WorkspaceManager, view: AdvancedGraph) {
+  view: Juggl;
+  constructor(app: App, workspaceManager: WorkspaceManager, view: Juggl) {
     super(app);
     this.manager = workspaceManager;
     this.view = view;

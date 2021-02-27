@@ -1,8 +1,8 @@
-import type AdvancedGraphPlugin from '../main';
+import type JugglPlugin from '../main';
 import type {FileSystemAdapter} from 'obsidian';
 import {promises as fs} from 'fs';
 
-export const STYLESHEET_PATH = './.obsidian/plugins/neo4j-graph-view/graph.css';
+export const STYLESHEET_PATH = './.obsidian/juggl/style.css';
 
 const YAML_MODIFY_SHEET = `
 node[color] {
@@ -31,8 +31,8 @@ defaultSheet comes before graph.css, yamlModifySheet comes after.
 export class GraphStyleSheet {
     defaultSheet: string;
     yamlModifySheet: string;
-    plugin: AdvancedGraphPlugin;
-    constructor(plugin: AdvancedGraphPlugin) {
+    plugin: JugglPlugin;
+    constructor(plugin: JugglPlugin) {
       this.defaultSheet = this.getDefaultStylesheet();
       this.yamlModifySheet = YAML_MODIFY_SHEET;
       this.plugin = plugin;

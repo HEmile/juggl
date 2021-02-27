@@ -1,4 +1,4 @@
-import type {IAdvancedGraphSettings, IAGPluginSettings} from '../settings';
+import type {IJugglSettings, IJugglPluginSettings} from '../settings';
 import {
   Component, debounce,
   EventRef,
@@ -11,7 +11,7 @@ import {
   Workspace,
   WorkspaceLeaf,
 } from 'obsidian';
-import type AdvancedGraphPlugin from '../main';
+import type JugglPlugin from '../main';
 import cytoscape, {
   Collection,
   Core,
@@ -39,20 +39,20 @@ import {
 } from '../constants';
 import {LocalMode} from './local-mode';
 import type {LayoutSettings} from './layout-settings';
-import {ColaGlobalLayout, getLayoutSetting, parseLayoutSettings} from './layout-settings';
+import {parseLayoutSettings} from './layout-settings';
 import {filter} from './query-builder';
 
 export const MD_VIEW_TYPE = 'markdown';
 
 let VIEW_COUNTER = 0;
 
-export class AdvancedGraph extends Component {
+export class Juggl extends Component {
     element: Element;
     workspace: Workspace;
-    settings: IAdvancedGraphSettings;
+    settings: IJugglSettings;
     initialNode: string;
     vault: Vault;
-    plugin: AdvancedGraphPlugin;
+    plugin: JugglPlugin;
     viz: Core;
     rebuildRelations = true;
     selectName: string = undefined;
@@ -65,7 +65,7 @@ export class AdvancedGraph extends Component {
     destroyHover: () => void = null;
     debouncedRestartLayout: () => void;
 
-    constructor(element: Element, plugin: AdvancedGraphPlugin, dataStores: IDataStore[], settings: IAdvancedGraphSettings, initialNode?: string) {
+    constructor(element: Element, plugin: JugglPlugin, dataStores: IDataStore[], settings: IJugglSettings, initialNode?: string) {
       super();
       this.element = element;
       this.settings = settings;
@@ -220,7 +220,7 @@ export class AdvancedGraph extends Component {
           // TODO resolve SourcePath, can be done using the source file.
           this.hoverTimeout[e.target.id()] = setTimeout(async () =>
           // @ts-ignore
-            await this.popover(edge.data()['context'], '', edge, 'advanced-graph-preview-edge'),
+            await this.popover(edge.data()['context'], '', edge, 'juggl-preview-edge'),
           800);
         }
       });
@@ -298,7 +298,7 @@ export class AdvancedGraph extends Component {
 
     async popover(mdContent: string, sourcePath: string, target: Singular, styleClass: string) {
       const newDiv = document.createElement('div');
-      newDiv.addClasses(['popover', 'hover-popover', 'is-loaded', 'advanced-graph-hover']);
+      newDiv.addClasses(['popover', 'hover-popover', 'is-loaded', 'juggl-hover']);
       const mdEmbedDiv = document.createElement('div');
       mdEmbedDiv.addClasses(['markdown-embed', styleClass]);
       newDiv.appendChild(mdEmbedDiv);
