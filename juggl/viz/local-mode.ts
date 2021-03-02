@@ -3,7 +3,7 @@ import type {EventNames, EventObject, NodeSingular} from 'cytoscape';
 import type {Juggl} from './visualization';
 import type {NodeCollection} from 'cytoscape';
 import type {Menu} from 'obsidian';
-import ToolbarLocal from '../ui/ToolbarLocal.svelte';
+import ToolbarLocal from '../ui/toolbar/ToolbarLocal.svelte';
 import {Component, TFile} from 'obsidian';
 import {ICoreDataStore, VizId} from '../interfaces';
 import {

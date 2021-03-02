@@ -1,15 +1,12 @@
-import type {IJugglSettings, IJugglPluginSettings} from '../settings';
+import type {IJugglSettings} from '../settings';
 import {
   Component, debounce,
   EventRef,
   Events,
-  ItemView,
   MarkdownRenderer,
   Menu,
-  TFile,
   Vault,
   Workspace,
-  WorkspaceLeaf,
 } from 'obsidian';
 import type JugglPlugin from '../main';
 import cytoscape, {
@@ -513,6 +510,7 @@ export class Juggl extends Component {
         this.viz.endBatch();
       }
 
+      console.log('triggering');
       this.trigger('elementsChange');
       this.searchFilter(this.settings.filter);
       if (debounceLayout) {

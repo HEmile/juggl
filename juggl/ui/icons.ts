@@ -28,6 +28,8 @@ export const icons: Record<string, string> = {
   ag_file: mdiIcons.mdiFileOutline,
   ag_filter: mdiIcons.mdiFilterOutline,
   ag_save: mdiIcons.mdiContentSave,
+  ag_node_list: mdiIcons.mdiFormatListBulletedType,
+  ag_style: mdiIcons.mdiPaletteOutline,
 };
 
 export const addIcons = (): void => {

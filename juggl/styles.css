@@ -190,3 +190,8 @@ button[data-tooltip]:hover:after {
     opacity: 1;
     transform: translate(-50%, 0)
 }
+
+div.juggl-list-text {
+    font-size: var(--font-small);
+    word-break: break-word;
+}

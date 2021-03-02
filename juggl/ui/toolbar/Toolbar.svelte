@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {icons} from "./icons";
+    import {icons} from "../icons";
     import {Core} from "cytoscape";
     import ToolbarButton from "./ToolbarButton.svelte";
     import {debounce} from "obsidian";

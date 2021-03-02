@@ -17,6 +17,7 @@ export class JugglView extends ItemView {
      }
 
      getDisplayText(): string {
+       // TODO: Make this interactive: Either the active workspace or the local graph
        return 'Juggl';
      }
 

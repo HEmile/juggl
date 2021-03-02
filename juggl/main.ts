@@ -25,8 +25,9 @@ import cxtmenu from '../../cytoscape.js-cxtmenu/cytoscape-cxtmenu';
 import {addIcons} from './ui/icons';
 import {STYLESHEET_PATH} from './viz/stylesheet';
 import {JugglView} from './viz/juggl-view';
+import {JugglNodesPane, JugglPane} from './pane/view';
 import YAML from 'yaml';
-import {JUGGL_VIEW_TYPE} from './constants';
+import {JUGGL_NODES_VIEW_TYPE, JUGGL_VIEW_TYPE} from './constants';
 import {WorkspaceManager} from './viz/workspaces/workspace-manager';
 
 
@@ -54,7 +55,7 @@ export default class JugglPlugin extends Plugin {
 
     async onload(): Promise<void> {
       super.onload();
-      console.log('Loading advanced graph view plugin');
+      console.log('Loading Juggl');
       navigator(cytoscape);
       // cytoscape.use(coseBilkent);
       cytoscape.use(popper);
@@ -154,7 +155,7 @@ export default class JugglPlugin extends Plugin {
 
       this.registerEvent(this.app.workspace.on('file-menu', (menu, file: TFile) => {
         menu.addItem((item) => {
-          item.setTitle('Open Advanced Graph View').setIcon('dot-network')
+          item.setTitle('Open Juggl').setIcon('dot-network')
               .onClick((evt) => {
                 if (file.extension === 'md') {
                   this.openLocalGraph(file.basename);
@@ -214,6 +215,13 @@ export default class JugglPlugin extends Plugin {
           }
         }, 200);
       });
+      if (this.app.workspace.getLeavesOfType(JUGGL_NODES_VIEW_TYPE).length === 0) {
+        const leaf = this.app.workspace.getRightLeaf(false);
+        const view = new JugglNodesPane(leaf, this);
+        await leaf.open(view);
+        await leaf.setViewState({type: JUGGL_NODES_VIEW_TYPE});
+      }//
+      // this.app.workspace.createLeafInParent(this.app.workspace.rightSplit, 0 );
     }
 
     public async openFile(file: TFile, newLeaf=false) {
@@ -376,7 +384,8 @@ export default class JugglPlugin extends Plugin {
 
     async onunload() {
       super.onunload();
-      console.log('Unloading Neo4j Graph View plugin');
+      console.log('Unloading Juggl');
+      this.app.workspace.detachLeavesOfType(JUGGL_NODES_VIEW_TYPE);//
     }
 
     public registerStore(store: IDataStore) {

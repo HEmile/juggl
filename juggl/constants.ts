@@ -22,4 +22,5 @@ export const DEBOUNCE_FOLLOW = 500;
 export const DEBOUNCE_LAYOUT = 2300;
 
 export const JUGGL_VIEW_TYPE = 'juggl_view';
+export const JUGGL_NODES_VIEW_TYPE = 'juggl_nodes';
 export const DATA_FOLDER = '.obsidian/juggl/';

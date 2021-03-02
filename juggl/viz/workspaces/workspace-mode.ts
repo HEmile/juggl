@@ -3,7 +3,7 @@ import type {EventNames, EventObject, NodeSingular} from 'cytoscape';
 import type {Juggl} from '../visualization';
 import type {NodeCollection} from 'cytoscape';
 import type {Menu} from 'obsidian';
-import Toolbar from '../../ui/Toolbar.svelte';
+import Toolbar from '../../ui/toolbar/Toolbar.svelte';
 import {Component} from 'obsidian';
 import {VizId} from '../../interfaces';
 import {
@@ -380,7 +380,7 @@ export class WorkspaceMode extends Component implements IAGMode {
     this.view.on('selectChange', this.toolbar.onSelect.bind(this.toolbar));
     this.view.on('vizReady', (viz) => {
       this.toolbar.$set({viz: viz});
-      this.toolbar.onSelect.bind(this.toolbar)();
+      this.toolbar.onSelect.bind(this.toolbar)();//
     });
   }
   async openFile(node: NodeSingular, newLeaf: boolean) {
@@ -451,6 +451,8 @@ export class WorkspaceMode extends Component implements IAGMode {
   }
   removeNodes(nodes: NodeCollection) {
     nodes.addClass(CLASS_HARD_FILTERED);
+    console.log('before ongraphcnanged');
+    this.view.onGraphChanged(true, true);
     this.view.trigger('hide', nodes);
     this.view.trigger('selectChange');
   }
