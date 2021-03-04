@@ -153,8 +153,11 @@ export class WorkspaceMode extends Component implements IAGMode {
     console.log(this.menu);
 
     this.registerCyEvent('tap', 'node', async (e: EventObject) => {
-      if (e.originalEvent.shiftKey) {
-        await this.openFile(e.target, e.originalEvent.metaKey);
+      if (!this.view.settings.openWithShift || e.originalEvent.shiftKey) {
+        const file = await this.view.plugin.openFileFromNode(e.target, e.originalEvent.metaKey);
+        if (file) {
+          this.updateActiveNode(e.target, true);
+        }
       }
     });
 
@@ -241,7 +244,7 @@ export class WorkspaceMode extends Component implements IAGMode {
       } else if (evt.key === 'a') {
         this.selectAll();
       } else if (evt.key === 'n') {
-        this.selectNeighbourhood();
+        this.selectNeighboursOfSelected();
       } else if (evt.key === 'p') {
         this.pinSelection();
       } else if (evt.key === 'u') {
@@ -286,25 +289,25 @@ export class WorkspaceMode extends Component implements IAGMode {
     return 'workspace';
   }
 
-  fillMenu(menu: Menu): void {
-    const selection = this.viz.nodes(':selected');
-    if (selection.length > 0) {
+  fillMenu(menu: Menu, nodes: NodeCollection): void {
+    console.log(nodes);
+    if (nodes.length > 0) {
       menu.addItem((item) => {
         item.setTitle('Expand selection (E)').setIcon('ag-expand')
             .onClick(async (evt) => {
-              await this.expandSelection();
+              await this.view.expand(nodes);
             });
       });
       menu.addItem((item) => {
         item.setTitle('Collapse selection (C)').setIcon('ag-collapse')
             .onClick((evt) =>{
-              this.collapseSelection();
+              this.collapse(nodes);
             });
       });
       menu.addItem((item) => {
         item.setTitle('Hide selection (H)').setIcon('ag-hide')
             .onClick((evt) => {
-              this.removeSelection();
+              this.removeNodes(nodes);
             });
       });
       menu.addItem((item) =>{
@@ -320,27 +323,27 @@ export class WorkspaceMode extends Component implements IAGMode {
             });
       });
     }
-    if (selection.length > 0) {
+    if (nodes.length > 0) {
       menu.addItem((item) => {
         item.setTitle('Select neighbors (N)').setIcon('ag-select-neighbors')
             .onClick((evt) => {
-              this.selectNeighbourhood();
+              this.selectNeighbourhood(nodes);
             });
       });
       const pinned = this.view.getPinned();
-      if (selection.difference(pinned).length > 0) {
+      if (nodes.difference(pinned).length > 0) {
         menu.addItem((item) => {
           item.setTitle('Pin selection (P)').setIcon('ag-lock')
               .onClick((evt) => {
-                this.pinSelection();
+                this.pin(nodes);
               });
         });
       }
-      if (selection.intersect(pinned).length > 0) {
+      if (nodes.intersect(pinned).length > 0) {
         menu.addItem((item) => {
           item.setTitle('Unpin selection (U)').setIcon('ag-unlock')
               .onClick((evt) => {
-                this.unpinSelection();
+                this.unpin(nodes);
               });
         });
       }
@@ -362,7 +365,7 @@ export class WorkspaceMode extends Component implements IAGMode {
         hideClick: this.removeSelection.bind(this),
         selectAllClick: this.selectAll.bind(this),
         selectInvertClick: this.invertSelection.bind(this),
-        selectNeighborClick: this.selectNeighbourhood.bind(this),
+        selectNeighborClick: this.selectNeighboursOfSelected.bind(this),
         lockClick: this.pinSelection.bind(this),
         unlockClick: this.unpinSelection.bind(this),
         fitClick: this.view.fitView.bind(this.view),
@@ -382,25 +385,6 @@ export class WorkspaceMode extends Component implements IAGMode {
       this.toolbar.$set({viz: viz});
       this.toolbar.onSelect.bind(this.toolbar)();//
     });
-  }
-  async openFile(node: NodeSingular, newLeaf: boolean) {
-    this.updateActiveNode(node, true);
-    const id = VizId.fromNode(node);
-    if (!(id.storeId === 'core')) {
-      return;
-    }
-    const file = this.view.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
-    if (file) {
-    // @ts-ignore
-      await this.view.plugin.openFile(file, newLeaf);
-    } else {
-    // Create dangling file
-    // TODO: Add default folder
-      const filename = id.id + '.md';
-      const createdFile = await this.view.vault.create(filename, '');
-      // @ts-ignore
-      await mode.view.plugin.openFile(createdFile, newLeaf);
-    }
   }
 
   updateActiveNode(node: NodeCollection, followImmediate: boolean) {
@@ -433,8 +417,8 @@ export class WorkspaceMode extends Component implements IAGMode {
     await this.view.expand(this.viz.nodes(':selected'));
   }
 
-  collapseSelection() {
-    const selectedProtected = this.viz.nodes(`:selected.${CLASS_PROTECTED}`)
+  collapse(nodes: NodeCollection) {
+    const selectedProtected = nodes.filter(`:selected`)
         .removeClass([CLASS_PROTECTED, CLASS_EXPANDED]);
     selectedProtected.openNeighborhood()
         .nodes()
@@ -448,6 +432,9 @@ export class WorkspaceMode extends Component implements IAGMode {
     this.recursionPreventer = true;
     this.view.onGraphChanged(true, true);
     this.recursionPreventer = false;
+  }
+  collapseSelection() {
+    this.collapse(this.viz.nodes(':selected'));
   }
   removeNodes(nodes: NodeCollection) {
     nodes.addClass(CLASS_HARD_FILTERED);
@@ -473,11 +460,14 @@ export class WorkspaceMode extends Component implements IAGMode {
     this.view.trigger('selectChange');
   }
 
-  selectNeighbourhood() {
+  selectNeighboursOfSelected() {
+    this.selectNeighbourhood(this.viz.nodes(':selected'));
+  }
+  selectNeighbourhood(nodes: NodeCollection) {
     // TODO: This keeps self-loops selected.
     this.viz.nodes(':selected')
-        .unselect()
-        .openNeighborhood()
+        .unselect();
+    nodes.openNeighborhood()
         .select();
     this.view.trigger('selectChange');
   }

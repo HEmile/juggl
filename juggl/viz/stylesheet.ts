@@ -5,6 +5,12 @@ import {promises as fs} from 'fs';
 export const STYLESHEET_PATH = './.obsidian/juggl/style.css';
 
 const YAML_MODIFY_SHEET = `
+
+
+node[title] {
+  label: data(title);
+}
+
 node[color] {
   background-color: data(color);
 }
@@ -104,7 +110,6 @@ export class GraphStyleSheet {
       return `
 node {
   background-color: ${fillColor};
-  label: data(name);
   color: ${textColor};
   font-family: ${font};
   text-valign: bottom;
@@ -114,6 +119,9 @@ node {
   min-zoomed-font-size: 10;
 }
 
+node[name] {
+  label: data(name);
+}
 node[degree] {
   width: mapData(degree, 0, 60, 5, 35);
   height: mapData(degree, 0, 60, 5, 35);

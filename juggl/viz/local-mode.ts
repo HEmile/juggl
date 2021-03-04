@@ -49,20 +49,7 @@ export class LocalMode extends Component implements IAGMode {
     _onLoad() {
       this.viz = this.view.viz;
       this.registerCyEvent('tap', 'node', async (e: EventObject) => {
-        const id = VizId.fromNode(e.target);
-        if (!(id.storeId === 'core')) {
-          return;
-        }
-        let file = this.view.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
-        if (file) {
-          await this.view.plugin.openFile(file);
-        } else {
-          // create dangling file
-          // todo: add default folder
-          const filename = id.id + '.md';
-          file = await this.view.vault.create(filename, '');
-          await this.view.plugin.openFile(file);
-        }
+        const file = await this.view.plugin.openFileFromNode(e.target, e.originalEvent.metaKey);
         if (file) {
           await this.onOpenFile(file);
         }
@@ -130,7 +117,7 @@ export class LocalMode extends Component implements IAGMode {
       return 'local';
     }
 
-    fillMenu(menu: Menu): void {
+    fillMenu(menu: Menu, nodes: NodeCollection): void {
 
     }
 

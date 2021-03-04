@@ -25,6 +25,7 @@ export interface IJugglSettings {
     limit: number;
     filter: string;
     zoomSpeed: number;
+    openWithShift: boolean;
     width: string | number;
     height: string | number;
 }
@@ -56,6 +57,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     toolbar: true,
     hoverEdges: false,
     mergeEdges: true,
+    openWithShift: false,
     coreStore: OBSIDIAN_STORE_NAME,
     mode: 'local',
     layout: 'force-directed',
@@ -75,6 +77,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     coreStore: OBSIDIAN_STORE_NAME,
     hoverEdges: false,
     mergeEdges: true,
+    openWithShift: false,
     mode: 'local',
     navigator: false,
     layout: 'force-directed',
@@ -122,19 +125,6 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
       containerEl.appendChild(introPar);
 
       new AppearanceSettings({target: containerEl, props: {plugin: this.plugin}});
-
-      // new Setting(containerEl)
-      //     .setName('Neo4j database password')
-      //     .setDesc('The password of your neo4j graph database. WARNING: This is stored in plaintext in your vault. ' +
-      //           'Don\'t use sensitive passwords here!')
-      //     .addText((text) => {
-      //       text.setPlaceholder('')
-      //           .setValue(this.plugin.settings.password)
-      //           .onChange((newFolder) => {
-      //             this.plugin.settings.password = newFolder;
-      //             this.plugin.saveData(this.plugin.settings);
-      //           }).inputEl.setAttribute('type', 'password');
-      //     });
 
       containerEl.createEl('h3');
       containerEl.createEl('h3', {text: 'Extensions'});
@@ -254,7 +244,17 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
-
+      new Setting(containerEl)
+          .setName('Open with shift')
+          .setDesc('Only opens file when clicking on a node when shift is pressed')
+          .addToggle((toggle) => {
+            toggle.setValue(this.plugin.settings.graphSettings.openWithShift)
+                .onChange((new_value) => {
+                  this.plugin.settings.graphSettings.openWithShift = new_value;
+                  this.plugin.settings.embedSettings.openWithShift = new_value;
+                  this.plugin.saveData(this.plugin.settings);
+                });
+          });
 
       // new Setting(containerEl)
       //     .setName('Index note content')

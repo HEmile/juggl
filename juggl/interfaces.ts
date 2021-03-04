@@ -55,7 +55,7 @@ export interface ICoreDataStore extends IDataStore {
 export interface IAGMode extends Component {
     getName(): string;
 
-    fillMenu(menu: Menu): void;
+    fillMenu(menu: Menu, nodes: NodeCollection): void;
 
     createToolbar(element: Element): void;
 

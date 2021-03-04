@@ -4,14 +4,18 @@ import {nodeResolve} from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import copy from 'rollup-plugin-copy';
 import autoPreprocess from 'svelte-preprocess';
+import env from 'process';
+
+console.log(env.env);
 
 export default {
   input: 'main.ts',
   output: {
     dir: '.',
-    sourcemap: 'inline',
+    // sourcemap: 'inline',
     format: 'cjs',
     exports: 'default',
+    // banner: '/* This file is bundled with rollup. For the source code, see Github */',
   },
   external: ['obsidian'],
   plugins: [
@@ -22,7 +26,7 @@ export default {
       emitCss: false,
       preprocess: autoPreprocess(),
     }),
-    typescript(),
+    typescript({sourceMap: true}),
     nodeResolve({browser: true,
       dedupe: ['svelte']}),
     copy({

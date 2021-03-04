@@ -17,6 +17,7 @@ export const icons: Record<string, string> = {
   ag_lock: mdiIcons.mdiLock,
   ag_unlock: mdiIcons.mdiLockOpenVariantOutline,
   ag_hide: mdiIcons.mdiEyeOff,
+  ag_unhide: mdiIcons.mdiEye,
   ag_fit: mdiIcons.mdiFitToPageOutline,
   ag_image: mdiIcons.mdiImage,
   ag_workspace: mdiIcons.mdiToolboxOutline,

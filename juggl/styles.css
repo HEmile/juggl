@@ -133,9 +133,17 @@ button.juggl-button:disabled > svg > path {
     opacity: 0.3;
 }
 
+button.juggl-button-pane {
+    background: none;
+    margin: 0;
+    padding: 0;
+    width: 15px;
+    height: 15px;
+}
+
 button[data-tooltip] {
     position: relative;
-    z-index: 1010;
+    z-index: 9010;
     /*display: block;*/
 }
 
@@ -188,7 +196,8 @@ button[data-tooltip]:hover:before,
 button[data-tooltip]:hover:after {
     visibility: visible;
     opacity: 1;
-    transform: translate(-50%, 0)
+    transform: translate(-50%, 0);
+    z-index: 9000;
 }
 
 div.juggl-list-text {

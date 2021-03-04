@@ -260,13 +260,15 @@ export class Juggl extends Component {
         if (!(e.target === this.viz) && e.target.group() === 'nodes') {
           const id = VizId.fromNode(e.target);
           e.target.select();
-          const file = this.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
-          if (!(file === undefined)) {
+          if (id.storeId === 'core') {
+            const file = this.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
+            if (!(file === undefined)) {
             // hook for plugins to populate menu with "file-aware" menu items
-            this.plugin.app.workspace.trigger('file-menu', fileMenu, file, 'my-context-menu', null);
+              this.plugin.app.workspace.trigger('file-menu', fileMenu, file, 'my-context-menu', null);
+            }
           }
         }
-        this.mode.fillMenu(fileMenu);
+        this.mode.fillMenu(fileMenu, this.viz.nodes(':selected'));
         fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
       });
       this.viz.on('layoutstop', debounce((e: EventObject) => {

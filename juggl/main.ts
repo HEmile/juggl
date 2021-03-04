@@ -12,7 +12,7 @@ import {Juggl, MD_VIEW_TYPE} from './viz/visualization';
 import {ImageServer} from './image-server';
 import type {ICoreDataStore, IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
-import cytoscape from 'cytoscape';//
+import cytoscape, {NodeSingular} from 'cytoscape';//
 // import coseBilkent from 'cytoscape-cose-bilkent';
 import navigator from 'cytoscape-navigator';
 import popper from 'cytoscape-popper';
@@ -29,6 +29,7 @@ import {JugglNodesPane, JugglPane} from './pane/view';
 import YAML from 'yaml';
 import {JUGGL_NODES_VIEW_TYPE, JUGGL_VIEW_TYPE} from './constants';
 import {WorkspaceManager} from './viz/workspaces/workspace-manager';
+import {VizId} from './interfaces';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -154,6 +155,9 @@ export default class JugglPlugin extends Plugin {
       this.addSettingTab(new JugglGraphSettingsTab(this.app, this));
 
       this.registerEvent(this.app.workspace.on('file-menu', (menu, file: TFile) => {
+        if (!file) {
+          return;
+        }
         menu.addItem((item) => {
           item.setTitle('Open Juggl').setIcon('dot-network')
               .onClick((evt) => {
@@ -222,6 +226,24 @@ export default class JugglPlugin extends Plugin {
         await leaf.setViewState({type: JUGGL_NODES_VIEW_TYPE});
       }//
       // this.app.workspace.createLeafInParent(this.app.workspace.rightSplit, 0 );
+    }
+
+    public async openFileFromNode(node: NodeSingular, newLeaf= false): Promise<TFile> {
+      const id = VizId.fromNode(node);
+      if (!(id.storeId === 'core')) {
+        return null;
+      }
+      let file = this.app.metadataCache.getFirstLinkpathDest(id.id, '');
+      if (file) {
+        await this.openFile(file);
+      } else {
+        // create dangling file
+        // todo: add default folder
+        const filename = id.id + '.md';
+        file = await this.vault.create(filename, '');
+        await this.openFile(file);
+      }
+      return file;
     }
 
     public async openFile(file: TFile, newLeaf=false) {

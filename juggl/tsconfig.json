@@ -4,6 +4,7 @@
     "baseUrl": ".",
     "module": "ESNext",
     "target": "es2020",
+    "sourceMap": true,
     "noImplicitAny": true,
     "importHelpers": true,
     "lib": [
