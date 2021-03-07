@@ -58,7 +58,6 @@ const _selectorFromAtomic = function(atomicQuery: ISearchParserDictionary): stri
         break;
     }
   }
-  console.log(selector);
   return selector;
 };
 

@@ -128,7 +128,6 @@ export class WorkspaceMode extends Component implements IAGMode {
             enabled: true, // whether the command is selectable
           });
         }
-        console.log(commands);
         return commands;
       }, // function( ele ){ return [ /*...*/ ] }, // a function that returns commands or a promise of commands
       fillColor: `${backgroundColor}`, // the background colour of the menu
@@ -150,7 +149,6 @@ export class WorkspaceMode extends Component implements IAGMode {
 
     // @ts-ignore
     this.menu = this.viz.cxtmenu( defaults );
-    console.log(this.menu);
 
     this.registerCyEvent('tap', 'node', async (e: EventObject) => {
       if (!this.view.settings.openWithShift || e.originalEvent.shiftKey) {
@@ -290,7 +288,6 @@ export class WorkspaceMode extends Component implements IAGMode {
   }
 
   fillMenu(menu: Menu, nodes: NodeCollection): void {
-    console.log(nodes);
     if (nodes.length > 0) {
       menu.addItem((item) => {
         item.setTitle('Expand selection (E)').setIcon('ag-expand')
@@ -438,7 +435,6 @@ export class WorkspaceMode extends Component implements IAGMode {
   }
   removeNodes(nodes: NodeCollection) {
     nodes.addClass(CLASS_HARD_FILTERED);
-    console.log('before ongraphcnanged');
     this.view.onGraphChanged(true, true);
     this.view.trigger('hide', nodes);
     this.view.trigger('selectChange');

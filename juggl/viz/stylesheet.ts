@@ -1,8 +1,20 @@
 import type JugglPlugin from '../main';
 import type {FileSystemAdapter} from 'obsidian';
 import {promises as fs} from 'fs';
+import type {Juggl} from './visualization';
 
 export const STYLESHEET_PATH = './.obsidian/juggl/style.css';
+export const SHAPES = ['rectangle', 'ellipse', 'roundrectangle'] as const;
+export type Shape = typeof SHAPES[number];
+export class StyleGroup {
+  filter: string;
+  color: string;
+  shape: Shape;
+}
+
+export const DEFAULT_USER_SHEET = `
+/* For a full overview of styling options, see https://js.cytoscape.org/#style */
+`;
 
 const YAML_MODIFY_SHEET = `
 
@@ -44,13 +56,13 @@ export class GraphStyleSheet {
       this.plugin = plugin;
     }
 
-    async getStylesheet(): Promise<string> {
+    async getStylesheet(viz: Juggl): Promise<string> {
       const file = (this.plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
       // const customSheet = '';
       const customSheet = await fs.readFile(file, 'utf-8')
           .catch(async (err) => {
             if (err.code === 'ENOENT') {
-              const cstmSheet = this.genStyleSheet();
+              const cstmSheet = DEFAULT_USER_SHEET;
               await fs.writeFile(file, cstmSheet);
               console.log(cstmSheet);
               return cstmSheet;
@@ -58,8 +70,10 @@ export class GraphStyleSheet {
               throw err;
             }
           });
-
-      return this.defaultSheet + customSheet + this.yamlModifySheet;
+      // TODO: Ordering: If people specify some new YAML property to take into account, style groups will override this!
+      const globalGroups = this.styleGroupsToSheet(this.plugin.settings.globalStyleGroups, 'global');
+      const localGroups = this.styleGroupsToSheet(viz.settings.styleGroups, 'local');
+      return this.defaultSheet + customSheet + globalGroups + localGroups + this.yamlModifySheet;
     }
 
 
@@ -94,6 +108,19 @@ export class GraphStyleSheet {
       const computedColor = getComputedStyle(graphDiv).getPropertyValue('color');
       graphDiv.detach();
       return computedColor;
+    }
+
+    styleGroupsToSheet(groups: StyleGroup[], groupPrefix: string): string {
+      let sheet = '';
+      for (const [index, val] of groups.entries()) {
+        sheet += `
+node.${groupPrefix}-${index} {
+  background-color: ${val.color};
+  shape: ${val.shape};
+}         
+`;
+      }
+      return sheet;
     }
 
     getDefaultStylesheet(): string {
@@ -231,94 +258,5 @@ node.filtered {
     display: none;
 }
 `;
-    }
-
-
-    genStyleSheet(): string {
-      const tagColorMap = {} as Record<string, string>;
-
-      const colorSet = [[
-        '#0089BA',
-        '#2C73D2',
-        '#008E9B',
-        '#0081CF',
-        '#008F7A',
-        '#008E9B', // This one is double oops!
-      ], [
-        '#D65DB1',
-        '#0082C1',
-        '#9270D3',
-        '#007F93',
-        '#007ED9',
-        '#007660',
-      ], [
-        '#FF9671',
-        '#A36AAA',
-        '#F27D88',
-        '#6967A9',
-        '#D26F9D',
-        '#1b6299',
-      ], [
-        '#FFC75F',
-        '#4C9A52',
-        '#C3BB4E',
-        '#00855B',
-        '#88AC4B',
-        '#006F61',
-      ], [
-        '#FF6F91',
-        '#6F7F22',
-        '#E07250',
-        '#257A3E',
-        '#AC7C26',
-        '#006F5F',
-      ], [
-        '#F9F871',
-        '#2FAB63',
-        '#B8E067',
-        '#008E63',
-        '#78C664',
-        '#007160',
-      ]];
-      const colors: string[] = [];
-      for (const i of Array(6).keys()) {
-        for (const j of Array(6).keys()) {
-          colors.push(colorSet[j][i]);
-        }
-      }
-      let tagsIter = 0;
-      for (const file of this.plugin.vault.getMarkdownFiles()) {
-        const cache = this.plugin.metadata.getFileCache(file);
-        if (cache?.tags) {
-          cache.tags.forEach((t) => {
-            const tag = t.tag.slice(1);
-            const hSplit = tag.split('/');
-            const tags = [];
-            for (const i in hSplit) {
-              const hTag = hSplit.slice(0, parseInt(i) + 1).join('-');
-              tags.push(`tag-${hTag}`);
-            }
-            for (const tag of tags) {
-              if (!(tag in tagColorMap)) {
-                tagColorMap[tag] = colors[tagsIter];
-                tagsIter += 1;
-                if (tagsIter >= colors.length) {
-                  tagsIter = 0;
-                }
-              }
-            }
-          });
-        }
-      }
-
-      let genSheet = '/* For a full overview of styling options, see https://js.cytoscape.org/#style */';
-      for (const tag of Object.keys(tagColorMap)) {
-        genSheet += `
-.${tag} {
-    background-color: ${tagColorMap[tag]};
-}
-`;
-      }
-      return genSheet;
     }
 }

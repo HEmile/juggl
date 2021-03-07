@@ -1,9 +1,10 @@
 import {App, EventRef, View, WorkspaceLeaf} from 'obsidian';
-import {JUGGL_NODES_VIEW_TYPE, JUGGL_VIEW_TYPE} from '../constants';
+import {JUGGL_NODES_VIEW_TYPE, JUGGL_STYLE_VIEW_TYPE, JUGGL_VIEW_TYPE} from '../constants';
 import type JugglPlugin from '../main';
 import type {Juggl} from '../viz/visualization';
 import type {JugglView} from '../viz/juggl-view';
 import NodesPane from './NodesPane.svelte';
+import StylePane from './StylePane.svelte';
 
 export abstract class JugglPane extends View {
     plugin: JugglPlugin;
@@ -22,7 +23,6 @@ export abstract class JugglPane extends View {
           if (leaf.view.getViewType() === JUGGL_VIEW_TYPE) {
             const activeViz = (leaf.view as JugglView).juggl;
             this.changeRef = activeViz.on('elementsChange', () => {
-              console.log('Here');
               view.onActiveVizChange();
             });
             if (activeViz === this.activeViz) {
@@ -69,6 +69,36 @@ export class JugglNodesPane extends JugglPane {
     }
 
     onActiveVizChange(): void {
-      this.pane.setViz.bind(this.pane)(this.activeViz);
+      if (this.pane) {
+        this.pane.setViz.bind(this.pane)(this.activeViz);
+      }
+    }
+}
+export class JugglStylePane extends JugglPane {
+    pane: NodesPane;
+    constructor(leaf: WorkspaceLeaf, plugin: JugglPlugin) {
+      super(leaf, plugin);
+      this.icon = 'ag-style';
+    }
+
+    onload() {
+      super.onload();
+      this.pane = new StylePane({target: this.containerEl, props: {
+        plugin: this.plugin,
+      }});
+    }
+
+    getDisplayText(): string {
+      return 'Juggl style';
+    }
+
+    getViewType(): string {
+      return JUGGL_STYLE_VIEW_TYPE;
+    }
+
+    onActiveVizChange(): void {
+      if (this.pane) {
+        this.pane.setViz.bind(this.pane)(this.activeViz);
+      }
     }
 }

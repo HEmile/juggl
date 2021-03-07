@@ -28,7 +28,7 @@
                     {v.data("name")}
                 </div>
                 {#if icon}
-                    <button type="button" class="juggl-button juggl-button-pane" on:click={onClickButton(v)} data-tooltip={icon_tooltip} >
+                    <button type="button" class="juggl-button juggl-button-pane" on:click={onClickButton(v)} aria-label={icon_tooltip} >
                         <svg style= "width:14px;height:14px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d={icon} />
                         </svg>

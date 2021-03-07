@@ -1,4 +1,4 @@
-import {App, PluginSettingTab, Setting, SplitDirection} from 'obsidian';
+import {App, PluginSettingTab, Setting, SplitDirection, TagCache} from 'obsidian';
 
 import type JugglPlugin from './main';
 import {OBSIDIAN_STORE_NAME} from './obsidian-store';
@@ -9,8 +9,93 @@ export const LAYOUTS = ['force-directed', 'circle', 'grid', 'hierarchy', 'cola']
 export type FDGDLayouts = 'cola'| 'd3-force';
 export type JugglLayouts = 'force-directed' | 'circle' | 'grid' | 'hierarchy' | FDGDLayouts;
 import KoFi from './ui/KoFi.svelte';
+import type {StyleGroup} from './viz/stylesheet';
 
+export const genStyleGroups = function(plugin: JugglPlugin): StyleGroup[] {
+  const tagColorMap = {} as Record<string, string>;
+
+  const colorSet = [[
+    '#0089BA',
+    '#2C73D2',
+    '#008E9B',
+    '#0081CF',
+    '#008F7A',
+    '#008E9B', // This one is double oops!
+  ], [
+    '#D65DB1',
+    '#0082C1',
+    '#9270D3',
+    '#007F93',
+    '#007ED9',
+    '#007660',
+  ], [
+    '#FF9671',
+    '#A36AAA',
+    '#F27D88',
+    '#6967A9',
+    '#D26F9D',
+    '#1b6299',
+  ], [
+    '#FFC75F',
+    '#4C9A52',
+    '#C3BB4E',
+    '#00855B',
+    '#88AC4B',
+    '#006F61',
+  ], [
+    '#FF6F91',
+    '#6F7F22',
+    '#E07250',
+    '#257A3E',
+    '#AC7C26',
+    '#006F5F',
+  ], [
+    '#F9F871',
+    '#2FAB63',
+    '#B8E067',
+    '#008E63',
+    '#78C664',
+    '#007160',
+  ]];
+  const colors: string[] = [];
+  for (const i of Array(6).keys()) {
+    for (const j of Array(6).keys()) {
+      colors.push(colorSet[j][i]);
+    }
+  }
+  let tagsIter = 0;
+  for (const file of plugin.vault.getMarkdownFiles()) {
+    const cache = plugin.metadata.getFileCache(file);
+    if (cache?.tags) {
+      cache.tags.forEach((t:TagCache) => {
+        const tag = t.tag.slice(1);
+        const hSplit = tag.split('/');
+        const tags = [];
+        for (const i in hSplit) {
+          const hTag = hSplit.slice(0, parseInt(i) + 1).join('-');
+          tags.push(hTag);
+        }
+        for (const tag of tags) {
+          if (!(tag in tagColorMap)) {
+            tagColorMap[tag] = colors[tagsIter];
+            tagsIter += 1;
+            if (tagsIter >= colors.length) {
+              tagsIter = 0;
+            }
+          }
+        }
+      });
+    }
+  }
+
+  const genSheet: StyleGroup[] = [];
+  for (const tag of Object.keys(tagColorMap)) {
+    genSheet.push({filter: `tag:#${tag}`, color: tagColorMap[tag], shape: 'ellipse'});
+  }
+  return genSheet;
+};
 export interface IJugglSettings {
+    styleGroups: StyleGroup[];
     autoAddNodes: boolean;
     navigator: boolean;
     toolbar: boolean;
@@ -40,6 +125,7 @@ export interface IJugglPluginSettings {
     debug: boolean;
     graphSettings: IJugglSettings;
     embedSettings: IJugglSettings;
+    globalStyleGroups: StyleGroup[];
 }
 
 
@@ -49,7 +135,9 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
   typedLinkPrefix: '-',
   imgServerPort: 3837,
   debug: false,
+  globalStyleGroups: [],
   graphSettings: {
+    styleGroups: [],
     autoAddNodes: true,
     autoExpand: false,
     autoZoom: false,
@@ -70,6 +158,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     height: '100%',
   },
   embedSettings: {
+    styleGroups: [],
     autoAddNodes: false,
     autoExpand: false,
     autoZoom: false,

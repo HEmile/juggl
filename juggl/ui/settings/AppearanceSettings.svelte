@@ -1,6 +1,6 @@
 <script lang="ts">
     import {FileSystemAdapter} from "obsidian";
-    import {STYLESHEET_PATH, GraphStyleSheet} from "../../viz/stylesheet";
+    import {STYLESHEET_PATH, GraphStyleSheet, DEFAULT_USER_SHEET} from "../../viz/stylesheet";
     import {promises as fs} from "fs";
     import type JugglPlugin from "../../main";
 
@@ -10,7 +10,7 @@
         let fullPath = (plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
         // Write a file, throw an error if it already exists (flag wx). Just catch that because it's fine.
         await fs.writeFile(fullPath,
-            new GraphStyleSheet(plugin).genStyleSheet(),
+            DEFAULT_USER_SHEET,
             { flag: 'wx' }).catch(e => {});
         shell.openPath(fullPath);
     }

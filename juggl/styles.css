@@ -141,66 +141,32 @@ button.juggl-button-pane {
     height: 15px;
 }
 
-button[data-tooltip] {
-    position: relative;
-    z-index: 9010;
-    /*display: block;*/
-}
-
-button[data-tooltip]:before,
-button[data-tooltip]:after {
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
-    transition: .2s ease-out;
-    transform: translate(-50%, -5px)
-}
-
-button[data-tooltip]:before {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-bottom: 5px;
-    padding: 7px;
-    width: 100%;
-    min-width: 70px;
-    max-width: 250px;
-    -webkit-border-radius: 3px;
-    -moz-border-radius: 3px;
-    border-radius: 3px;
-    background-color: #000;
-    background-color: hsla(0, 0%, 20%, 1);
-    color: #fff;
-    content: attr(data-tooltip);
-    text-align: center;
-    font-size: 14px;
-    line-height: 1.2;
-    transition: .2s ease-out;
-}
-
-button[data-tooltip]:after {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    width: 0;
-    border-top: 5px solid #000;
-    border-top: 5px solid hsla(0, 0%, 20%, 1);
-    border-right: 5px solid transparent;
-    border-left: 5px solid transparent;
-    content: " ";
-    font-size: 0;
-    line-height: 0;
-}
-
-button[data-tooltip]:hover:before,
-button[data-tooltip]:hover:after {
-    visibility: visible;
-    opacity: 1;
-    transform: translate(-50%, 0);
-    z-index: 9000;
-}
 
 div.juggl-list-text {
     font-size: var(--font-small);
     word-break: break-word;
+}
+
+div.juggl-style-group {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--background-modifier-border-focus);
+}
+
+div.juggl-style-pane {
+    overflow-y: auto;
+}
+
+.break {
+    flex-basis: 100%;
+    height: 0;
+}
+
+/* Use a collapsed column to break to a new column */
+.break-column {
+    flex-basis: 100%;
+    width: 0;
 }

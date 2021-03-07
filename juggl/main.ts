@@ -7,6 +7,7 @@ import {
   IJugglPluginSettings,
   JugglGraphSettingsTab,
   DefaultJugglSettings, LAYOUTS,
+  genStyleGroups,
 } from './settings';
 import {Juggl, MD_VIEW_TYPE} from './viz/visualization';
 import {ImageServer} from './image-server';
@@ -25,11 +26,12 @@ import cxtmenu from '../../cytoscape.js-cxtmenu/cytoscape-cxtmenu';
 import {addIcons} from './ui/icons';
 import {STYLESHEET_PATH} from './viz/stylesheet';
 import {JugglView} from './viz/juggl-view';
-import {JugglNodesPane, JugglPane} from './pane/view';
+import {JugglNodesPane, JugglPane, JugglStylePane} from './pane/view';
 import YAML from 'yaml';
-import {JUGGL_NODES_VIEW_TYPE, JUGGL_VIEW_TYPE} from './constants';
+import {JUGGL_NODES_VIEW_TYPE, JUGGL_STYLE_VIEW_TYPE, JUGGL_VIEW_TYPE} from './constants';
 import {WorkspaceManager} from './viz/workspaces/workspace-manager';
 import {VizId} from './interfaces';
+import type {FSWatcher} from 'fs';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -53,6 +55,7 @@ export default class JugglPlugin extends Plugin {
     coreStores: Record<string, ICoreDataStore> = {};
     stores: IDataStore[] = [];
     workspaceManager: WorkspaceManager;
+    watcher: FSWatcher;
 
     async onload(): Promise<void> {
       super.onload();
@@ -79,6 +82,7 @@ export default class JugglPlugin extends Plugin {
       this.addChild(this.workspaceManager);
       this.registerCoreStore(obsidianStore, OBSIDIAN_STORE_NAME);
 
+      DefaultJugglSettings.globalStyleGroups = genStyleGroups(this);
       this.settings = Object.assign({}, DefaultJugglSettings, await this.loadData());
       this.settings.graphSettings = Object.assign({}, DefaultJugglSettings.graphSettings, this.settings.graphSettings);
       this.settings.embedSettings = Object.assign({}, DefaultJugglSettings.embedSettings, this.settings.embedSettings);
@@ -176,12 +180,11 @@ export default class JugglPlugin extends Plugin {
       // But that'll fire on every file change.
       const fs = require('original-fs');
       if (fs.existsSync(path)) {
-        require('original-fs').watch(path,
+        this.watcher = require('original-fs').watch(path,
             async (curr:any, prev:any) => {
               console.log(`Updating stylesheet from ${path}`);
               for (const view of this.activeGraphs()) {
-                const style = await view.createStylesheet();
-                view.viz.style(style);
+                await view.updateStylesheet();
               }
             });
       }
@@ -225,7 +228,12 @@ export default class JugglPlugin extends Plugin {
         await leaf.open(view);
         await leaf.setViewState({type: JUGGL_NODES_VIEW_TYPE});
       }//
-      // this.app.workspace.createLeafInParent(this.app.workspace.rightSplit, 0 );
+      if (this.app.workspace.getLeavesOfType(JUGGL_STYLE_VIEW_TYPE).length === 0) {
+        const leaf = this.app.workspace.getRightLeaf(false);
+        const view = new JugglStylePane(leaf, this);
+        await leaf.open(view);
+        await leaf.setViewState({type: JUGGL_STYLE_VIEW_TYPE});
+      }// // this.app.workspace.createLeafInParent(this.app.workspace.rightSplit, 0 );
     }
 
     public async openFileFromNode(node: NodeSingular, newLeaf= false): Promise<TFile> {
@@ -407,7 +415,11 @@ export default class JugglPlugin extends Plugin {
     async onunload() {
       super.onunload();
       console.log('Unloading Juggl');
-      this.app.workspace.detachLeavesOfType(JUGGL_NODES_VIEW_TYPE);//
+      this.app.workspace.detachLeavesOfType(JUGGL_NODES_VIEW_TYPE);
+      this.app.workspace.detachLeavesOfType(JUGGL_STYLE_VIEW_TYPE);
+      if (this.watcher) {
+        this.watcher.close();
+      }
     }
 
     public registerStore(store: IDataStore) {

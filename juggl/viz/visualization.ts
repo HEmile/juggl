@@ -20,7 +20,7 @@ import cytoscape, {
   NodeSingular, Singular,
 } from 'cytoscape';
 import type {IAGMode, IDataStore, IMergedToGraph} from '../interfaces';
-import {GraphStyleSheet} from './stylesheet';
+import {GraphStyleSheet, StyleGroup} from './stylesheet';
 import Timeout = NodeJS.Timeout;
 
 import {WorkspaceMode} from './workspaces/workspace-mode';
@@ -122,7 +122,6 @@ export class Juggl extends Component {
           wheelSensitivity: this.settings.zoomSpeed,
         });
       }
-      console.log('wtf!');
 
       this.viz.dblclick();
 
@@ -153,8 +152,7 @@ export class Juggl extends Component {
         this.viz.add(edges);
         this.onGraphChanged(true);
       }
-      const styleSheet = await this.createStylesheet();
-      this.viz.style(styleSheet);
+      await this.updateStylesheet();
 
       // Shouldn'' this just call restartLayout?
 
@@ -396,10 +394,11 @@ export class Juggl extends Component {
       return edgesInGraph;
     }
 
-    async createStylesheet(): Promise<string> {
+    async updateStylesheet(): Promise<void> {
       const sheet = new GraphStyleSheet(this.plugin);
       this.trigger('stylesheet', sheet);
-      return await sheet.getStylesheet();
+      const sSheet = await sheet.getStylesheet(this);
+      this.viz.style(sSheet);
     }
 
     onunload(): void {
@@ -500,6 +499,21 @@ export class Juggl extends Component {
       return {merged: mergedCollection, added: addCollection};
     }
 
+    assignStyleGroups() {
+      const viz = this.viz;
+      const _assignGroups = function(groups: StyleGroup[], prefix: string) {
+        for (const [index, group] of groups.entries()) {
+          const clazz = `${prefix}-${index}`;
+          viz.nodes().removeClass(clazz);
+          const filteredNodes = filter(group.filter, viz.nodes());
+          filteredNodes.addClass(clazz);
+          console.log(filteredNodes);
+        }
+      };
+      _assignGroups(this.settings.styleGroups, 'local');
+      _assignGroups(this.plugin.settings.globalStyleGroups, 'global');
+    }
+
     onGraphChanged(batch:boolean=true, debounceLayout=false) {
       if (batch) {
         this.viz.startBatch();
@@ -512,7 +526,6 @@ export class Juggl extends Component {
         this.viz.endBatch();
       }
 
-      console.log('triggering');
       this.trigger('elementsChange');
       this.searchFilter(this.settings.filter);
       if (debounceLayout) {
@@ -520,6 +533,7 @@ export class Juggl extends Component {
       } else {
         this.restartLayout();
       }
+      this.assignStyleGroups();
     }
 
     public getViz(): Core {
