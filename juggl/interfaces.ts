@@ -52,6 +52,13 @@ export interface ICoreDataStore extends IDataStore {
     get(nodeId: VizId): Promise<NodeDefinition>;
 }
 
+type IDataStores = IDataStore[];
+
+export interface IJugglStores {
+   coreStore: ICoreDataStore;
+   dataStores: IDataStore[];
+}
+
 export interface IAGMode extends Component {
     getName(): string;
 
@@ -111,4 +118,16 @@ export class VizId {
 export interface IMergedToGraph {
     merged: Collection;
     added: Collection;
+}
+
+// From https://github.com/jplattel/obsidian-query-language/blob/4840e5da6ff5d94dfcba8ff6c900421300466de6/src/search.ts#L3
+export interface IFuseFile {
+    [index:string]: any;
+    title: string;
+    path: string;
+    content: string;
+    created: any;
+    modified: any;
+    tags?: string[];
+    frontmatter?: any;
 }

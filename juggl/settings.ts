@@ -95,24 +95,25 @@ export const genStyleGroups = function(plugin: JugglPlugin): StyleGroup[] {
   return genSheet;
 };
 export interface IJugglSettings {
-    styleGroups: StyleGroup[];
     autoAddNodes: boolean;
-    navigator: boolean;
-    toolbar: boolean;
-    coreStore: string;
-    mergeEdges: boolean;
-    mode: string;
-    hoverEdges: boolean;
     autoExpand: boolean;
     autoZoom: boolean;
-    layout: JugglLayouts | LayoutOptions;
+    coreStore: string;
+    expandInitial: boolean;
     fdgdLayout: FDGDLayouts ;
-    limit: number;
     filter: string;
-    zoomSpeed: number;
-    openWithShift: boolean;
-    width: string | number;
     height: string | number;
+    hoverEdges: boolean;
+    layout: JugglLayouts | LayoutOptions;
+    limit: number;
+    mergeEdges: boolean;
+    mode: string;
+    navigator: boolean;
+    openWithShift: boolean;
+    styleGroups: StyleGroup[];
+    toolbar: boolean;
+    width: string | number;
+    zoomSpeed: number;
 }
 
 
@@ -137,44 +138,46 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
   debug: false,
   globalStyleGroups: [],
   graphSettings: {
-    styleGroups: [],
+    // TODO: Not currently used anywhere
     autoAddNodes: true,
     autoExpand: false,
     autoZoom: false,
-    navigator: true,
-    toolbar: true,
-    hoverEdges: false,
-    mergeEdges: true,
-    openWithShift: false,
     coreStore: OBSIDIAN_STORE_NAME,
-    mode: 'local',
-    layout: 'force-directed',
+    expandInitial: true,
     fdgdLayout: 'cola',
-    // TODO: Not currently used anywhere
-    limit: 10000,
     filter: '',
-    zoomSpeed: 1,
-    width: '100%',
     height: '100%',
+    hoverEdges: false,
+    layout: 'force-directed',
+    limit: 10000,
+    mergeEdges: true,
+    mode: 'local',
+    navigator: true,
+    openWithShift: false,
+    styleGroups: [],
+    toolbar: true,
+    width: '100%',
+    zoomSpeed: 1,
   },
   embedSettings: {
-    styleGroups: [],
     autoAddNodes: false,
     autoExpand: false,
     autoZoom: false,
-    toolbar: false,
     coreStore: OBSIDIAN_STORE_NAME,
+    expandInitial: true,
+    fdgdLayout: 'cola',
+    filter: '',
+    height: '400px',
     hoverEdges: false,
+    layout: 'force-directed',
+    limit: 1000,
     mergeEdges: true,
-    openWithShift: false,
     mode: 'local',
     navigator: false,
-    layout: 'force-directed',
-    fdgdLayout: 'cola',
-    limit: 1000,
-    filter: '',
+    openWithShift: false,
+    styleGroups: [],
+    toolbar: false,
     width: '100%',
-    height: '400px',
     zoomSpeed: 1,
   },
 };

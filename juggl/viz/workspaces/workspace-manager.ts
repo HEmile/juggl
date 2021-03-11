@@ -56,7 +56,7 @@ export class WorkspaceManager extends Component {
           }
           const vId = VizId.fromNode(nodes[i]);
 
-          for (const store of viz.datastores) {
+          for (const store of viz.datastores.dataStores) {
             if (store.storeId() === vId.storeId) {
               await store.refreshNode(viz, vId);
               break;

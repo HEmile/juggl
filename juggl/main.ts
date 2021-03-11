@@ -11,7 +11,7 @@ import {
 } from './settings';
 import {Juggl, MD_VIEW_TYPE} from './viz/visualization';
 import {ImageServer} from './image-server';
-import type {ICoreDataStore, IDataStore, ITypedLink, ITypedLinkProperties} from './interfaces';
+import type {ICoreDataStore, IDataStore, IFuseFile, IJugglStores, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
 import cytoscape, {NodeSingular} from 'cytoscape';//
 // import coseBilkent from 'cytoscape-cose-bilkent';
@@ -198,11 +198,13 @@ export default class JugglPlugin extends Plugin {
             if (!(LAYOUTS.contains(settings.layout))) {
               throw `Invalid layout. Choose one from ${LAYOUTS}`;
             }
-            const stores = [this.coreStores[settings.coreStore] as IDataStore].concat(this.stores);
+            const stores:IJugglStores = {
+              dataStores: [this.coreStores[settings.coreStore] as IDataStore].concat(this.stores),
+              coreStore: this.coreStores[settings.coreStore]};
             el.style.width = settings.width;
             el.style.height = settings.height;
             if (Object.keys(parsed).contains('local')) {
-              this.addChild(new Juggl(el, this, stores, settings, parsed.local));
+              this.addChild(new Juggl(el, this, stores, settings, [parsed.local]));
             } else if (Object.keys(parsed).contains('workspace')) {
               const graph = new Juggl(el, this, stores, settings, null);
               if (!this.workspaceManager.graphs.contains(parsed.workspace)) {
@@ -210,6 +212,16 @@ export default class JugglPlugin extends Plugin {
               }
               this.addChild(graph);
               await this.workspaceManager.loadGraph(parsed.workspace, graph);
+            } else if (Object.keys(parsed).contains('oql')) {
+              // @ts-ignore
+              if ('obsidian-query-language' in this.app.plugins.plugins) {
+                // @ts-ignore
+                const searchResults: IFuseFile[] = await this.app.plugins.plugins['obsidian-query-language'].search(parsed.oql);
+                settings.expandInitial = false;
+                this.addChild(new Juggl(el, this, stores, settings, searchResults.map((file) => file.title)));
+              } else {
+                throw 'The Obsidian Query Language plugin isn\'t loaded, so cannot query using oql!';
+              }
             } else {
               throw 'Invalid query. Specify either the local property or the workspace property.';
             }

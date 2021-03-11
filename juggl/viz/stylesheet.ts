@@ -143,7 +143,7 @@ node {
   shape: ellipse;
   border-width: 0;
   text-wrap: wrap;
-  min-zoomed-font-size: 10;
+  min-zoomed-font-size: 8;
 }
 
 node[name] {

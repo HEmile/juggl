@@ -19,7 +19,7 @@ import cytoscape, {
   NodeDefinition,
   NodeSingular, Singular,
 } from 'cytoscape';
-import type {IAGMode, IDataStore, IMergedToGraph} from '../interfaces';
+import type {IAGMode, IDataStore, IJugglStores, IMergedToGraph} from '../interfaces';
 import {GraphStyleSheet, StyleGroup} from './stylesheet';
 import Timeout = NodeJS.Timeout;
 
@@ -47,14 +47,14 @@ export class Juggl extends Component {
     element: Element;
     workspace: Workspace;
     settings: IJugglSettings;
-    initialNode: string;
+    initialNodes: string[];
     vault: Vault;
     plugin: JugglPlugin;
     viz: Core;
     rebuildRelations = true;
     selectName: string = undefined;
     events: Events;
-    datastores: IDataStore[];
+    datastores: IJugglStores;
     activeLayout: Layouts;
     hoverTimeout: Record<string, Timeout> = {};
     mode: IAGMode;
@@ -62,12 +62,12 @@ export class Juggl extends Component {
     destroyHover: () => void = null;
     debouncedRestartLayout: () => void;
 
-    constructor(element: Element, plugin: JugglPlugin, dataStores: IDataStore[], settings: IJugglSettings, initialNode?: string) {
+    constructor(element: Element, plugin: JugglPlugin, dataStores: IJugglStores, settings: IJugglSettings, initialNodes?: string[]) {
       super();
       this.element = element;
       this.settings = settings;
       this.workspace = plugin.app.workspace;
-      this.initialNode = initialNode;
+      this.initialNodes = initialNodes;
       this.vault = plugin.app.vault;
       this.plugin = plugin;
       this.datastores = dataStores;
@@ -101,10 +101,14 @@ export class Juggl extends Component {
       div.setAttr('tabindex', '0');
 
       let nodes: NodeDefinition[];
-      let idInitial = null;
-      if (this.initialNode) {
-        idInitial = new VizId(this.initialNode, 'core');
-        nodes = await this.neighbourhood([idInitial]);
+      let idsInitial: VizId[] = null;
+      if (this.initialNodes) {
+        idsInitial = this.initialNodes.map((s) => new VizId(s, 'core'));
+        if (this.settings.expandInitial) {
+          nodes = await this.neighbourhood(idsInitial);
+        } else {
+          nodes = await Promise.all(idsInitial.map( (id) => this.datastores.coreStore.get(id)));
+        }
         this.viz = cytoscape({
           container: div,
           elements: nodes,
@@ -143,20 +147,22 @@ export class Juggl extends Component {
       }
       VIEW_COUNTER += 1;
 
-      if (idInitial) {
-        const initialNode = this.viz.$id(idInitial.toId());
-        initialNode.addClass(CLASS_EXPANDED);
-        initialNode.addClass(CLASS_PROTECTED);
-        const nodez = this.viz.nodes();
-        const edges = await this.buildEdges(nodez);
-        this.viz.add(edges);
+      if (idsInitial && this.settings.expandInitial) {
+        for (const id of idsInitial) {
+          const initialNode = this.viz.$id(id.toId());
+          initialNode.addClass(CLASS_EXPANDED);
+          initialNode.addClass(CLASS_PROTECTED);
+          const nodez = this.viz.nodes();
+          const edges = await this.buildEdges(nodez);
+          this.viz.add(edges);
+        }
         this.onGraphChanged(true);
       }
       await this.updateStylesheet();
 
       // Shouldn'' this just call restartLayout?
 
-      if (idInitial) {
+      if (idsInitial) {
         this.restartLayout();
       }
 
@@ -348,7 +354,7 @@ export class Juggl extends Component {
 
     async neighbourhood(toExpand: VizId[]) : Promise<NodeDefinition[]> {
       const nodes: NodeDefinition[] = [];
-      for (const store of this.datastores) {
+      for (const store of this.datastores.dataStores) {
         nodes.push(...await store.getNeighbourhood(toExpand));
       }
       return nodes;
@@ -356,7 +362,7 @@ export class Juggl extends Component {
 
     async buildEdges(newNodes: NodeCollection): Promise<EdgeDefinition[]> {
       const edges: EdgeDefinition[] = [];
-      for (const store of this.datastores) {
+      for (const store of this.datastores.dataStores) {
         edges.push(...await store.connectNodes(this.viz.nodes(), newNodes, this));
       }
       return edges;

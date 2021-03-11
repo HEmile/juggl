@@ -2,7 +2,7 @@ import {ItemView, WorkspaceLeaf} from 'obsidian';
 import type JugglPlugin from '../main';
 import {Juggl} from './visualization';
 import {JUGGL_VIEW_TYPE} from '../constants';
-import type {IDataStore} from '../interfaces';
+import type {IDataStore, IJugglStores} from '../interfaces';
 
 export class JugglView extends ItemView {
      juggl: Juggl;
@@ -11,8 +11,11 @@ export class JugglView extends ItemView {
        // TODO: Maybe make this configurable
        leaf.setPinned(true);
        const settings = plugin.settings.graphSettings;
-       this.juggl = new Juggl(this.containerEl.children[1], plugin,
-           [plugin.coreStores[settings.coreStore] as IDataStore].concat(plugin.stores), settings, initialNode);
+       const coreStore = plugin.coreStores[settings.coreStore];
+       const stores: IJugglStores ={
+         dataStores: [coreStore as IDataStore].concat(plugin.stores),
+         coreStore: coreStore};
+       this.juggl = new Juggl(this.containerEl.children[1], plugin, stores, settings, [initialNode]);
        this.addChild(this.juggl);
      }
 

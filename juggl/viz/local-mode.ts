@@ -72,13 +72,8 @@ export class LocalMode extends Component implements IAGMode {
       let node: NodeSingular;
       this.viz.startBatch();
       if (this.viz.$id(id.toId()).length === 0) {
-        for (const dataStore of this.view.datastores) {
-          if (dataStore.storeId() === 'core') {
-            const nodeDef = await (dataStore as ICoreDataStore).get(id);
-            node = this.viz.add(nodeDef);
-            break;
-          }
-        }
+        const nodeDef = await this.view.datastores.coreStore.get(id);
+        node = this.viz.add(nodeDef);
       } else {
         node = this.viz.$id(id.toId());
       }
