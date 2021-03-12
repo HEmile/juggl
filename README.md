@@ -7,7 +7,7 @@
     <a href="https://github.com/HEmile/obsidian-neo4j-graph-view/releases">
         <img src="https://img.shields.io/github/v/release/HEmile/obsidian-neo4j-graph-view"
             alt="Github latest release" width="100"></a>
-   <a href="https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin">
+   <a href="https://juggl.io/Neo4j+Graph+View/Neo4j+Graph+View+Plugin">
         <img src="https://img.shields.io/badge/docs-Obsidian-blue"
             alt="Documentation" width="100"></a>
     <a href="https://discord.gg/sAmSGpaPgM">
@@ -23,7 +23,7 @@ I’d highly appreciate anyone who would also like to help test! If that’s you
 ## Neo4j Graph View
 ![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/styled_screenshot.png)
 
-Documentation at https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin. 
+Documentation at https://juggl.io/Neo4j+Graph+View/Neo4j+Graph+View+Plugin. 
 
 Join the new Discord server to discuss the plugin: https://discord.gg/sAmSGpaPgM
 
@@ -41,12 +41,12 @@ Next up:
 - [ ] Different and more stable front end
 - [x] Standardize style sheet using CSS instead of JSON
 
-A [Roadmap](https://publish.obsidian.md/semantic-obsidian/Roadmap) with planned features is also available.
+A [Roadmap](https://juggl.io/Roadmap) with planned features is also available.
 
 ![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/obsidian%20neo4j%20plugin.gif)
 
 ### Installation
-Detailed installation instructions is at https://publish.obsidian.md/semantic-obsidian/Installation+of+Neo4j+Graph+View+Plugin
+Detailed installation instructions is at https://juggl.io/Neo4j+Graph+View/Installation+of+Neo4j+Graph+View+Plugin
 1. Make sure you have [Python 3.6+](https://www.python.org/downloads/) installed. It needs the system-installed Python. Make sure to add Python to PATH!
 2. Make sure you have [Neo4j desktop](https://neo4j.com/download/) installed
 4. Create a new database in Neo4j desktop and start it. Record the password you use!
@@ -55,7 +55,7 @@ Detailed installation instructions is at https://publish.obsidian.md/semantic-ob
 If installing Python seems daunting, you can wait a couple of weeks. The goal is to port that code to Javascript.
 
 ### Use
-Detailed getting started guide is at https://publish.obsidian.md/semantic-obsidian/Using+the+Neo4j+Graph+View
+Detailed getting started guide is at https://juggl.io/Neo4j+Graph+View/Using+the+Neo4j+Graph+View
 
 On an open note, use the command "Neo4j Graph View: Open local graph of note". You can run commands using ctrl/cmd+p. Alternatively, you can bind this command to a hotkey in the settings.
 
@@ -71,7 +71,7 @@ code block, use the Obsidian command 'Neo4j Graph View: Execute Cypher query'. E
 ### Possible problems
 All changes made in obsidian should be automatically reflected in Neo4j, but this is still very buggy. 
 
-If you are running into issues, see https://publish.obsidian.md/semantic-obsidian/Installation+of+Neo4j+Graph+View+Plugin#troubleshooting
+If you are running into issues, see https://juggl.io/Neo4j+Graph+View/Installation+of+Neo4j+Graph+View+Plugin#troubleshooting
 ### Semantics
 The plugin collects all notes with extension .md in the input directory (default: `markdown/`). Each note is interpreted as follows:
 - Interprets tags as entity types
@@ -109,4 +109,4 @@ your vault.
 ## Python code: Semantic Markdown to Neo4j
 This Obsidian plugin uses the Python package `semantic-markdown-converter`, which is also in this repo. 
 It creates an active data stream from a folder of Markdown notes to a Neo4j database. 
-For documentation, see https://publish.obsidian.md/semantic-obsidian/Semantic+Markdown+Converter
+For documentation, see https://juggl.io/Neo4j+Graph+View/Semantic+Markdown+Converter
