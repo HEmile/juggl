@@ -12,7 +12,7 @@ export default {
   input: 'main.ts',
   output: {
     dir: '.',
-    // sourcemap: 'inline',
+    sourcemap: 'inline',
     format: 'cjs',
     exports: 'default',
     // banner: '/* This file is bundled with rollup. For the source code, see Github */',

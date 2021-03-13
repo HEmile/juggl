@@ -13,7 +13,7 @@ import {Juggl, MD_VIEW_TYPE} from './viz/visualization';
 import {ImageServer} from './image-server';
 import type {ICoreDataStore, IDataStore, IFuseFile, IJugglStores, ITypedLink, ITypedLinkProperties} from './interfaces';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
-import cytoscape, {NodeSingular} from 'cytoscape';//
+import cytoscape, {NodeSingular} from 'cytoscape';
 // import coseBilkent from 'cytoscape-cose-bilkent';
 import navigator from 'cytoscape-navigator';
 import popper from 'cytoscape-popper';
@@ -178,15 +178,20 @@ export default class JugglPlugin extends Plugin {
       // If this doesn't work nicely,
       // The Obsidian-way is this.registerEvent( this.app.vault.on("raw", {} );
       // But that'll fire on every file change.
-      const fs = require('original-fs');
-      if (fs.existsSync(path)) {
-        this.watcher = require('original-fs').watch(path,
-            async (curr:any, prev:any) => {
-              console.log(`Updating stylesheet from ${path}`);
-              for (const view of this.activeGraphs()) {
-                await view.updateStylesheet();
-              }
-            });
+      try {
+        const fs = require('original-fs');
+        if (fs.existsSync(path)) {
+          this.watcher = require('original-fs').watch(path,
+              async (curr: any, prev: any) => {
+                console.log(`Updating stylesheet from ${path}`);
+                for (const view of this.activeGraphs()) {
+                  await view.updateStylesheet();
+                }
+              });
+        }
+      } catch (e) {
+        console.log('Cannot watch stylesheet. This is probably because we are on mobile');
+        console.log(e);
       }
       this.registerMarkdownCodeBlockProcessor('juggl', async (src, el, context) => {
         // timeout is needed to ensure the div is added to the window. The graph will only load if

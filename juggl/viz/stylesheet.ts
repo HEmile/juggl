@@ -59,17 +59,22 @@ export class GraphStyleSheet {
     async getStylesheet(viz: Juggl): Promise<string> {
       const file = (this.plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
       // const customSheet = '';
-      const customSheet = await fs.readFile(file, 'utf-8')
-          .catch(async (err) => {
-            if (err.code === 'ENOENT') {
-              const cstmSheet = DEFAULT_USER_SHEET;
-              await fs.writeFile(file, cstmSheet);
-              console.log(cstmSheet);
-              return cstmSheet;
-            } else {
-              throw err;
-            }
-          });
+      const customSheet = '';
+      try {
+        const customSheet = await fs.readFile(file, 'utf-8')
+            .catch(async (err) => {
+              if (err.code === 'ENOENT') {
+                const cstmSheet = DEFAULT_USER_SHEET;
+                await fs.writeFile(file, cstmSheet);
+                return cstmSheet;
+              } else {
+                throw err;
+              }
+            });
+      } catch (e) {
+        console.log('Couldn\'t load user stylesheet. This is probably because we are on mobile');
+        console.log(e);
+      }
       // TODO: Ordering: If people specify some new YAML property to take into account, style groups will override this!
       const globalGroups = this.styleGroupsToSheet(this.plugin.settings.globalStyleGroups, 'global');
       const localGroups = this.styleGroupsToSheet(viz.settings.styleGroups, 'local');

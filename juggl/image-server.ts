@@ -21,7 +21,14 @@ export class ImageServer extends Component {
       const http = require('http');
       const fs = require('fs');
 
-      const dir = path.join(this.plugin.path);
+      let dir:string = null;
+      try {
+        dir = path.join(this.plugin.path);
+      } catch (e) {
+        console.log('Couldn\'t start image server. This is likely because we\'re on mobile!');
+        console.log(e);
+        return;
+      }
 
       const mime = {
         gif: 'image/gif',

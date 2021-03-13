@@ -2,7 +2,6 @@ import {Component, DataAdapter} from 'obsidian';
 import type JugglPlugin from '../../main';
 import type {Juggl} from '../visualization';
 import {DATA_FOLDER} from '../../constants';
-import path from 'path';
 import {VizId} from '../../interfaces';
 
 export class WorkspaceManager extends Component {
@@ -19,6 +18,7 @@ export class WorkspaceManager extends Component {
       super.onload();
       try {
         await this.adapter.mkdir(DATA_FOLDER);
+        const path = require('path');
         this.graphs = (await this.adapter.list(DATA_FOLDER)).folders.map((s) => path.basename(s));
       } catch (e) {
         console.log(e);

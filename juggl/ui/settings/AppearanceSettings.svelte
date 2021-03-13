@@ -1,7 +1,7 @@
 <script lang="ts">
     import {FileSystemAdapter} from "obsidian";
     import {STYLESHEET_PATH, GraphStyleSheet, DEFAULT_USER_SHEET} from "../../viz/stylesheet";
-    import {promises as fs} from "fs";
+    // import {promises as fs} from "fs";
     import type JugglPlugin from "../../main";
 
     export let plugin: JugglPlugin;

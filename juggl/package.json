@@ -58,7 +58,6 @@
     "cytoscape-dblclick": "^0.3.1",
     "cytoscape-navigator": "^2.0.1",
     "cytoscape-popper": "^2.0.0",
-    "path": "^0.12.7",
     "search-query-parser": "^1.5.5",
     "yaml": "^1.10.0"
   }
