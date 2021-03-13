@@ -1,12 +1,15 @@
 <script lang="ts">
+    import {Icon, SHAPES, StyleGroup} from "../viz/stylesheet";
+    import {IconModal} from "./icon-modal";
+    import JugglPlugin from "../main";
+    import {emptyStyleGroup} from "../settings";
     export let groups: StyleGroup[];
     export let title: string;
     export let onChangeFilter;
     export let onChangeGroups;
-    import {SHAPES, StyleGroup} from "../viz/stylesheet";
-
+    export let plugin: JugglPlugin;
     let onNewGroup = function() {
-        groups.push({filter: "", color: "#000000", shape: "circle"});
+        groups.push(emptyStyleGroup);
         groups = groups;
         onChangeGroups();
     }
@@ -14,6 +17,15 @@
         groups.remove(group);
         groups = groups;
         onChangeGroups();
+    }
+    let onIconButton = function(group: StyleGroup) {
+        let callback = function(icon: Icon) {
+            group.icon = icon;
+            onChangeGroups();
+            groups = groups;
+        }
+        let iconModal = new IconModal(plugin.app, callback);
+        iconModal.open();
     }
 
 </script>
@@ -33,12 +45,23 @@
                 </svg>
             </div>
             <div class="break"></div>
-            <select bind:value={group.shape} class="dropdown" on:change={onChangeGroups}>
+            <select bind:value={group.shape} class="dropdown" on:blur={onChangeGroups}>
                 {#each SHAPES as shape}
                     <option value={shape}>{shape}</option>
                 {/each}
             </select>
             <input type="color" aria-label="Click to change color" bind:value={group.color} flex-basis="100%" on:change={onChangeGroups}/>
+            <div class="break"></div>
+            <button class="juggl-icon-button" on:click={onIconButton(group)}>
+                {#if group.icon.path}
+                    <svg style= "width:24px;height:24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="currentcolor" d={group.icon.path} />
+                    </svg>
+                {:else}
+                    {group.icon.name}
+                {/if}
+
+            </button>
         </div>
     {/each}
     <div class="graph-color-button-container" on:click={onNewGroup}>

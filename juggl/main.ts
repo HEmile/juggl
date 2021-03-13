@@ -7,7 +7,7 @@ import {
   IJugglPluginSettings,
   JugglGraphSettingsTab,
   DefaultJugglSettings, LAYOUTS,
-  genStyleGroups,
+  genStyleGroups, emptyStyleGroup,
 } from './settings';
 import {Juggl, MD_VIEW_TYPE} from './viz/visualization';
 import {ImageServer} from './image-server';
@@ -84,9 +84,12 @@ export default class JugglPlugin extends Plugin {
 
       DefaultJugglSettings.globalStyleGroups = genStyleGroups(this);
       this.settings = Object.assign({}, DefaultJugglSettings, await this.loadData());
+      this.settings.globalStyleGroups = this.settings.globalStyleGroups.map((g) =>
+        Object.assign({}, emptyStyleGroup, g));
       this.settings.graphSettings = Object.assign({}, DefaultJugglSettings.graphSettings, this.settings.graphSettings);
       this.settings.embedSettings = Object.assign({}, DefaultJugglSettings.embedSettings, this.settings.embedSettings);
 
+      console.log(this.settings);
       // this.statusBar = this.addStatusBarItem();
       // this.statusBar.setText(STATUS_OFFLINE);
       // this.neo4jStream = new Neo4jStream(this);

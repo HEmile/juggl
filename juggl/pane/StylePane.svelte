@@ -41,6 +41,6 @@
 
 </script>
 <div class="juggl-style-pane">
-    <StyleGroups groups={localGroups} title="Local style groups" onChangeGroups={onChangeGroups} onChangeFilter={onChangeFilter} />
-    <StyleGroups groups={globalGroups} title="Global style groups" onChangeGroups={onChangeGroupsGlobal} onChangeFilter={onChangeFilterGlobal} />
+    <StyleGroups groups={localGroups} title="Local style groups" onChangeGroups={onChangeGroups} onChangeFilter={onChangeFilter} plugin={plugin} />
+    <StyleGroups groups={globalGroups} title="Global style groups" onChangeGroups={onChangeGroupsGlobal} onChangeFilter={onChangeFilterGlobal} plugin={plugin} />
 </div>

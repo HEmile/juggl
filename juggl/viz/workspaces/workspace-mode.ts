@@ -61,6 +61,7 @@ export class WorkspaceMode extends Component implements IAGMode {
     const backgroundColor = style.getPropertyValue('--background-secondary');
     const textColor = style.getPropertyValue('--text-normal');
     const font = style.getPropertyValue('--text');
+    const plugin = this.view.plugin;
     // the default values of each option are outlined below:
     const defaults = {
       menuRadius: 70, // the outer radius (node center to the end of the menu) in pixels. It is added to the rendered size of the node. Can either be a number or function as in the example.
@@ -73,7 +74,7 @@ export class WorkspaceMode extends Component implements IAGMode {
             content: pathToSvg(icons.ag_file),
             select: async function(ele: NodeSingular, event: Event) {
               // @ts-ignore
-              await mode.openFile(ele, event.originalEvent.metaKey);
+              await plugin.openFileFromNode(ele, event.originalEvent.metaKey);
             },
             enabled: true,
           });
