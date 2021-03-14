@@ -24,8 +24,12 @@
             onChangeGroups();
             groups = groups;
         }
-        let iconModal = new IconModal(plugin.app, callback);
+        let iconModal = new IconModal(plugin.app, callback, group.icon.color);
         iconModal.open();
+    }
+    let showGroup = function(group: StyleGroup, show: boolean) {
+        group.showInPane = show;
+        groups = groups;
     }
 
 </script>
@@ -35,7 +39,15 @@
 </div>
 <div class="juggl-style-group-container">
     {#each groups as group}
+        {#if group.showInPane}
         <div class="juggl-style-group">
+            <div class="clickable-icon" aria-label="Hide group" on:click={showGroup(group, false)} flex-basis="100%" >
+                <svg viewBox="0 0 100 100" width="8" height="8" class="right-triangle">
+                    <path fill="currentColor" stroke="currentColor"
+                          d="M94.9,20.8c-1.4-2.5-4.1-4.1-7.1-4.1H12.2c-3,0-5.7,1.6-7.1,4.1c-1.3,2.4-1.2,5.2,0.2,7.6L43.1,88c1.5,2.3,4,3.7,6.9,3.7 s5.4-1.4,6.9-3.7l37.8-59.6C96.1,26,96.2,23.2,94.9,20.8L94.9,20.8z">
+                    </path>
+                </svg>
+            </div>
             <input type="text" placeholder="Enter filter..." bind:value={group.filter} on:change={onChangeFilter}/>
             <div class="clickable-icon" aria-label="Delete group" on:click={onDeleteGroup(group)} flex-basis="100%" >
                 <svg viewBox="0 0 100 100" width="16" height="16" class="cross">
@@ -60,9 +72,24 @@
                 {:else}
                     {group.icon.name}
                 {/if}
-
             </button>
+            {#if group.icon.path}
+                <input type="color" aria-label="Click to change icon color" bind:value={group.icon.color} flex-basis="100%" on:change={onChangeGroups}/>
+            {/if}
         </div>
+        {:else}
+            <div class="juggl-style-group-hidden">
+                <div class="clickable-icon" style="display: inline" aria-label="Hide group" on:click={showGroup(group, true)} >
+                    <svg viewBox="0 0 100 100" width="8" height="8" class="right-triangle">
+                        <path fill="currentColor" stroke="currentColor" transform="rotate(270 50 50)"
+                              d="M94.9,20.8c-1.4-2.5-4.1-4.1-7.1-4.1H12.2c-3,0-5.7,1.6-7.1,4.1c-1.3,2.4-1.2,5.2,0.2,7.6L43.1,88c1.5,2.3,4,3.7,6.9,3.7 s5.4-1.4,6.9-3.7l37.8-59.6C96.1,26,96.2,23.2,94.9,20.8L94.9,20.8z">
+                        </path>
+                    </svg>
+                </div>
+                {group.filter}
+            </div>
+            <br />
+        {/if}
     {/each}
     <div class="graph-color-button-container" on:click={onNewGroup}>
         <button class="mod-cta">

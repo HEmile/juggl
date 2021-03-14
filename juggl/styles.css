@@ -153,8 +153,15 @@ div.juggl-style-group {
     flex-wrap: wrap;
     align-items: center;
     padding-bottom: 6px;
+    padding-top: 6px;
     border-bottom: 1px solid var(--background-modifier-border-focus);
 }
+
+div.juggl-style-group-hidden {
+    width: auto;
+    display: inline;
+}
+
 
 div.juggl-style-pane {
     overflow-y: auto;
@@ -169,4 +176,22 @@ div.juggl-style-pane {
 .break-column {
     flex-basis: 100%;
     width: 0;
+}
+.react-icon {
+    display: inline-flex;
+    width: 24px;
+    box-sizing: content-box;
+    height: 24px;
+    stroke-width: 0;
+}
+.react-icon > svg {
+    vertical-align: top;
+    line-height: 0;
+    font-size: 0;
+    margin-bottom: 3px;
+}
+
+.juggl-icon-picker > .suggestion-item {
+    height: auto;
+    min-height: 24px;
 }

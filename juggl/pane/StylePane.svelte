@@ -1,6 +1,5 @@
 <script lang="ts">
     import {Juggl} from "../viz/visualization";
-    import type {IJugglPluginSettings} from "../settings";
     import StyleGroups from "./StyleGroups.svelte";
     import JugglPlugin from "../main";
 
@@ -26,17 +25,16 @@
     }
     let onChangeGroupsGlobal = function() {
         plugin.saveData(settings);
-        onChangeGroups();
+        plugin.activeGraphs().forEach(j => j.updateStylesheet());
     }
     let onChangeFilter = function() {
         if (viz) {
-            console.log("on change filter!");
             viz.assignStyleGroups();
         }
     }
     let onChangeFilterGlobal = function () {
         plugin.saveData(settings);
-        onChangeFilter();
+        plugin.activeGraphs().forEach(j => j.assignStyleGroups());
     }
 
 </script>

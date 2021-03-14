@@ -11,7 +11,11 @@ export type JugglLayouts = 'force-directed' | 'circle' | 'grid' | 'hierarchy' | 
 import KoFi from './ui/KoFi.svelte';
 import type {StyleGroup} from './viz/stylesheet';
 
-export const emptyStyleGroup = {filter: '', color: '#000000', shape: 'circle', icon: {name: 'No icon', path: ''}};
+export const emptyStyleGroup: StyleGroup = {filter: '',
+  color: 'black',
+  shape: 'ellipse',
+  icon: {name: 'No icon', path: '', color: 'white'},
+  showInPane: true};
 export const genStyleGroups = function(plugin: JugglPlugin): StyleGroup[] {
   const tagColorMap = {} as Record<string, string>;
 
@@ -91,7 +95,11 @@ export const genStyleGroups = function(plugin: JugglPlugin): StyleGroup[] {
 
   const genSheet: StyleGroup[] = [];
   for (const tag of Object.keys(tagColorMap)) {
-    genSheet.push({filter: `tag:#${tag}`, color: tagColorMap[tag], shape: 'ellipse', icon: {name: 'No icon', path: ''}});
+    genSheet.push({filter: `tag:#${tag}`,
+      color: tagColorMap[tag],
+      shape: 'ellipse',
+      icon: {name: 'No icon', path: '', color: 'white'},
+      showInPane: true});
   }
   return genSheet;
 };

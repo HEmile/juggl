@@ -4,17 +4,36 @@ import {promises as fs} from 'fs';
 import type {Juggl} from './visualization';
 
 export const STYLESHEET_PATH = './.obsidian/juggl/style.css';
-export const SHAPES = ['rectangle', 'ellipse', 'roundrectangle'] as const;
+export const SHAPES = ['ellipse',
+  'rectangle',
+  'triangle',
+  'diamond',
+  'pentagon',
+  'hexagon',
+  'tag',
+  'rhomboid',
+  'star',
+  'vee',
+  'round-rectangle',
+  'round-triangle',
+  'round-diamond',
+  'round-pentagon',
+  'round-hexagon',
+  'round-tag',
+
+];
 export type Shape = typeof SHAPES[number];
 export class Icon {
     path: string;
     name: string;
+    color: string = 'black';
 }
 export class StyleGroup {
   filter: string;
   color: string;
   shape: Shape;
   icon: Icon;
+  showInPane: boolean;
 }
 
 export const DEFAULT_USER_SHEET = `
@@ -129,11 +148,10 @@ export class GraphStyleSheet {
           const svg = '<?xml version="1.0" encoding="UTF-8" ?>'+
                 '<!DOCTYPE svg>'+
                 '<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" version="1.1">' +
-                `<path fill="black" d="${val.icon.path}" />` +
+                `<path fill="${val.icon.color}" d="${val.icon.path}" />` +
                 '</svg>';
           const html = parser.parseFromString(svg, 'text/xml').documentElement.outerHTML;
           icon = `background-image: url('data:image/svg+xml,${encodeURIComponent(html)}');`;
-          // icon = 'background-image: "https://cdn4.iconfinder.com/data/icons/logos-and-brands/512/91_Discord_logo_logos-512.png";';
         }
 
         sheet += `
