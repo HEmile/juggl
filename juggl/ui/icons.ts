@@ -31,6 +31,7 @@ export const icons: Record<string, string> = {
   ag_save: mdiIcons.mdiContentSave,
   ag_node_list: mdiIcons.mdiFormatListBulletedType,
   ag_style: mdiIcons.mdiPaletteOutline,
+  ag_help: mdiIcons.mdiHelp,
 };
 
 export const addIcons = (): void => {

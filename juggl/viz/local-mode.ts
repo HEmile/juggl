@@ -134,6 +134,7 @@ export class LocalMode extends Component implements IAGMode {
             this.view.restartLayout();
           },
           filterValue: this.view.settings.filter,
+          workspace: this.view.plugin.app.workspace,
         },
       });
       // this.view.on('vizReady', (viz) => {

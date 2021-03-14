@@ -2,12 +2,14 @@
     import {icons} from "../icons";
     import {Core} from "cytoscape";
     import ToolbarButton from "./ToolbarButton.svelte";
-    import {debounce} from "obsidian";
+    import {debounce, Workspace} from "obsidian";
+    import HelpButton from "./HelpButton.svelte";
+
     export let viz: Core;
     export let filterValue: string;
-    export let fdgdClick;//
+    export let fdgdClick;
     export let concentricClick;
-    export let gridClick;//
+    export let gridClick;
     export let hierarchyClick;
     export let expandClick;
     export let collapseClick;
@@ -21,6 +23,7 @@
     export let localModeClick;
     export let filterInput;
     export let saveClick;
+    export let workspace: Workspace;
 
     filterInput = debounce(filterInput, 500, true);
 
@@ -54,6 +57,7 @@
     <ToolbarButton icon={icons.ag_local} onClick={localModeClick} title="Local mode"/>
 </div>
 <div class="cy-toolbar-section">
+    <HelpButton {workspace} />
     <ToolbarButton icon={icons.ag_save} onClick={saveClick} title="Manage workspace graphs" />
 </div>
 <div class="cy-toolbar-section">

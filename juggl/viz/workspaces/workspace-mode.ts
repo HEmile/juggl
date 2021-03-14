@@ -371,6 +371,7 @@ export class WorkspaceMode extends Component implements IAGMode {
         saveClick: () => {
           new WorkspaceModal(this.view.plugin.app, this.view.plugin.workspaceManager, this.view).open();
         },
+        workspace: this.view.plugin.app.workspace,
       },
     });
     this.view.on('selectChange', this.toolbar.onSelect.bind(this.toolbar));

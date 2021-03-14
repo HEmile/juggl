@@ -2,7 +2,8 @@
     import {icons} from "../icons";
     // import {Core} from "cytoscape";
     import ToolbarButton from "./ToolbarButton.svelte";
-    import {debounce} from "obsidian";
+    import HelpButton from "./HelpButton.svelte";
+    import {debounce, Workspace} from "obsidian";
 
     export let fdgdClick;
     export let concentricClick;
@@ -12,6 +13,7 @@
     export let workspaceModeClick;
     export let filterInput;
     export let filterValue;
+    export let workspace: Workspace;
     filterInput = debounce(filterInput, 500, true);
 
 </script>
@@ -25,5 +27,8 @@
 <div class="cy-toolbar-section">
     <ToolbarButton icon={icons.ag_fit} onClick={fitClick} title="Fit view"/>
     <ToolbarButton icon={icons.ag_workspace} onClick={workspaceModeClick} title="Workspace mode"/>
+</div>
+<div class="cy-toolbar-section">
+    <HelpButton {workspace}/>
 </div>
 <br /><label for="ag-filter">Filter: </label><input type="text" id="ag-filter" name="ag-filter" on:input={filterInput} value={filterValue}>

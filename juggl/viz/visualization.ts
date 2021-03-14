@@ -117,7 +117,6 @@ export class Juggl extends Component {
           wheelSensitivity: this.settings.zoomSpeed,
         });
       } else {
-        console.log(div);
         this.viz = cytoscape({
           container: div,
           elements: [{data: {id: 'a'}}, {data: {id: 'b'}}],
@@ -380,18 +379,13 @@ export class Juggl extends Component {
       // Currently returns the edges merged into the graph, not the full neighborhood
       const expandedIds = toExpand.map((n) => VizId.fromNode(n));
       const neighbourhood = await this.neighbourhood(expandedIds);
-      console.log(neighbourhood);
       this.mergeToGraph(neighbourhood, false, false);
       const nodes = this.viz.collection();
       neighbourhood.forEach((n) => {
         nodes.merge(this.viz.$id(n.data.id) as NodeSingular);
       });
 
-      console.log('Printing nodes');
-      console.log(nodes);
       const edges = await this.buildEdges(nodes);
-      console.log(toExpand);
-      console.log('printing edges');
       const edgesInGraph = this.mergeToGraph(edges, false, triggerGraphChanged);
       if (batch) {
         this.viz.endBatch();
@@ -513,7 +507,6 @@ export class Juggl extends Component {
           viz.nodes().removeClass(clazz);
           const filteredNodes = filter(group.filter, viz.nodes());
           filteredNodes.addClass(clazz);
-          console.log(filteredNodes);
         }
       };
       _assignGroups(this.settings.styleGroups, 'local');
