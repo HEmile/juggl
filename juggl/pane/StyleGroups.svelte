@@ -16,6 +16,7 @@
     let onDeleteGroup = function(group: StyleGroup) {
         groups.remove(group);
         groups = groups;
+        onChangeFilter();
         onChangeGroups();
     }
     let onIconButton = function(group: StyleGroup) {

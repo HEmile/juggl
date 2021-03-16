@@ -327,7 +327,6 @@ ${edge.data.context}`;
       const store = this;
       this.registerEvent(
           this.metadata.on('changed', (file) => {
-            console.log('changed');
             store.plugin.activeGraphs().forEach(async (v) => {
               await store.refreshNode(v, VizId.fromFile(file));
             });

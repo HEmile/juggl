@@ -83,9 +83,9 @@ export class GraphStyleSheet {
     async getStylesheet(viz: Juggl): Promise<string> {
       const file = (this.plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
       // const customSheet = '';
-      const customSheet = '';
+      let customSheet = '';
       try {
-        const customSheet = await fs.readFile(file, 'utf-8')
+        customSheet = await fs.readFile(file, 'utf-8')
             .catch(async (err) => {
               if (err.code === 'ENOENT') {
                 const cstmSheet = DEFAULT_USER_SHEET;
