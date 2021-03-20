@@ -40,6 +40,9 @@ export class ObsidianStore extends Component implements ICoreDataStore {
     }
 
     async createEdges(srcFile: TFile, srcId: string, toNodes: NodeCollection, graph: Juggl): Promise<EdgeDefinition[]> {
+      if (!(srcFile.extension === 'md')) {
+        return [];
+      }
       const cache = this.metadata.getFileCache(srcFile);
       if (!cache) {
         return [];
