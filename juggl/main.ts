@@ -89,7 +89,6 @@ export default class JugglPlugin extends Plugin {
       this.settings.graphSettings = Object.assign({}, DefaultJugglSettings.graphSettings, this.settings.graphSettings);
       this.settings.embedSettings = Object.assign({}, DefaultJugglSettings.embedSettings, this.settings.embedSettings);
 
-      console.log(this.settings);
       // this.statusBar = this.addStatusBarItem();
       // this.statusBar.setText(STATUS_OFFLINE);
       // this.neo4jStream = new Neo4jStream(this);
@@ -178,24 +177,7 @@ export default class JugglPlugin extends Plugin {
       }));
       const path = (this.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
 
-      // If this doesn't work nicely,
-      // The Obsidian-way is this.registerEvent( this.app.vault.on("raw", {} );
-      // But that'll fire on every file change.
-      try {
-        const fs = require('original-fs');
-        if (fs.existsSync(path)) {
-          this.watcher = require('original-fs').watch(path,
-              async (curr: any, prev: any) => {
-                console.log(`Updating stylesheet from ${path}`);
-                for (const view of this.activeGraphs()) {
-                  await view.updateStylesheet();
-                }
-              });
-        }
-      } catch (e) {
-        console.log('Cannot watch stylesheet. This is probably because we are on mobile');
-        console.log(e);
-      }
+
       this.registerMarkdownCodeBlockProcessor('juggl', async (src, el, context) => {
         // timeout is needed to ensure the div is added to the window. The graph will only load if
         // it is attached. This will also prevent any annoying hickups while looading the graph.
@@ -254,6 +236,29 @@ export default class JugglPlugin extends Plugin {
         await leaf.open(view);
         await leaf.setViewState({type: JUGGL_STYLE_VIEW_TYPE});
       }// // this.app.workspace.createLeafInParent(this.app.workspace.rightSplit, 0 );
+
+      this.addRibbonIcon('ag-concentric', 'Juggl global graph', () => {
+        this.openGlobalGraph();
+      });
+
+      // If this doesn't work nicely,
+      // The Obsidian-way is this.registerEvent( this.app.vault.on("raw", {} );
+      // But that'll fire on every file change.
+      try {
+        const fs = require('original-fs');
+        if (fs.existsSync(path)) {
+          this.watcher = require('original-fs').watch(path,
+              async (curr: any, prev: any) => {
+                console.log(`Updating stylesheet from ${path}`);
+                for (const view of this.activeGraphs()) {
+                  await view.updateStylesheet();
+                }
+              });
+        }
+      } catch (e) {
+        console.log('Cannot watch stylesheet. This is probably because we are on mobile');
+        console.log(e);
+      }
     }
 
     public async openFileFromNode(node: NodeSingular, newLeaf= false): Promise<TFile> {
@@ -287,7 +292,15 @@ export default class JugglPlugin extends Plugin {
     async openLocalGraph(name: string) {
       const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
       // const query = this.localNeighborhoodCypher(name);
-      const neovisView = new JugglView(leaf, this, name);
+      const neovisView = new JugglView(leaf, this.settings.graphSettings, this, [name]);
+      await leaf.open(neovisView);
+    }
+
+    async openGlobalGraph() {
+      const leaf = this.app.workspace.getLeaf(false);
+      // const query = this.localNeighborhoodCypher(name);
+      const names = this.app.vault.getFiles().map((f) => f.extension === 'md'? f.basename : f.name);
+      const neovisView = new JugglView(leaf, this.settings.globalgraphSettings, this, names);
       await leaf.open(neovisView);
     }
     // nodeCypher(label: string): string {

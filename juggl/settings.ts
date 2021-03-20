@@ -134,6 +134,7 @@ export interface IJugglPluginSettings {
     imgServerPort: number;
     debug: boolean;
     graphSettings: IJugglSettings;
+    globalgraphSettings: IJugglSettings;
     embedSettings: IJugglSettings;
     globalStyleGroups: StyleGroup[];
 }
@@ -187,6 +188,27 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     styleGroups: [],
     toolbar: false,
     width: '100%',
+    zoomSpeed: 1,
+  },
+  globalgraphSettings: {
+    autoAddNodes: true,
+    autoExpand: false,
+    autoZoom: false,
+    coreStore: OBSIDIAN_STORE_NAME,
+    expandInitial: false,
+    fdgdLayout: 'cola',
+    filter: '-class:dangling -class:file',
+    height: '100%',
+    width: '100%',
+    limit: 10000,
+    hoverEdges: false,
+    layout: 'force-directed',
+    mergeEdges: true,
+    mode: 'workspace',
+    navigator: true,
+    openWithShift: false,
+    styleGroups: [],
+    toolbar: true,
     zoomSpeed: 1,
   },
 };

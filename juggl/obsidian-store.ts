@@ -109,9 +109,8 @@ ${edge.data.context}`;
             returnEdges.push(inlineEdge);
           }
         }
-        return returnEdges;//
+        return returnEdges;
       }
-      // No merging, TODO
       return [].concat(...Object.values(edges));
     }
 

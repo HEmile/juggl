@@ -146,15 +146,17 @@ export class Juggl extends Component {
       }
       VIEW_COUNTER += 1;
 
-      if (idsInitial && this.settings.expandInitial) {
+      if (idsInitial ) {
         for (const id of idsInitial) {
           const initialNode = this.viz.$id(id.toId());
-          initialNode.addClass(CLASS_EXPANDED);
+          if (this.settings.expandInitial) {
+            initialNode.addClass(CLASS_EXPANDED);
+          }
           initialNode.addClass(CLASS_PROTECTED);
-          const nodez = this.viz.nodes();
-          const edges = await this.buildEdges(nodez);
-          this.viz.add(edges);
         }
+        const nodez = this.viz.nodes();
+        const edges = await this.buildEdges(nodez);
+        this.viz.add(edges);
         this.onGraphChanged(true);
       }
       await this.updateStylesheet();

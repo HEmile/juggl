@@ -216,7 +216,6 @@ export const getLayoutSetting = function(layoutType: JugglLayouts, settings?: IJ
 };
 
 export const parseLayoutSettings = function(settings: IJugglSettings) {
-  console.log(settings);
   if (typeof settings.layout === 'string' || settings.layout instanceof String) {
     return getLayoutSetting(settings.layout as JugglLayouts, settings );
   } else {
