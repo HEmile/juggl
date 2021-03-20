@@ -32,6 +32,7 @@ import {JUGGL_NODES_VIEW_TYPE, JUGGL_STYLE_VIEW_TYPE, JUGGL_VIEW_TYPE} from './c
 import {WorkspaceManager} from './viz/workspaces/workspace-manager';
 import {VizId} from './interfaces';
 import type {FSWatcher} from 'fs';
+import {GlobalWarningModal} from './ui/settings/global-graph-modal';
 
 
 // I got this from https://github.com/SilentVoid13/Templater/blob/master/src/fuzzy_suggester.ts
@@ -145,6 +146,13 @@ export default class JugglPlugin extends Plugin {
           this.openLocalGraph(name);
         },
       });
+      this.addCommand( {
+        id: 'open-vis-global',
+        name: 'Open global graph',
+        callback: () => {
+          this.openGlobalGraph();
+        },
+      });
 
       // this.addCommand({
       //   id: 'execute-query',
@@ -224,18 +232,28 @@ export default class JugglPlugin extends Plugin {
           }
         }, 200);
       });
-      if (this.app.workspace.getLeavesOfType(JUGGL_NODES_VIEW_TYPE).length === 0) {
-        const leaf = this.app.workspace.getRightLeaf(false);
-        const view = new JugglNodesPane(leaf, this);
-        await leaf.open(view);
-        await leaf.setViewState({type: JUGGL_NODES_VIEW_TYPE});
-      }//
-      if (this.app.workspace.getLeavesOfType(JUGGL_STYLE_VIEW_TYPE).length === 0) {
-        const leaf = this.app.workspace.getRightLeaf(false);
-        const view = new JugglStylePane(leaf, this);
-        await leaf.open(view);
-        await leaf.setViewState({type: JUGGL_STYLE_VIEW_TYPE});
-      }// // this.app.workspace.createLeafInParent(this.app.workspace.rightSplit, 0 );
+      const plugin = this;
+      const createPanes = async function() {
+        if (plugin.app.workspace.getLeavesOfType(JUGGL_NODES_VIEW_TYPE).length === 0) {
+          const leaf = plugin.app.workspace.getRightLeaf(false);
+          const view = new JugglNodesPane(leaf, plugin);
+          await leaf.open(view);
+          await leaf.setViewState({type: JUGGL_NODES_VIEW_TYPE});
+        }//
+        if (plugin.app.workspace.getLeavesOfType(JUGGL_STYLE_VIEW_TYPE).length === 0) {
+          const leaf = plugin.app.workspace.getRightLeaf(false);
+          const view = new JugglStylePane(leaf, plugin);
+          await leaf.open(view);
+          await leaf.setViewState({type: JUGGL_STYLE_VIEW_TYPE});
+        }// // this.app.workspace.createLeafInParent(this.app.workspace.rightSplit, 0 );
+      };
+      if (this.app.workspace.layoutReady) {
+        await createPanes();
+      } else {
+        this.registerEvent(this.app.workspace.on('layout-ready', async () => {
+          await createPanes();
+        }));
+      }
 
       this.addRibbonIcon('ag-concentric', 'Juggl global graph', () => {
         this.openGlobalGraph();
@@ -300,8 +318,18 @@ export default class JugglPlugin extends Plugin {
       const leaf = this.app.workspace.getLeaf(false);
       // const query = this.localNeighborhoodCypher(name);
       const names = this.app.vault.getFiles().map((f) => f.extension === 'md'? f.basename : f.name);
-      const neovisView = new JugglView(leaf, this.settings.globalgraphSettings, this, names);
-      await leaf.open(neovisView);
+      console.log(names.length);
+      if (names.length > 250) {
+        const modal = new GlobalWarningModal(this.app, async () => {
+          const neovisView = new JugglView(leaf, this.settings.globalgraphSettings, this, names);
+          await leaf.open(neovisView);
+          modal.close();
+        });
+        modal.open();
+      } else {
+        const neovisView = new JugglView(leaf, this.settings.globalgraphSettings, this, names);
+        await leaf.open(neovisView);
+      }
     }
     // nodeCypher(label: string): string {
     //   return 'MATCH (n) WHERE n.name="' + label +
