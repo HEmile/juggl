@@ -3,63 +3,53 @@ import searchQuery, {ISearchParserDictionary} from 'search-query-parser';
 import cytoscape from 'cytoscape';
 
 
-const _containsSelector = function(attribute: string, filters: string|string[], op='*='): string {
+const _containsSelector = function(attribute: string, filters: string|string[], op='*='): string[] {
   if (typeof(filters) === 'string' || filters instanceof String) {
-    return `[${attribute} ${op} '${filters}']`;
+    return [`[${attribute} ${op} '${filters}']`];
   }
-  return filters.reduce((acc, s) => acc+`[${attribute} ${op} '${s}']`, '');
+  return filters.map((s) => `[${attribute} ${op} '${s}']`);
 };
 
-const _tagSelector = function(tag: string|string[]): string {
+const _tagSelector = function(tag: string|string[]): string[] {
   if (typeof(tag) === 'string' || tag instanceof String) {
     if (tag.length > 0 && tag[0] === '#') {
-      return `.tag-${tag.slice(1)}`;
+      return [`.tag-${tag.slice(1)}`];
+    }
+    return [];
+  }
+  return tag.map((t) => {
+    if (t.length > 0 && t[0] === '#') {
+      return `.tag-${t.slice(1)}`;
     }
     return '';
-  }
-  return tag.reduce((acc, t) => {
-    if (t.length > 0 && t[0] === '#') {
-      return acc + `.tag-${t.slice(1)}`;
-    }
-    return acc;
-  }, '');
+  });
 };
 
-const _classSelector = function(clazz: string|string[]): string {
+const _classSelector = function(clazz: string|string[]): string[] {
   if (typeof(clazz) === 'string' || clazz instanceof String) {
-    return `.${clazz}`;
+    return [`.${clazz}`];
   }
-  return clazz.reduce((acc, c) => acc + `.${c}`, '');
+  return clazz.map(( c) => `.${c}`);
 };
 
-const _selectorFromAtomic = function(atomicQuery: ISearchParserDictionary): string {
-  let selector = 'node';
-  for (const key of Object.keys(atomicQuery)) {
-    switch (key) {
-      case 'exclude': break;
-      case 'content':
-      case 'ignore-case':
-      case 'text': selector += _containsSelector('content', atomicQuery[key], '@*=');
-        break;
-      case 'match-case':
-        selector += _containsSelector('content', atomicQuery[key], '*=');
-        break;
-      case 'file': selector += _containsSelector('name', atomicQuery[key]);
-        break;
-      case 'name': selector += _containsSelector('name', atomicQuery[key], '@*=');
-        break;
-      case 'tag': selector += _tagSelector(atomicQuery[key]);
-        break;
-      case 'class': selector += _classSelector(atomicQuery[key]);
-        break;
-      case 'raw': selector += atomicQuery[key];
-        break;
-      default: selector += _containsSelector(key, atomicQuery[key]);
-        break;
-    }
+
+const literal = function(atomicQuery: ISearchParserDictionary, key: string): string[] {
+  switch (key) {
+    case 'exclude': return [];
+    case 'content':
+    case 'ignore-case':
+    case 'text': return _containsSelector('content', atomicQuery[key], '@*=');
+    case 'match-case':
+      return _containsSelector('content', atomicQuery[key], '*=');
+    case 'file': return _containsSelector('name', atomicQuery[key]);
+    case 'name': return _containsSelector('name', atomicQuery[key], '@*=');
+    case 'tag': return _tagSelector(atomicQuery[key]);
+    case 'class': return _classSelector(atomicQuery[key]);
+    case 'raw': return atomicQuery[key];
+    default: return _containsSelector(key, atomicQuery[key]);
   }
-  return selector;
 };
+
 
 const _parseAtomicQuery = function(query: string, nodes: NodeCollection): NodeCollection {
   const options = {
@@ -68,11 +58,18 @@ const _parseAtomicQuery = function(query: string, nodes: NodeCollection): NodeCo
     offsets: false,
   };
   const parsedQuery = searchQuery.parse(query, options) as ISearchParserDictionary;
-  let filteredNodes = nodes.filter(_selectorFromAtomic(parsedQuery));
+  let selector = 'node';
+  for (const key of Object.keys(parsedQuery)) {
+    selector += literal(parsedQuery, key).join();
+  }
+  let filteredNodes = nodes.filter(selector);
   if (parsedQuery.exclude) {
-    const notQuery = _selectorFromAtomic(parsedQuery.exclude);
-    if (!(notQuery === 'node')) {
-      filteredNodes = filteredNodes.not(notQuery);
+    for (const key of Object.keys(parsedQuery.exclude)) {
+      for (const query of literal(parsedQuery.exclude, key)) {
+        const selector = 'node' + query;
+        console.log(selector);
+        filteredNodes = filteredNodes.not(selector);
+      }
     }
   }
   return filteredNodes;
