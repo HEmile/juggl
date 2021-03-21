@@ -34,6 +34,7 @@ export class StyleGroup {
   shape: Shape;
   icon: Icon;
   showInPane: boolean;
+  show: boolean;
 }
 
 export const DEFAULT_USER_SHEET = `
@@ -143,18 +144,19 @@ export class GraphStyleSheet {
       let sheet = '';
       const parser = new DOMParser;
       for (const [index, val] of groups.entries()) {
-        let icon = '';
-        if (val.icon && val.icon.path) {
-          const svg = '<?xml version="1.0" encoding="UTF-8" ?>'+
-                '<!DOCTYPE svg>'+
-                '<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" version="1.1">' +
-                `<path fill="${val.icon.color}" d="${val.icon.path}" />` +
-                '</svg>';
-          const html = parser.parseFromString(svg, 'text/xml').documentElement.outerHTML;
-          icon = `background-image: url('data:image/svg+xml,${encodeURIComponent(html)}');`;
-        }
+        if (val.show) {
+          let icon = '';
+          if (val.icon && val.icon.path) {
+            const svg = '<?xml version="1.0" encoding="UTF-8" ?>' +
+                      '<!DOCTYPE svg>' +
+                      '<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" version="1.1">' +
+                      `<path fill="${val.icon.color}" d="${val.icon.path}" />` +
+                      '</svg>';
+            const html = parser.parseFromString(svg, 'text/xml').documentElement.outerHTML;
+            icon = `background-image: url('data:image/svg+xml,${encodeURIComponent(html)}');`;
+          }
 
-        sheet += `
+          sheet += `
 node.${groupPrefix}-${index} {
   background-color: ${val.color};
   shape: ${val.shape};
@@ -162,6 +164,13 @@ node.${groupPrefix}-${index} {
   ${icon} 
 }         
 `;
+        } else {
+          sheet += `
+node.${groupPrefix}-${index} {
+  display: none;
+}
+`;
+        }
       }
       return sheet;
     }

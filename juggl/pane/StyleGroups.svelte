@@ -3,6 +3,8 @@
     import {IconModal} from "./icon-modal";
     import JugglPlugin from "../main";
     import {emptyStyleGroup} from "../settings";
+    import {icons} from "../ui/icons";
+
     export let groups: StyleGroup[];
     export let title: string;
     export let onChangeFilter;
@@ -33,6 +35,12 @@
         groups = groups;
     }
 
+    let changeShow = function(group: StyleGroup) {
+        group.show = !group.show;
+        onChangeGroups();
+        groups = groups;
+    }
+
 </script>
 
 <div class="juggl-list-header">
@@ -42,10 +50,17 @@
     {#each groups as group}
         {#if group.showInPane}
         <div class="juggl-style-group">
-            <div class="clickable-icon" aria-label="Hide group" on:click={showGroup(group, false)} flex-basis="100%" >
+            <div class="clickable-icon" aria-label="Hide group options" on:click={showGroup(group, false)} flex-basis="100%" >
                 <svg viewBox="0 0 100 100" width="8" height="8" class="right-triangle">
                     <path fill="currentColor" stroke="currentColor"
                           d="M94.9,20.8c-1.4-2.5-4.1-4.1-7.1-4.1H12.2c-3,0-5.7,1.6-7.1,4.1c-1.3,2.4-1.2,5.2,0.2,7.6L43.1,88c1.5,2.3,4,3.7,6.9,3.7 s5.4-1.4,6.9-3.7l37.8-59.6C96.1,26,96.2,23.2,94.9,20.8L94.9,20.8z">
+                    </path>
+                </svg>
+            </div>
+            <div class="clickable-icon" aria-label="Hide group" on:click={changeShow(group)} flex-basis="100%" >
+                <svg viewBox="0 0 24 24" width="16" height="16" class="right-triangle">
+                    <path fill="currentColor" stroke="currentColor"
+                          d={group.show ? icons.ag_unhide : icons.ag_hide}>
                     </path>
                 </svg>
             </div>
