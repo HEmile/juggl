@@ -7,7 +7,7 @@ import {
 } from '../constants';
 import type {NodeSingular} from 'cytoscape';
 import type {Juggl} from './visualization';
-import type {JugglLayouts, IJugglSettings} from '../settings';
+import type {JugglLayouts, IJugglSettings, CytoscapeLayouts, FDGDLayouts, AllLayouts} from '../settings';
 import type {LayoutOptions} from 'cytoscape';
 
 export interface LayoutSettings {
@@ -200,15 +200,19 @@ export class ConcentricLayout implements LayoutSettings {
 }
 
 
-export const getLayoutSetting = function(layoutType: JugglLayouts, settings?: IJugglSettings, options?: LayoutOptions) {
+export const getLayoutSetting = function(layoutType: AllLayouts, settings?: IJugglSettings, options?: LayoutOptions) {
+  console.log(layoutType, options);
   switch (layoutType) {
-    case 'circle': return new ConcentricLayout(options);
+    case 'circle':
+    case 'concentric': return new ConcentricLayout(options);
     case 'force-directed': if (settings && settings.fdgdLayout === 'd3-force') {
       return new D3GlobalLayout(options);
     } else {
       return new ColaGlobalLayout(options);
     }
-    case 'hierarchy': return new DagreGlobalLayout(options);
+    case 'hierarchy':
+    case 'dagre':
+      return new DagreGlobalLayout(options);
     case 'grid': return new GridGlobalLayout(options);
     case 'cola': return new ColaGlobalLayout(options);
     case 'd3-force': return new D3GlobalLayout(options);

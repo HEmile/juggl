@@ -8,6 +8,8 @@ import type {LayoutOptions} from 'cytoscape';
 export const LAYOUTS = ['force-directed', 'circle', 'grid', 'hierarchy', 'cola'];
 export type FDGDLayouts = 'cola'| 'd3-force';
 export type JugglLayouts = 'force-directed' | 'circle' | 'grid' | 'hierarchy' | FDGDLayouts;
+export type CytoscapeLayouts = FDGDLayouts | 'concentric' | 'grid' | 'dagre';
+export type AllLayouts = CytoscapeLayouts | JugglLayouts;
 import KoFi from './ui/KoFi.svelte';
 import type {StyleGroup} from './viz/stylesheet';
 
