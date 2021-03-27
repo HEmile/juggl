@@ -165,11 +165,13 @@ div.juggl-style-group-hidden {
 
 div.juggl-style-pane {
     overflow-y: auto;
+    padding: 0 10px;
+    font-size: 14px;
 }
 
 .break {
     flex-basis: 100%;
-    height: 0;
+    height: 3px;
 }
 
 /* Use a collapsed column to break to a new column */
@@ -194,4 +196,14 @@ div.juggl-style-pane {
 .juggl-icon-picker > .suggestion-item {
     height: auto;
     min-height: 24px;
+}
+
+button.juggl-icon-button {
+    height: 30px;
+}
+
+.juggl-style-pane-left {
+    display: inline-flex;
+    width: 50px;
+    justify-content: center;
 }

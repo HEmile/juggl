@@ -21,6 +21,13 @@ export const DISCRETE_SPACING_FACTOR = 0.5;
 export const DEBOUNCE_FOLLOW = 500;
 export const DEBOUNCE_LAYOUT = 2300;
 
+export const MIN_NODE_SIZE = 5;
+export const MAX_NODE_SIZE = 35;
+export const MIN_FONT_SIZE = 5;
+export const MAX_FONT_SIZE = 11;
+export const MIN_TEXT_WIDTH = 65;
+export const MAX_TEXT_WIDTH = 100;
+
 export const JUGGL_VIEW_TYPE = 'juggl_view';
 export const JUGGL_NODES_VIEW_TYPE = 'juggl_nodes';
 export const JUGGL_STYLE_VIEW_TYPE = 'juggl_style';

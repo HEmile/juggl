@@ -2,6 +2,7 @@ import type JugglPlugin from '../main';
 import type {FileSystemAdapter} from 'obsidian';
 import {promises as fs} from 'fs';
 import type {Juggl} from './visualization';
+import {MAX_FONT_SIZE, MAX_NODE_SIZE, MAX_TEXT_WIDTH, MIN_FONT_SIZE, MIN_NODE_SIZE, MIN_TEXT_WIDTH} from '../constants';
 
 export const STYLESHEET_PATH = './.obsidian/juggl/style.css';
 export const SHAPES = ['ellipse',
@@ -35,6 +36,7 @@ export class StyleGroup {
   icon: Icon;
   showInPane: boolean;
   show: boolean;
+  size: number;
 }
 
 export const DEFAULT_USER_SHEET = `
@@ -155,13 +157,18 @@ export class GraphStyleSheet {
             const html = parser.parseFromString(svg, 'text/xml').documentElement.outerHTML;
             icon = `background-image: url('data:image/svg+xml,${encodeURIComponent(html)}');`;
           }
-
+          // Until size = 1, let text size linearly scale with node, then scale the square root.
+          const textSizeModifier = Math.max(Math.min(val.size, 1), Math.sqrt(val.size));
           sheet += `
 node.${groupPrefix}-${index} {
   background-color: ${val.color};
   shape: ${val.shape};
   background-fit: contain;
   ${icon} 
+  width: mapData(degree, 0, 60, ${MIN_NODE_SIZE*val.size}, ${MAX_NODE_SIZE*val.size});
+  height: mapData(degree, 0, 60, ${MIN_NODE_SIZE*val.size}, ${MAX_NODE_SIZE*val.size});
+  font-size: mapData(degree, 0, 60, ${MIN_FONT_SIZE*textSizeModifier}, ${MAX_FONT_SIZE*textSizeModifier});
+  text-max-width: mapData(degree, 0, 60, ${Math.round(MIN_TEXT_WIDTH*textSizeModifier)}px, ${Math.round(MAX_TEXT_WIDTH*textSizeModifier)}px);
 }         
 `;
         } else {
@@ -202,11 +209,11 @@ node[name] {
   label: data(name);
 }
 node[degree] {
-  width: mapData(degree, 0, 60, 5, 35);
-  height: mapData(degree, 0, 60, 5, 35);
-  font-size: mapData(degree, 0, 60, 5, 11);
+  width: mapData(degree, 0, 60, ${MIN_NODE_SIZE}, ${MAX_NODE_SIZE});
+  height: mapData(degree, 0, 60, ${MIN_NODE_SIZE}, ${MAX_NODE_SIZE});
+  font-size: mapData(degree, 0, 60, ${MIN_FONT_SIZE}, ${MAX_FONT_SIZE});
   text-opacity: mapData(degree, 0, 60, 0.7, 1);
-  text-max-width: mapData(degree, 0, 60, 65px, 100px);
+  text-max-width: mapData(degree, 0, 60, ${MIN_TEXT_WIDTH}px, ${MAX_TEXT_WIDTH}px);
 }
 
 node:selected {
