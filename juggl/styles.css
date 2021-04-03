@@ -162,7 +162,7 @@ div.juggl-style-group-hidden {
     display: inline;
 }
 
-
+div.juggl-nodes-pane,
 div.juggl-style-pane {
     overflow-y: auto;
     padding: 0 10px;

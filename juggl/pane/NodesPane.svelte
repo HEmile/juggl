@@ -43,7 +43,9 @@
     }
 </script>
 
-<NodesList nodes={visible} name="Nodes in graph" ctxmenu={ctxMenu} onClickText={clickTxt}/>
+<div class="juggl-nodes-pane">
+    <NodesList nodes={visible} name="Nodes in graph" ctxmenu={ctxMenu} onClickText={clickTxt}/>
 
-<NodesList nodes={hidden} name="Hidden nodes" ctxmenu={ctxMenu} onClickText={clickTxt} icon={icons.ag_unhide}
-icon_tooltip="Show in graph" onClickButton={filterButtonClick} />
+    <NodesList nodes={hidden} name="Hidden nodes" ctxmenu={ctxMenu} onClickText={clickTxt} icon={icons.ag_unhide}
+    icon_tooltip="Show in graph" onClickButton={filterButtonClick} />
+</div>
