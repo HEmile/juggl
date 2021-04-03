@@ -105,7 +105,9 @@ export class GraphStyleSheet {
       // TODO: Ordering: If people specify some new YAML property to take into account, style groups will override this!
       const globalGroups = this.styleGroupsToSheet(this.plugin.settings.globalStyleGroups, 'global');
       const localGroups = this.styleGroupsToSheet(viz.settings.styleGroups, 'local');
-      return this.defaultSheet + customSheet + globalGroups + localGroups + this.yamlModifySheet;
+      const sheet = this.defaultSheet + customSheet + globalGroups + localGroups + this.yamlModifySheet;
+      console.log(sheet);
+      return sheet;
     }
 
 

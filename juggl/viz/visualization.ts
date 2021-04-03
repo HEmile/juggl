@@ -480,7 +480,12 @@ export class Juggl extends Component {
           addElements.push(n);
         } else {
           const gElement = this.viz.$id(n.data.id);
+          console.log(gElement.classes());
           const extraClasses = CLASSES.filter((clazz) => gElement.hasClass(clazz));
+
+          // @ts-ignore
+          extraClasses.push(...gElement.classes().filter((el: string) => el.startsWith('global-') || el.startsWith('local-')));
+
           // TODO: Maybe make an event here
           gElement.classes(n.classes);
           for (const clazz of extraClasses) {

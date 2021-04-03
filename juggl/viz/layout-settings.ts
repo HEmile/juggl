@@ -7,7 +7,7 @@ import {
 } from '../constants';
 import type {NodeSingular} from 'cytoscape';
 import type {Juggl} from './visualization';
-import type {JugglLayouts, IJugglSettings, CytoscapeLayouts, FDGDLayouts, AllLayouts} from '../settings';
+import type {JugglLayouts, IJugglSettings, AllLayouts} from '../settings';
 import type {LayoutOptions} from 'cytoscape';
 
 export interface LayoutSettings {
@@ -201,7 +201,6 @@ export class ConcentricLayout implements LayoutSettings {
 
 
 export const getLayoutSetting = function(layoutType: AllLayouts, settings?: IJugglSettings, options?: LayoutOptions) {
-  console.log(layoutType, options);
   switch (layoutType) {
     case 'circle':
     case 'concentric': return new ConcentricLayout(options);

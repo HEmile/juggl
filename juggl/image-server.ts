@@ -60,10 +60,8 @@ export class ImageServer extends Component {
         // }
         // @ts-ignore
         const type = mime[path.extname(file).slice(1)];
-        console.log(file);
         const s = fs.createReadStream(file);
         s.on('open', function() {
-          console.log('Here2');
           res.setHeader('Content-Type', type);
           res.setHeader('Access-Control-Allow-Origin', '*');
           s.pipe(res);
