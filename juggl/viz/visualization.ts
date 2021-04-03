@@ -480,7 +480,6 @@ export class Juggl extends Component {
           addElements.push(n);
         } else {
           const gElement = this.viz.$id(n.data.id);
-          console.log(gElement.classes());
           const extraClasses = CLASSES.filter((clazz) => gElement.hasClass(clazz));
 
           // @ts-ignore

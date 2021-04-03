@@ -155,7 +155,7 @@ export class WorkspaceMode extends Component implements IAGMode {
       if (!this.view.settings.openWithShift || e.originalEvent.shiftKey) {
         const file = await this.view.plugin.openFileFromNode(e.target, e.originalEvent.metaKey);
         if (file) {
-          this.updateActiveNode(e.target, true);
+          this.updateActiveNode(e.target, this.view.settings.autoZoom);
         }
       }
     });
@@ -197,7 +197,7 @@ export class WorkspaceMode extends Component implements IAGMode {
         const node = this.viz.$id(id.toId()) as NodeSingular;
         node.addClass(CLASS_PROTECTED);
 
-        this.updateActiveNode(node, followImmediate);
+        this.updateActiveNode(node, followImmediate && this.view.settings.autoZoom);
       }
     }));
 
@@ -392,7 +392,7 @@ export class WorkspaceMode extends Component implements IAGMode {
         .connectedNodes()
         .addClass(CLASS_CONNECTED_ACTIVE_NODE)
         .union(node);
-    if (this.view.settings.autoZoom && followImmediate) {
+    if (followImmediate) {
       this.viz.animate({
         fit: {
           eles: neighbourhood,
