@@ -15,10 +15,9 @@
             alt="chat on Discord" width="120"></a>
 </p>
 
-ANNOUNCEMENT: I’ve been working on rewriting this plugin with the new name Juggl. It no longer requires Neo4j and Python, and has a lot more features than Neo4j graph view.
-
-It’s in a pretty good state, and I’ve been testing it already with some people in my Discord.
-I’d highly appreciate anyone who would also like to help test! If that’s you, you can join this Discord: https://discord.gg/sAmSGpaPgM 
+ANNOUNCEMENT: This plugin has been rewritten with new name Juggl. It no longer requires Neo4j and Python, and has a lot more features than Neo4j graph view.
+You can install a release candidate of the new plugin [from this link](https://juggl.io/Installing+Juggl+pre-releases) and it will be on the Obsidian community plugins soon!
+The Neo4j Graph View will be removed at that point.
 
 ## Neo4j Graph View
 ![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/main/neo4j-graph-view/resources/styled_screenshot.png)
