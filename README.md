@@ -15,8 +15,8 @@
 </p>
 
 ## Juggl 
-Juggl release candidates [are now available]( https://juggl.io/Installing+Juggl+pre-releases)!
-
+Juggl release candidates [are now available](https://juggl.io/Installing+Juggl+pre-releases)!
+![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/juggl/juggl/resources/juggl_screenshot.png)
 
 Juggl is a completely interactive, stylable and expandable graph view for [Obsidian](https://obsidian.md). 
 It is designed as an advanced 'local' graph view called the 'workspace', where you can juggle all your thoughts with ease.
@@ -27,18 +27,22 @@ You will have complete control over the style of your graph using the powerful [
 Juggl has a useful styling pane nodes colors, shapes, sizes, and icons.
 This helps you get an immediate overview over what the content of each node is.
 
+![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/juggl/juggl/resources/style_pane.gif)
 
 ## Features
 Juggl has many features unique to its graph view compared to the Obsidian graph view:
-- Use [CSS](https://juggl.io/Features/Styling/CSS+Styling), [YAML](https://juggl.io/Features/Styling/YAML+Styling) and 
-  the [Style Pane](https://juggl.io/Features/Styling/Style+Pane) for complete control over the style of your graph.
+- Use [CSS](https://juggl.io/Features/Styling/CSS+Styling), [YAML](https://juggl.io/Features/Styling/YAML+Styling) and the [Style Pane](https://juggl.io/Features/Styling/Style+Pane) for complete control over the style of your graph.
 - A [Workspace mode](https://juggl.io/Features/Workspace+mode/Workspace+mode) that helps you build up your graph with all nodes that are relevant to your current project.
+  ![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/juggl/juggl/resources/workspace_mode.gif)
   - Selectively browse and hide nodes, and pin their location so you never lose where they are
-  - Save your graph so you can continue working on it later
   - Write new ideas and see your graph evolve
-- 4 different [layouts](https://juggl.io/Features/Layouts) to get different kinds of insights 
-- A [code fence](https://juggl.io/Features/Juggl+code+fence) that displays the graph within Obsidian notes 
-- No need to install Python or Neo4j, unlike Neo4j Graph View, 
-
+  - Save your graph so you can continue working on it later
+  ![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/juggl/juggl/resources/save_workspace.gif)
+- 4 different [layouts](https://juggl.io/Features/Layouts) to get unique insights
+  ![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/juggl/juggl/resources/layouts.gif)
+- A [code fence](https://juggl.io/Features/Juggl+code+fence) that displays the graph within Obsidian notes
+  ![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/juggl/juggl/resources/code_fence.gif)
+- Link type support
+- No need to install Python or Neo4j, unlike Neo4j Graph View!
 
 
