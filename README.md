@@ -45,4 +45,14 @@ Juggl has many features unique to its graph view compared to the Obsidian graph 
 - Link type support
 - No need to install Python or Neo4j, unlike Neo4j Graph View!
 
+## Getting started 
+You can open Juggl from the 'more options' menu on files:
+![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/juggl/juggl/resources/open_juggl.gif)
+
+You can interact with the graph with many of the same options as in Obsidian. For further documentation, check out 
+[juggl.io](juggl.io), where you can find information on for example [styling](https://juggl.io/Features/Styling/Styling)
+or the syntax of the [code fence](https://juggl.io/Features/Juggl+code+fence). 
+You can also open the help vault with this button in Juggl:
+![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/juggl/juggl/resources/juggl_help.gif)
+
 
