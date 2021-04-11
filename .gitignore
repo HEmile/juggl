@@ -128,3 +128,5 @@ dmypy.json
 /markdown/
 .idea/
 out.cypher
+/docs/.obsidian/
+/docs/Development/

@@ -1,0 +1,28 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "module": "ESNext",
+    "target": "es2020",
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "importHelpers": true,
+    "lib": [
+      "dom",
+      "es5",
+      "scripthost",
+      "es2020",
+      "dom.iterable"
+    ],
+    "esModuleInterop": true,
+    "types": ["node", "svelte"],
+    "paths": {"src":  ["*"]},
+    "typeRoots": [
+      "./node_modules/@types/"
+    ]
+  },
+  "include": [
+    "./**/*"
+  ],
+  "exclude": ["node_modules/*"]
+}
