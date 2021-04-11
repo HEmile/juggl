@@ -12,6 +12,7 @@ The following properties are supported out of the box, but you can use any prope
 - `shape`: Change the shape of a node. You can use the same shapes as in the [[Style Pane]].
 - `width` and `height`: Change the width and height of a node.
 - `image`: Use the given image as a background image on the node. You can use both external links (https) to a website image, or an image in your vault. Some caveats: External images can only be used if the site is configured to accept cross-reference requests! This means it won't work for the majority of external links. 
+- `cssclass`: Can be used to assign [[CSS Styling#Classes|classes]]  to the notes for [[CSS Styling]].
 A better option is to download the image and save it to your vault. To reference an image in your vault, you need to use the **path to the image**, not just the name of the image. For instance, if your image `img.png` is in the `files` folder, you should do  `image: files/img.png`.
 - `cssclass`: List of [[CSS Styling|CSS]] classes that can be used for additional styling of nodes.
 

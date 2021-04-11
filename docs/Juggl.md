@@ -2,11 +2,9 @@
 aliases: []
 ---
 
-Welcome to the documentation of Juggl. If you came here looking for the documentation of the [[Neo4j Graph View Plugin]], please go [[Neo4j Graph View Plugin|here]]. If you want to install Juggl, see [[Installing Juggl pre-releases]].
+Welcome to the documentation of Juggl.  If you want to install Juggl, see [[Installing Juggl pre-releases]].
 
 Juggl is the next generation of PKM-focused graph views! 
-
-We have started opening pre-release versions for Juggl. See [[Installing Juggl pre-releases]] if you want to try it! You can also join the [[Discord]] to join the discussion on the development and report bugs.
 
 # Features
 Juggl is a new graph view with many more features than the original [[Obsidian]] graph view. 
@@ -36,7 +34,7 @@ You can choose from **four layout options**:
 You can use "[[Juggl code fence|code fence]]s" to embed graphs within your Obsidian note! You can even use the graph you saved in the [[Workspace mode]]. 
 
 ### More!
-- **Mobile ready!** While still buggy, the graph actually works on mobile
+- **Mobile ready!** While still buggy, the graph works on mobile
 - Has a **navigation element** that keeps an overview of the total graph
 - Supports stylable [[Link Types]]
 - Ready to be extended by other plugins through the [[Juggl API]]
@@ -45,6 +43,9 @@ You can use "[[Juggl code fence|code fence]]s" to embed graphs within your Obsid
 Juggl currently only has an implementation for [[Obsidian]]. However, the meat of the code is not necessarily reliant on Obsidian and could be ported to other PKM software. If you are interested, you can contact [[Emile van Krieken|me]], preferrably on [[Discord]].
 
 Note that Juggl is GPL3 **dual-**licensed. Contact me for details. 
+
+# Neo4j Graph View
+If you came here looking for the documentation of the [[Neo4j Graph View Plugin]], please go [[Neo4j Graph View Plugin|here]].
 
 --- 
 #plugin

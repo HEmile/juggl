@@ -2,7 +2,7 @@
 aliases: []
 ---
 
-Pre-release versions of [[Juggl]] are now available. The latest pre-release can be download [from this link](https://www.dropbox.com/s/i285vzhqrax8pdv/v0.3.0%20rc1.zip?dl=0).
+Pre-release versions of [[Juggl]] are available [from this link](https://www.dropbox.com/s/i285vzhqrax8pdv/v0.3.0%20rc1.zip?dl=0).
 
 ## Installation instructions
 Unzip the downloaded file in `.obsidian/plugins/neo4j-graph-view/`. The easiest way to find this folder is to follow these steps:
