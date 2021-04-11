@@ -1,10 +1,10 @@
 {
-	"id": "neo4j-graph-view",
+	"id": "juggl",
 	"name": "Juggl",
-	"version": "0.3.0",
-	"minAppVersion": "0.10.12",
+	"version": "1.0.0",
+	"minAppVersion": "0.11.5",
 	"description": "Adds a completely interactive, stylable and expandable graph view to Obsidian.",
 	"author": "Emile",
 	"authorUrl": "https://twitter.com/emilevankrieken",
-	"isDesktopOnly": true
+	"isDesktopOnly": false
 }
