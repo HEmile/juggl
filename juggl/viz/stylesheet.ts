@@ -3,8 +3,11 @@ import type {FileSystemAdapter} from 'obsidian';
 import {promises as fs} from 'fs';
 import type {Juggl} from './visualization';
 import {MAX_FONT_SIZE, MAX_NODE_SIZE, MAX_TEXT_WIDTH, MIN_FONT_SIZE, MIN_NODE_SIZE, MIN_TEXT_WIDTH} from '../constants';
+import type {Vault} from 'obsidian';
 
-export const STYLESHEET_PATH = './.obsidian/juggl/style.css';
+export const STYLESHEET_PATH = function(vault: Vault) {
+  return `${vault.configDir}/plugins/juggl/graph.css`;
+};
 export const SHAPES = ['ellipse',
   'rectangle',
   'triangle',
@@ -84,7 +87,7 @@ export class GraphStyleSheet {
     }
 
     async getStylesheet(viz: Juggl): Promise<string> {
-      const file = (this.plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
+      const file = (this.plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH(this.plugin.vault));
       // const customSheet = '';
       let customSheet = '';
       try {

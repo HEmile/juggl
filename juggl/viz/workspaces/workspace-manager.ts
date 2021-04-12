@@ -17,9 +17,9 @@ export class WorkspaceManager extends Component {
     async onload() {
       super.onload();
       try {
-        await this.adapter.mkdir(DATA_FOLDER);
+        await this.adapter.mkdir(DATA_FOLDER(this.plugin.vault));
         const path = require('path');
-        this.graphs = (await this.adapter.list(DATA_FOLDER)).folders.map((s) => path.basename(s));
+        this.graphs = (await this.adapter.list(DATA_FOLDER(this.plugin.vault))).folders.map((s) => path.basename(s));
       } catch (e) {
         console.log(e);
       }
@@ -27,11 +27,12 @@ export class WorkspaceManager extends Component {
 
     async saveGraph(name: string, viz: Juggl) {
       try {
-        await this.adapter.mkdir(DATA_FOLDER + name);
+        const folder = DATA_FOLDER(viz.vault) + name;
+        await this.adapter.mkdir(folder);
         const graphJson = viz.viz.json();
-        await this.adapter.write(DATA_FOLDER + name + '/graph.json', JSON.stringify(graphJson));
+        await this.adapter.write(folder + '/graph.json', JSON.stringify(graphJson));
         const settings = viz.settings;
-        await this.adapter.write(DATA_FOLDER + name + '/settings.json', JSON.stringify(settings));
+        await this.adapter.write(folder + '/settings.json', JSON.stringify(settings));
         if (!this.graphs.contains(name)) {
           this.graphs.push(name);
         }
@@ -42,8 +43,9 @@ export class WorkspaceManager extends Component {
 
     async loadGraph(name: string, viz: Juggl) {
       try {
-        const graph = JSON.parse(await this.adapter.read(DATA_FOLDER + name + '/graph.json'));
-        const settings = JSON.parse(await this.adapter.read(DATA_FOLDER + name + '/settings.json'));
+        const folder = DATA_FOLDER(viz.vault) + name;
+        const graph = JSON.parse(await this.adapter.read(folder + '/graph.json'));
+        const settings = JSON.parse(await this.adapter.read( folder + '/settings.json'));
         viz.viz.json(graph);
         viz.settings = settings;
 

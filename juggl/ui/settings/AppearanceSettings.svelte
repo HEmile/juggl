@@ -6,7 +6,7 @@
 
     export let plugin: JugglPlugin;
     let openGraphCSS = async function() {
-        let fullPath = (plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
+        let fullPath = (plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH(plugin.vault));
         // Write a file, throw an error if it already exists (flag wx). Just catch that because it's fine.
         try {
             const shell = require('electron').shell;
@@ -18,7 +18,7 @@
             await shell.openPath(fullPath);
         }
         catch (e) {
-            console.log("Couldn't open style.css. This is probably because we are on mobile.");
+            console.log("Couldn't open graph.css. This is probably because we are on mobile.");
             console.log(e);
         }
     }

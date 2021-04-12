@@ -1,3 +1,5 @@
+import type {Vault} from 'obsidian';
+
 export const CLASS_PINNED = 'pinned';
 export const CLASS_EXPANDED = 'expanded';
 export const CLASS_ACTIVE_NODE = 'active-node';
@@ -32,4 +34,6 @@ export const JUGGL_VIEW_TYPE = 'juggl_view';
 export const JUGGL_NODES_VIEW_TYPE = 'juggl_nodes';
 export const JUGGL_STYLE_VIEW_TYPE = 'juggl_style';
 export const JUGGL_HELP_VIEW = 'juggl-help';
-export const DATA_FOLDER = '.obsidian/juggl/';
+export const DATA_FOLDER = function(vault: Vault) {
+  return `${vault.configDir}/plugins/juggl/`;
+};

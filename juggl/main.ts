@@ -1,7 +1,7 @@
 import {
-  FileSystemAdapter, FileView,
-  MarkdownView, MetadataCache, parseFrontMatterStringArray, parseFrontMatterTags,
-  Plugin, ReferenceCache, TFile, Vault,
+  FileSystemAdapter,
+  MetadataCache, parseFrontMatterStringArray, parseFrontMatterTags,
+  Plugin, ReferenceCache, TFile, Vault, parseYaml,
 } from 'obsidian';
 import {
   IJugglPluginSettings,
@@ -27,7 +27,6 @@ import {addIcons} from './ui/icons';
 import {STYLESHEET_PATH} from './viz/stylesheet';
 import {JugglView} from './viz/juggl-view';
 import {JugglNodesPane, JugglPane, JugglStylePane} from './pane/view';
-import YAML from 'yaml';
 import {JUGGL_NODES_VIEW_TYPE, JUGGL_STYLE_VIEW_TYPE, JUGGL_VIEW_TYPE} from './constants';
 import {WorkspaceManager} from './viz/workspaces/workspace-manager';
 import {VizId} from './interfaces';
@@ -143,7 +142,7 @@ export default class JugglPlugin extends Plugin {
           this.openLocalGraph(name);
         },
       });
-      this.addCommand( {
+      this.addCommand({
         id: 'open-vis-global',
         name: 'Open global graph',
         callback: () => {
@@ -180,22 +179,22 @@ export default class JugglPlugin extends Plugin {
               });
         });
       }));
-      const path = (this.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH);
 
 
       this.registerMarkdownCodeBlockProcessor('juggl', async (src, el, context) => {
         // timeout is needed to ensure the div is added to the window. The graph will only load if
         // it is attached. This will also prevent any annoying hickups while looading the graph.
         setTimeout(async () => {
-          const parsed = YAML.parse(src);
+          const parsed = parseYaml(src);
           try {
             const settings = Object.assign({}, this.settings.embedSettings, parsed);
             if (!(LAYOUTS.contains(settings.layout))) {
               throw `Invalid layout. Choose one from ${LAYOUTS}`;
             }
-            const stores:IJugglStores = {
+            const stores: IJugglStores = {
               dataStores: [this.coreStores[settings.coreStore] as IDataStore].concat(this.stores),
-              coreStore: this.coreStores[settings.coreStore]};
+              coreStore: this.coreStores[settings.coreStore],
+            };
             el.style.width = settings.width;
             el.style.height = settings.height;
             if (Object.keys(parsed).contains('local')) {
@@ -203,7 +202,7 @@ export default class JugglPlugin extends Plugin {
             } else if (Object.keys(parsed).contains('workspace')) {
               const graph = new Juggl(el, this, stores, settings, null);
               if (!this.workspaceManager.graphs.contains(parsed.workspace)) {
-                throw 'Did not recognize workspace. Did you misspell its name?';
+                throw new Error('Did not recognize workspace. Did you misspell its name?');
               }
               this.addChild(graph);
               await this.workspaceManager.loadGraph(parsed.workspace, graph);
@@ -215,16 +214,16 @@ export default class JugglPlugin extends Plugin {
                 settings.expandInitial = false;
                 this.addChild(new Juggl(el, this, stores, settings, searchResults.map((file) => file.title)));
               } else {
-                throw 'The Obsidian Query Language plugin isn\'t loaded, so cannot query using oql!';
+                throw new Error('The Obsidian Query Language plugin isn\'t loaded, so cannot query using oql!');
               }
             } else {
-              throw 'Invalid query. Specify either the local property or the workspace property.';
+              throw new Error('Invalid query. Specify either the local property or the workspace property.');
             }
           } catch (error) {
-          // taken from https://github.com/jplattel/obsidian-query-language/blob/main/src/renderer.ts
+            // taken from https://github.com/jplattel/obsidian-query-language/blob/main/src/renderer.ts
             const errorElement = document.createElement('div');
             errorElement.addClass('juggl-error');
-            errorElement.innerText = error;
+            errorElement.innerText = error.message;
             el.appendChild(errorElement);
           }
         }, 200);
@@ -245,10 +244,10 @@ export default class JugglPlugin extends Plugin {
         }// // this.app.workspace.createLeafInParent(this.app.workspace.rightSplit, 0 );
       };
       if (this.app.workspace.layoutReady) {
-        await createPanes();
+        createPanes().then();
       } else {
         this.registerEvent(this.app.workspace.on('layout-ready', async () => {
-          await createPanes();
+          createPanes().then();
         }));
       }
 
@@ -256,24 +255,17 @@ export default class JugglPlugin extends Plugin {
         this.openGlobalGraph();
       });
 
-      // If this doesn't work nicely,
-      // The Obsidian-way is this.registerEvent( this.app.vault.on("raw", {} );
-      // But that'll fire on every file change.
-      try {
-        const fs = require('original-fs');
-        if (fs.existsSync(path)) {
-          this.watcher = require('original-fs').watch(path,
-              async (curr: any, prev: any) => {
-                console.log(`Updating stylesheet from ${path}`);
-                for (const view of this.activeGraphs()) {
-                  await view.updateStylesheet();
-                }
-              });
+      const sheetPath = STYLESHEET_PATH(this.vault);
+      // @ts-ignore
+      this.registerEvent(this.vault.on('raw', (file) => {
+        // @ts-ignore
+        if (file === sheetPath) {
+          console.log(`Updating stylesheet from ${sheetPath}`);
+          for (const view of this.activeGraphs()) {
+            view.updateStylesheet().then();
+          }
         }
-      } catch (e) {
-        console.log('Cannot watch stylesheet. This is probably because we are on mobile');
-        console.log(e);
-      }
+      }));
     }
 
     public async openFileFromNode(node: NodeSingular, newLeaf= false): Promise<TFile> {
@@ -315,7 +307,6 @@ export default class JugglPlugin extends Plugin {
       const leaf = this.app.workspace.getLeaf(false);
       // const query = this.localNeighborhoodCypher(name);
       const names = this.app.vault.getFiles().map((f) => f.extension === 'md'? f.basename : f.name);
-      console.log(names.length);
       if (names.length > 250) {
         const modal = new GlobalWarningModal(this.app, async () => {
           const neovisView = new JugglView(leaf, this.settings.globalgraphSettings, this, names);
