@@ -287,13 +287,7 @@ export default class JugglPlugin extends Plugin {
     }
 
     public async openFile(file: TFile, newLeaf=false) {
-      const mdLeaves = this.app.workspace.getLeavesOfType(MD_VIEW_TYPE).concat(this.app.workspace.getLeavesOfType('image'));
-      // this.app.workspace.iterateAllLeaves(leaf => console.log(leaf.view.getViewType()));
-      if (!newLeaf && mdLeaves.length > 0) {
-        await mdLeaves[0].openFile(file);//
-      } else {
-        await this.app.workspace.getLeaf(newLeaf).openFile(file);
-      }
+      await this.app.workspace.getLeaf(newLeaf).openFile(file);
     }
 
     async openLocalGraph(name: string) {
