@@ -22,7 +22,7 @@ import avsdf from 'cytoscape-avsdf';
 import dagre from 'cytoscape-dagre';
 import d3Force from 'cytoscape-d3-force';
 import dblclick from 'cytoscape-dblclick';
-import cxtmenu from '../../cytoscape.js-cxtmenu/cytoscape-cxtmenu';
+import cxtmenu from 'cytoscape-cxtmenu';
 import {addIcons} from './ui/icons';
 import {STYLESHEET_PATH} from './viz/stylesheet';
 import {JugglView} from './viz/juggl-view';

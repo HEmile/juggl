@@ -72,7 +72,7 @@ export class WorkspaceMode extends Component implements IAGMode {
         if (id.storeId === 'core') {
           commands.push({
             content: pathToSvg(icons.ag_file),
-            select: async function(ele: NodeSingular, event: Event) {
+            select: async function(ele: NodeSingular, gestureStart: any, event: Event) {
               // @ts-ignore
               await plugin.openFileFromNode(ele, event.originalEvent.metaKey);
             },

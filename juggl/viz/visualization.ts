@@ -261,7 +261,7 @@ export class Juggl extends Component {
       });
       this.viz.on('cxttap', (e) =>{
         // Thanks Liam for sharing how to do context menus
-        const fileMenu = new Menu(); // Creates empty file menu
+        const fileMenu = new Menu(this.plugin.app); // Creates empty file menu
         if (!(e.target === this.viz) && e.target.group() === 'nodes') {
           const id = VizId.fromNode(e.target);
           e.target.select();
