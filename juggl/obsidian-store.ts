@@ -152,13 +152,11 @@ ${edge.data.context}`;
     getOtherId(link: ReferenceCache, sourcePath: string) : VizId {
       const path = getLinkpath(link.link);
       const file = this.metadata.getFirstLinkpathDest(path, sourcePath);
-      let name: string;
       if (file) {
-        name = file.extension === 'md' ? file.basename : file.name;
+        return new VizId(file.name, this.storeId());
       } else {
-        name = path;
+        return new VizId(path, this.storeId() );
       }
-      return new VizId(name, this.storeId());
     }
 
     async getNodeFromLink(link: ReferenceCache, sourcePath: string) : Promise<NodeDefinition> {
@@ -199,7 +197,7 @@ ${edge.data.context}`;
       const classes = this.plugin.getClasses(file).join(' ');
 
       const data = {
-        id: VizId.toId(name, this.storeId()),
+        id: VizId.toId(file.name, this.storeId()),
         name: name,
         path: file.path,
         resource_url: `http://localhost:${this.plugin.settings.imgServerPort}/${encodeURI(file.path)}`,
