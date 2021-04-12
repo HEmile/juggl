@@ -1,5 +1,5 @@
 import {
-  FileSystemAdapter,
+  FileSystemAdapter, FileView,
   MarkdownView, MetadataCache, parseFrontMatterStringArray, parseFrontMatterTags,
   Plugin, ReferenceCache, TFile, Vault,
 } from 'obsidian';
@@ -138,11 +138,8 @@ export default class JugglPlugin extends Plugin {
         id: 'open-vis',
         name: 'Open local graph of note',
         callback: () => {
-          const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-          if (activeView == null) {
-            return;
-          }
-          const name = activeView.getDisplayText();
+          const file = this.app.workspace.getActiveFile();
+          const name = file.name;
           this.openLocalGraph(name);
         },
       });

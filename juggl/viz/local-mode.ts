@@ -66,9 +66,8 @@ export class LocalMode extends Component implements IAGMode {
     async onOpenFile(file: TFile) {
       if (!this.view.settings.autoAddNodes) {
         return;
-      }//
-      const name = file.basename;
-      const id = new VizId(name, 'core');
+      }
+      const id = new VizId(file.name, 'core');
       let node: NodeSingular;
       this.viz.startBatch();
       if (this.viz.$id(id.toId()).length === 0) {

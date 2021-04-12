@@ -180,7 +180,7 @@ export class WorkspaceMode extends Component implements IAGMode {
         return;
       }
       if (file && this.view.settings.autoAddNodes) {
-        const name = file.basename;
+        const name = file.name;
         const id = new VizId(name, 'core');
         let followImmediate = true;
         if (this.viz.$id(id.toId()).length === 0) {
