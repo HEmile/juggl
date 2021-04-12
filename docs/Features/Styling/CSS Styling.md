@@ -13,6 +13,8 @@ This document acts as an overview of common and useful options for Juggl. For do
 
 We will first discuss how to [[#Selectors|select certain objects]], then discuss common [[#Properties|properties]] you might want to change, then finally show a couple of [[#Snippets|snippets]] to get started. 
 
+If you need more help, feel free to join the [[Discord]] where help is provided for all your styling questions!
+
 # Selectors
 [Selectors](https://www.w3schools.com/cssref/css_selectors.asp) are used to filter what objects to style. The two main 'elements' that can be targeted are `node` and `edge`.	
 ## Classes

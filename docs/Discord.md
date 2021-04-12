@@ -11,7 +11,7 @@ Current goals of the server:
 - Discuss [[Juggl]] 
 	- Show off graphs
 	- Discussing advanced use
-		- [[Styling]] of the graph
+		- [[Styling]] of the graph, in particular [[CSS Styling|CSS]] and [[YAML Styling|YAML]].
 		- [[Workspace mode]]
 		- Usage of the [[Juggl code fence|code fence]]
 	- Feature requests and discussion

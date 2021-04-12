@@ -9,6 +9,7 @@ export const LAYOUTS = ['force-directed', 'circle', 'grid', 'hierarchy', 'cola']
 export type FDGDLayouts = 'cola'| 'd3-force';
 export type JugglLayouts = 'force-directed' | 'circle' | 'grid' | 'hierarchy' | FDGDLayouts;
 export type CytoscapeLayouts = FDGDLayouts | 'concentric' | 'grid' | 'dagre';
+export type JugglMode = 'local' | 'workspace';
 export type AllLayouts = CytoscapeLayouts | JugglLayouts;
 import KoFi from './ui/KoFi.svelte';
 import type {StyleGroup} from './viz/stylesheet';
@@ -122,7 +123,7 @@ export interface IJugglSettings {
     layout: JugglLayouts | LayoutOptions;
     limit: number;
     mergeEdges: boolean;
-    mode: string;
+    mode: JugglMode;
     navigator: boolean;
     openWithShift: boolean;
     styleGroups: StyleGroup[];
@@ -167,7 +168,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     layout: 'force-directed',
     limit: 10000,
     mergeEdges: true,
-    mode: 'local',
+    mode: 'workspace',
     navigator: true,
     openWithShift: false,
     styleGroups: [],
@@ -275,7 +276,7 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
             dropdown.addOption('local', 'Local Mode');
             dropdown.addOption('workspace', 'Workspace Mode');
             dropdown.setValue(this.plugin.settings.graphSettings.mode)
-                .onChange((newValue) => {
+                .onChange((newValue: JugglMode) => {
                   this.plugin.settings.graphSettings.mode = newValue;
                   this.plugin.saveData(this.plugin.settings);
                 });
