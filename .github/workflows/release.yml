@@ -26,8 +26,9 @@ jobs:
           cd "juggl"
           npm install
           npm run build --if-present
+          cd ..
           mkdir ${{ env.PLUGIN_NAME }}
-          cp main.js manifest.json ${{ env.PLUGIN_NAME }}
+          cp juggl/main.js manifest.json juggl/style.css ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
           ls
           echo "::set-output name=tag_name::$(git tag --sort version:refname | tail -n 1)"
@@ -49,7 +50,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: juggl/${{ env.PLUGIN_NAME }}.zip
+          asset_path: ${{ env.PLUGIN_NAME }}.zip
           asset_name: ${{ env.PLUGIN_NAME }}-${{ steps.build.outputs.tag_name }}.zip
           asset_content_type: application/zip
       - name: Upload main.js
