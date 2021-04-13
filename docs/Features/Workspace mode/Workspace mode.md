@@ -65,6 +65,7 @@ These functions will apply to the full selection of nodes selected using shift-d
 The first four buttons allow you to choose a [[Layouts|layout]]. To the right of that, you have the 'fit view' button which centers the view on the graph, a button to return to the [[Local mode]], and a button that navigates to the help vault (that you are reading right now). 
 
 ### Saving and loading
+![[save_workspace.gif||400]]
 ![[Screenshot 2021-04-03 at 15.01.44.png|200]]
 
 The highlighted button will let you save and load [[Workspace graph]]s. Click the button to open the Manage Workspace Graphs UI: 

@@ -1,6 +1,9 @@
 ---
 aliases: [code fence]
 ---
+
+![[code_fence.gif|400]]
+
 You can use 'code fences' to embed [[Juggl]] graphs inside notes. For instance, the following code block:
 
 ~~~

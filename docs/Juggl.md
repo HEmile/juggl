@@ -8,7 +8,7 @@ Juggl is the next generation of PKM-focused graph views!
 
 # Features
 Juggl is a new graph view with many more features than the original [[Obsidian]] graph view. 
-
+![[juggl trailer.gif]]
 ## Styling
 [[Styling|Style]] the graph in many ways:
 1.  Using a special [[Style Pane]] that is very easy to use
@@ -36,7 +36,7 @@ You can use "[[Juggl code fence|code fence]]s" to embed graphs within your Obsid
 ### More!
 - **Mobile ready!** While still buggy, the graph works on mobile
 - Has a **navigation element** that keeps an overview of the total graph
-- Supports stylable [[Link Types]]
+- Supports stylable [[Link Types]]. You can use this to add labels to edges, for example
 - Ready to be extended by other plugins through the [[Juggl API]]
 
 # Implementations and licensing

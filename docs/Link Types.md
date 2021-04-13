@@ -1,8 +1,10 @@
 ---
 aliases: []
 ---
-You can created Typed Links using the following syntax:
+You can created Typed Links using the following list-based syntax:
 `- linkType [[note 1]], [[note 2|alias]]`
+
+For example, if you have a \[\[Rembrant\]\] note and you want to link it to  \[\[The Night Watch\]\], you would add `- painted [[The Night Watch]]` to your Rembrant note. 
 
 This vault contains many examples of such links at the bottom of the page. These will be visualized by [[Juggl]] as text on edges.
 
