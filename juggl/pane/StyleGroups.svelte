@@ -11,7 +11,7 @@
     export let onChangeGroups;
     export let plugin: JugglPlugin;
     let onNewGroup = function() {
-        groups.push(emptyStyleGroup);
+        groups.push({...emptyStyleGroup});
         groups = groups;
         onChangeGroups();
     }

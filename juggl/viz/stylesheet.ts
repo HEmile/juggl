@@ -30,7 +30,7 @@ export type Shape = typeof SHAPES[number];
 export class Icon {
     path: string;
     name: string;
-    color: string = 'black';
+    color: string = '#000000';
 }
 export class StyleGroup {
   filter: string;
