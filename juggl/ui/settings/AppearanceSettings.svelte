@@ -5,8 +5,9 @@
     import type JugglPlugin from "../../main";
 
     export let plugin: JugglPlugin;
+    let stylesheetPath = STYLESHEET_PATH(plugin.vault);
     let openGraphCSS = async function() {
-        let fullPath = (plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH(plugin.vault));
+        let fullPath = (plugin.vault.adapter as FileSystemAdapter).getFullPath(stylesheetPath);
         // Write a file, throw an error if it already exists (flag wx). Just catch that because it's fine.
         try {
             const shell = require('electron').shell;
@@ -29,10 +30,10 @@
     Appearance
 </h3>
 <p>
-    You can style the graph with css. This is done in the .obsidian/juggl/style.css file.
+    You can style the graph with css. This is done in the {stylesheetPath} file.
     See <a href="https://publish.obsidian.md/semantic-obsidian/Node+styling">this page</a> for help with styling.
 </p>
 
 <button on:click={openGraphCSS}>
-    Open style.css in default editor.
+    Open graph.css in default editor.
 </button>
