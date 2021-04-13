@@ -2,7 +2,7 @@
 aliases: []
 ---
 
-Welcome to the documentation of Juggl.  If you want to install Juggl, see [[Installing Juggl pre-releases]].
+Welcome to the documentation of Juggl, now available on the [[Obsidian]] community plugins store.
 
 Juggl is the next generation of PKM-focused graph views! 
 
@@ -45,7 +45,7 @@ Juggl currently only has an implementation for [[Obsidian]]. However, the meat o
 Note that Juggl is GPL3 **dual-**licensed. Contact me for details. 
 
 # Neo4j Graph View
-If you came here looking for the documentation of the [[Neo4j Graph View Plugin]], please go [[Neo4j Graph View Plugin|here]].
+If you came here looking for the documentation of the deprecated [[Neo4j Graph View Plugin]], please go [[Neo4j Graph View Plugin|here]].
 
 --- 
 #plugin

@@ -1,4 +1,4 @@
-This plugin will be depracated in the near future and replaced by [[Juggl]]. You can join the [[Discord]] if you would like to help testing. 
+This plugin is deprecated and replaced by [[Juggl]]. It will be removed from the community plugins store in the near future.
 
 ![[styled_screenshot.png]]
 

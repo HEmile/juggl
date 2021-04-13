@@ -186,10 +186,11 @@ export default class JugglPlugin extends Plugin {
         // it is attached. This will also prevent any annoying hickups while looading the graph.
         setTimeout(async () => {
           const parsed = parseYaml(src);
+          console.log(parsed);
           try {
             const settings = Object.assign({}, this.settings.embedSettings, parsed);
             if (!(LAYOUTS.contains(settings.layout))) {
-              throw `Invalid layout. Choose one from ${LAYOUTS}`;
+              throw new Error(`Invalid layout. Choose one from ${LAYOUTS}`);
             }
             const stores: IJugglStores = {
               dataStores: [this.coreStores[settings.coreStore] as IDataStore].concat(this.stores),
