@@ -366,10 +366,16 @@ export default class JugglPlugin extends Plugin {
               classes.push('image');
             }
             if ('tags' in cache.frontmatter) {
-              classes.push(...this._parseTags(parseFrontMatterTags(cache.frontmatter)));
+              const tags = parseFrontMatterTags(cache.frontmatter);
+              if (tags) {
+                classes.push(...this._parseTags(tags));
+              }
             }
             if ('cssclass' in cache.frontmatter) {
-              classes.push(...parseFrontMatterStringArray(cache.frontmatter, 'cssclass'));
+              const clazzes = parseFrontMatterStringArray(cache.frontmatter, 'cssclass');
+              if (clazzes) {
+                classes.push(...clazzes);
+              }
             }
           }
           if (cache?.tags) {
