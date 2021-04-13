@@ -62,12 +62,12 @@ const _parseAtomicQuery = function(query: string, nodes: NodeCollection): NodeCo
   for (const key of Object.keys(parsedQuery)) {
     selector += literal(parsedQuery, key).join();
   }
+  console.log(nodes);
   let filteredNodes = nodes.filter(selector);
   if (parsedQuery.exclude) {
     for (const key of Object.keys(parsedQuery.exclude)) {
       for (const query of literal(parsedQuery.exclude, key)) {
         const selector = 'node' + query;
-        console.log(selector);
         filteredNodes = filteredNodes.not(selector);
       }
     }

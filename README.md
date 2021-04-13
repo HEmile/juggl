@@ -30,7 +30,8 @@ This helps you get an immediate overview over what the content of each node is.
 ## Features
 Juggl has many features unique to its graph view compared to the Obsidian graph view:
 - Complete control over the style of your graph using [CSS](https://juggl.io/Features/Styling/CSS+Styling), [YAML](https://juggl.io/Features/Styling/YAML+Styling) and the [Style Pane](https://juggl.io/Features/Styling/Style+Pane) .
-- A [Workspace mode](https://juggl.io/Features/Workspace+mode/Workspace+mode) that helps you build up your graph with all nodes that are relevant to your current project.
+  - Include images!
+- A [Workspace mode](https://juggl.io/Features/Workspace+mode/Workspace+mode) that lets you build your graph with all nodes that are relevant to your current project
   - Selectively browse and hide nodes, and pin their location so you never lose them
   - Write new ideas and see your graph evolve
   - Save your graph and continue working on it later

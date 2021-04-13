@@ -202,9 +202,9 @@ ${edge.data.context}`;
         path: file.path,
         resource_url: `http://localhost:${this.plugin.settings.imgServerPort}/${encodeURI(file.path)}`,
       } as NodeDataDefinition;
+      data['content'] = await this.vault.cachedRead(file);
       const frontmatter = cache?.frontmatter;
       if (frontmatter) {
-        data['content'] = await this.vault.cachedRead(file);
         Object.keys(frontmatter).forEach((k) => {
           if (!(k === 'position')) {
             if (k === 'image') {
