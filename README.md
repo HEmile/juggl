@@ -16,9 +16,6 @@
 </p>
 
 ## Juggl 
-Juggl release candidates [are now available](https://juggl.io/Installing+Juggl+pre-releases)!
-![](https://raw.githubusercontent.com/HEmile/obsidian-neo4j-graph-view/juggl/juggl/resources/juggl_screenshot.png)
-
 Juggl is a completely interactive, stylable and expandable graph view for [Obsidian](https://obsidian.md). 
 It is designed as an advanced 'local' graph view called the 'workspace', where you can juggle all your thoughts with ease.
 With Juggl, you can navigate Obsidian through a beautiful graph!
