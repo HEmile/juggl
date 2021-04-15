@@ -16,14 +16,9 @@
 </p>
 
 ## Juggl 
-Juggl is a completely interactive, stylable and expandable graph view for [Obsidian](https://obsidian.md). 
-It is designed as an advanced 'local' graph view called the 'workspace', where you can juggle all your thoughts with ease.
-With Juggl, you can navigate Obsidian through a beautiful graph!
+Juggl is a completely interactive, stylable and expandable graph view for [Obsidian](https://obsidian.md). It is designed as an advanced 'local' graph view called the 'workspace', where you can juggle all your thoughts with ease: By navigating your vault through a beautiful graph!
 
-For example, you can select what parts of the graph to expand, to make sure there is never too much information on the screen.
-You will have complete control over the style of your graph using the powerful [Cytoscape.js library](https://js.cytoscape.org):
-Juggl has a useful styling pane nodes colors, shapes, sizes, and icons.
-This helps you get an immediate overview over what the content of each node is.
+For example, you can select what parts of the graph to expand, to make sure there is never too much information on the screen. You will have complete control over the style of your graph using the powerful [Cytoscape.js library](https://js.cytoscape.org): Juggl has a useful styling pane nodes colors, shapes, sizes, and icons. This helps you get an immediate overview over what the content of each node is.
 
 ![](https://raw.githubusercontent.com/HEmile/juggl/main/juggl/resources/juggl_trailer.gif)
 
@@ -46,9 +41,7 @@ Juggl has many features unique to its graph view compared to the Obsidian graph 
 You can open Juggl from the 'more options' menu on files:
 ![](https://raw.githubusercontent.com/HEmile/juggl/main/juggl/resources/open_juggl.gif)
 
-You can interact with the graph with many of the same options as in Obsidian. For further documentation, check out 
-[juggl.io](juggl.io), where you can find information on for example [styling](https://juggl.io/Features/Styling/Styling)
-or the syntax of the [code fence](https://juggl.io/Features/Juggl+code+fence). 
+You can interact with the graph with many of the same options as in Obsidian. For further documentation, check out [juggl.io](juggl.io), where you can find information on for example [styling](https://juggl.io/Features/Styling/Styling) or the syntax of the [code fence](https://juggl.io/Features/Juggl+code+fence). 
 You can also open the help vault with this button in Juggl:
 ![](https://raw.githubusercontent.com/HEmile/juggl/main/juggl/resources/juggl_help.gif)
 
