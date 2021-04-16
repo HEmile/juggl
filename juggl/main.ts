@@ -1,7 +1,7 @@
 import {
   FileSystemAdapter,
   MetadataCache, parseFrontMatterStringArray, parseFrontMatterTags,
-  Plugin, ReferenceCache, TFile, Vault, parseYaml,
+  Plugin, ReferenceCache, TFile, Vault, parseYaml, WorkspaceLeaf,
 } from 'obsidian';
 import {
   IJugglPluginSettings,
@@ -186,7 +186,6 @@ export default class JugglPlugin extends Plugin {
         // it is attached. This will also prevent any annoying hickups while looading the graph.
         setTimeout(async () => {
           const parsed = parseYaml(src);
-          console.log(parsed);
           try {
             const settings = Object.assign({}, this.settings.embedSettings, parsed);
             if (!(LAYOUTS.contains(settings.layout))) {
@@ -230,27 +229,25 @@ export default class JugglPlugin extends Plugin {
         }, 200);
       });
       const plugin = this;
+
+      // Adapted from https://github.com/liamcain/obsidian-calendar-plugin/blob/master/src/main.ts
+      this.registerView(JUGGL_NODES_VIEW_TYPE, (leaf: WorkspaceLeaf) => new JugglNodesPane(leaf, plugin));
+      this.registerView(JUGGL_STYLE_VIEW_TYPE, (leaf: WorkspaceLeaf) => new JugglStylePane(leaf, plugin));
       const createPanes = async function() {
         if (plugin.app.workspace.getLeavesOfType(JUGGL_NODES_VIEW_TYPE).length === 0) {
           const leaf = plugin.app.workspace.getRightLeaf(false);
-          const view = new JugglNodesPane(leaf, plugin);
-          await leaf.open(view);
+          // const view = new JugglNodesPane(leaf, plugin);
+          // await leaf.open(view);
           await leaf.setViewState({type: JUGGL_NODES_VIEW_TYPE});
         }//
         if (plugin.app.workspace.getLeavesOfType(JUGGL_STYLE_VIEW_TYPE).length === 0) {
           const leaf = plugin.app.workspace.getRightLeaf(false);
-          const view = new JugglStylePane(leaf, plugin);
-          await leaf.open(view);
+          // const view = new JugglStylePane(leaf, plugin);
+          // await leaf.open(view);
           await leaf.setViewState({type: JUGGL_STYLE_VIEW_TYPE});
         }// // this.app.workspace.createLeafInParent(this.app.workspace.rightSplit, 0 );
       };
-      if (this.app.workspace.layoutReady) {
-        createPanes().then();
-      } else {
-        this.registerEvent(this.app.workspace.on('layout-ready', async () => {
-          createPanes().then();
-        }));
-      }
+      this.app.workspace.onLayoutReady(createPanes);
 
       this.addRibbonIcon('ag-concentric', 'Juggl global graph', () => {
         this.openGlobalGraph();
