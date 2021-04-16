@@ -324,13 +324,13 @@ export default class JugglPlugin extends Plugin {
       const names = this.app.vault.getFiles().map((f) => f.extension === 'md'? f.basename : f.name);
       if (names.length > 250) {
         const modal = new GlobalWarningModal(this.app, async () => {
-          const neovisView = new JugglView(leaf, this.settings.globalgraphSettings, this, names);
+          const neovisView = new JugglView(leaf, this.settings.globalGraphSettings, this, names);
           await leaf.open(neovisView);
           modal.close();
         });
         modal.open();
       } else {
-        const neovisView = new JugglView(leaf, this.settings.globalgraphSettings, this, names);
+        const neovisView = new JugglView(leaf, this.settings.globalGraphSettings, this, names);
         await leaf.open(neovisView);
       }
     }

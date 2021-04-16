@@ -123,6 +123,7 @@ export interface IJugglSettings {
     layout: JugglLayouts | LayoutOptions;
     limit: number;
     mergeEdges: boolean;
+    metaKeyHover: boolean;
     mode: JugglMode;
     navigator: boolean;
     openWithShift: boolean;
@@ -138,10 +139,11 @@ export interface IJugglPluginSettings {
     password: string; // neo4j
     typedLinkPrefix: string;
     splitDirection: SplitDirection; // 'horizontal';
+    globalGraphRibbon: boolean;
     imgServerPort: number;
     debug: boolean;
     graphSettings: IJugglSettings;
-    globalgraphSettings: IJugglSettings;
+    globalGraphSettings: IJugglSettings;
     embedSettings: IJugglSettings;
     globalStyleGroups: StyleGroup[];
 }
@@ -154,6 +156,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
   imgServerPort: 3837,
   debug: false,
   globalStyleGroups: [],
+  globalGraphRibbon: true,
   graphSettings: {
     // TODO: Not currently used anywhere
     autoAddNodes: true,
@@ -168,6 +171,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     layout: 'force-directed',
     limit: 10000,
     mergeEdges: true,
+    metaKeyHover: false,
     mode: 'workspace',
     navigator: true,
     openWithShift: false,
@@ -189,6 +193,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     layout: 'force-directed',
     limit: 1000,
     mergeEdges: true,
+    metaKeyHover: false,
     mode: 'local',
     navigator: false,
     openWithShift: false,
@@ -197,7 +202,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     width: '100%',
     zoomSpeed: 1,
   },
-  globalgraphSettings: {
+  globalGraphSettings: {
     autoAddNodes: true,
     autoExpand: false,
     autoZoom: false,
@@ -211,6 +216,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     hoverEdges: false,
     layout: 'force-directed',
     mergeEdges: true,
+    metaKeyHover: false,
     mode: 'workspace',
     navigator: true,
     openWithShift: false,
@@ -249,7 +255,7 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
 
       const introPar = document.createElement('p');
       introPar.innerHTML =
-          'Check out ' + doc_link.outerHTML + ' for guides on how to use the plugin. <br>' +
+          'Check out ' + doc_link.outerHTML + ' for documentation on how to use the plugin. <br>' +
             'Join ' + discord_link.outerHTML + ' for help, nice discussion and insight into development.';
 
       containerEl.appendChild(introPar);
@@ -293,26 +299,40 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
                 .onChange((newValue: FDGDLayouts) => {
                   this.plugin.settings.graphSettings.fdgdLayout = newValue;
                   this.plugin.settings.embedSettings.fdgdLayout = newValue;
+                  this.plugin.settings.globalGraphSettings.fdgdLayout = newValue;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
-
 
       new Setting(containerEl)
-          .setName('Data store')
-          .setDesc('Set what database to get the Obsidian graph from. By default, only Obsidian itself is an option. ' +
-                'Later on, you will be able to install the Neo4j Stream Plugin to use a Neo4j backend which has more features and scales better to large graphs.')
-          .addDropdown((dropdown) => {
-            Object.keys(this.plugin.coreStores).forEach((c) => {
-              dropdown.addOption(c, c);
-            });
-            dropdown.setValue(this.plugin.settings.graphSettings.coreStore)
-                .onChange((newValue) => {
-                  this.plugin.settings.graphSettings.coreStore = newValue;
-                  this.plugin.settings.embedSettings.coreStore = newValue;
+          .setName('Global Graph Icon')
+          .setDesc('Show the Global Graph Icon on the left ribbon.')
+          .addToggle((toggle) => {
+            toggle.setValue(this.plugin.settings.graphSettings.hoverEdges)
+                .onChange((new_value) => {
+                  this.plugin.settings.globalGraphRibbon = new_value;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
+      // // Note: This isn't currently used anywhere, and the Neo4j stream plugin will likely not provide a backend.
+      // // Therefore this setting is disabled to prevent confusion.
+      // new Setting(containerEl)
+      //     .setName('Data store')
+      //     .setDesc('Set what database to get the Obsidian graph from. By default, only Obsidian itself is an option. ' +
+      //           'Later on, you will be able to install the Neo4j Stream Plugin to use a Neo4j backend which has more features and scales better to large graphs.')
+      //     .addDropdown((dropdown) => {
+      //       Object.keys(this.plugin.coreStores).forEach((c) => {
+      //         dropdown.addOption(c, c);
+      //       });
+      //       dropdown.setValue(this.plugin.settings.graphSettings.coreStore)
+      //           .onChange((newValue) => {
+      //             this.plugin.settings.graphSettings.coreStore = newValue;
+      //             this.plugin.settings.embedSettings.coreStore = newValue;
+      //             this.plugin.saveData(this.plugin.settings);
+      //           });
+      //     });
+
+
       containerEl.createEl('h4', {text: 'Workspace mode'});
       new Setting(containerEl)
           .setName('Automatically add nodes')
@@ -332,6 +352,7 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
             toggle.setValue(this.plugin.settings.graphSettings.autoZoom)
                 .onChange((new_value) => {
                   this.plugin.settings.graphSettings.autoZoom = new_value;
+                  this.plugin.settings.globalGraphSettings.autoZoom = new_value;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
@@ -348,6 +369,7 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
                 .onChange((newValue ) =>{
                   this.plugin.settings.graphSettings.zoomSpeed = newValue;
                   this.plugin.settings.embedSettings.zoomSpeed = newValue;
+                  this.plugin.settings.globalGraphSettings.zoomSpeed = newValue;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
@@ -365,23 +387,25 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
       //     });
       new Setting(containerEl)
           .setName('Hover on edges')
-          .setDesc('Hover on edges to show what they are connected to..')
+          .setDesc('Hover on edges to show what they are connected to.')
           .addToggle((toggle) => {
             toggle.setValue(this.plugin.settings.graphSettings.hoverEdges)
                 .onChange((new_value) => {
                   this.plugin.settings.graphSettings.hoverEdges = new_value;
                   this.plugin.settings.embedSettings.hoverEdges = new_value;
+                  this.plugin.settings.globalGraphSettings.hoverEdges = new_value;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
       new Setting(containerEl)
           .setName('Open with shift')
-          .setDesc('Only opens file when clicking on a node when shift is pressed')
+          .setDesc('Only opens file when clicking on a node when shift is pressed.')
           .addToggle((toggle) => {
             toggle.setValue(this.plugin.settings.graphSettings.openWithShift)
                 .onChange((new_value) => {
                   this.plugin.settings.graphSettings.openWithShift = new_value;
                   this.plugin.settings.embedSettings.openWithShift = new_value;
+                  this.plugin.settings.globalGraphSettings.openWithShift = new_value;
                   this.plugin.saveData(this.plugin.settings);
                 });
           });
