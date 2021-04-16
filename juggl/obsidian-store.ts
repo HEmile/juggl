@@ -63,6 +63,10 @@ export class ObsidianStore extends Component implements ICoreDataStore {
             context: line,
             edgeCount: 1,
           } as EdgeDataDefinition;
+          const splitLink = ref.original.split('|');
+          if (splitLink.length > 1) {
+            data['alias'] = splitLink.slice(1).join().slice(0, -2);
+          }
           let classes = '';
           const typedLink = this.plugin.parseTypedLink(ref, line);
           if (typedLink === null) {
