@@ -19,7 +19,7 @@ will display when using Juggl as:
 The code fence is in the familiar YAML syntax. 
 
 ## Creating a Juggl code fence
-
+The code fence requires one of currently two **modes**. You can use
 
 --- 
 #feature

@@ -238,7 +238,7 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
       new KoFi({target: containerEl});
 
       const doc_link = document.createElement('a');
-      doc_link.href = 'https://publish.obsidian.md/semantic-obsidian/Neo4j+Graph+View+Plugin';
+      doc_link.href = 'https://juggl.io';
       doc_link.target = '_blank';
       doc_link.innerHTML = 'the documentation';
 

@@ -17,6 +17,12 @@ The syntax of this simulates [the search syntax in Obsidian](https://help.obsidi
 - `class:`: Search based on [[CSS Styling#Classes|CSS class]].
 - `raw:`: Search using a [[CSS Styling#Selectors|CSS selector]].
 
+## Tips
+- Hiding **attachments**: `-class:file`
+- Hiding **images**: `-class:image`
+- Hiding **dangling nodes**:  `-class:dangling`
+- You can add those filters to the [[Style Pane]] to quickly hide and unhide them
+
 ## Limitations
 Regex does not work, nor do  the `section:`, `line:` and `block:` operators. 
 

@@ -27,6 +27,7 @@ While holding shift, you can click and drag around the screen to select a group 
 
 Selected nodes can be interacted with through the [[#Toolbar]]. 
 
+### Radial context menu
 To interact with a single node, click and hold on that node to open the **radial context menu**: 
 ![[Screen Recording 2021-04-03 at 13.58.20.mp4]]
 
@@ -54,7 +55,8 @@ Filters the node from the view. You can add the node back again using the [[Node
 ![[Pasted image 20210403143207.png|200]]
 
 Focus on the selected nodes and its neighbors, and zoom the view to fit on its neighborhood.
-## Toolbar
+
+### Toolbar
 The toolbar is the set of buttons on the top of the Juggl view, with the following functions: 
 ![[Pasted image 20210402162157.png]]
 

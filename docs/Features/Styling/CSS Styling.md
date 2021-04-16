@@ -13,6 +13,8 @@ This document acts as an overview of common and useful options for Juggl. For do
 
 We will first discuss how to [[#Selectors|select certain objects]], then discuss common [[#Properties|properties]] you might want to change, then finally show a couple of [[#Snippets|snippets]] to get started. 
 
+If you prefer to start off with examples, I'd recommend immediately jumping to [[#Snippets]]. 
+
 If you need more help, feel free to join the [[Discord]] where help is provided for all your styling questions!
 
 # Selectors
@@ -24,6 +26,7 @@ Classes can be selected using `.class`. Available classes that are useful to sty
 - Any class in the `cssclass` property in your [[YAML Styling|YAML]] frontmatter is also available on that node.
 - `.dangling`: Targets dangling nodes (nodes that aren't created as a file)
 - `.image`: Targets all nodes that are rendered as images. This is image files, but also notes that are styled with the `image` [[YAML Styling|YAML]] property. Similar for `.audio`, `.video` and `.pdf`.
+- `.file`: Targets all attachments (everything that does not have the `.md` extension)
 - `.note`: Targets all nodes that represent `.md` files.
 - `.global-3`: Targets nodes in the **fourth** global [[Style Pane|style group]](note: zero-based indexing!)
 - `.local-5`: Targets nodes in the fifth local style group
@@ -84,7 +87,7 @@ Useful common properties are listed as following. See [this link](https://js.cyt
 - `background-image`: URL to the background image. See [this link](https://js.cytoscape.org/#style/background-image) and [[YAML Styling]] for nuances
 	- There is a significant amount of options for dealing with images, such as how it is contained in the node, smoothing, opacity, offset, etc. See [this link](https://js.cytoscape.org/#style/background-image).
 - `label`: The text on the node, usually the name of a note. 
-	- Many standard options for styling this are avabile, see [this link](https://js.cytoscape.org/#style/labels). You can for example change the positioning of the text to be inside the node.
+	- Many standard options for styling this are available like the `font-family`, see [this link](https://js.cytoscape.org/#style/labels). You can for example change the positioning of the text to be inside the node. The 
 - `display`: Set to none to not display the element.
 
 ## Edges
@@ -94,6 +97,7 @@ Edges can also be completely styled. See [this link](https://js.cytoscape.org/#s
 - `line-color`: Color of the edge
 - `line-style`: Choose from `solid, dotted, dashed`
 - `line-opacity`: Opacity of the edge. 
+- `label`: The text on the node
 # Snippets
 **Style [[Link Types]]**: Color links with the `author` type red.
 ```css
@@ -101,9 +105,53 @@ Edges can also be completely styled. See [this link](https://js.cytoscape.org/#s
 	line-color: red;
 }
 ```
+
+**Map cooking time to colour**: Changes from the color blue to red depending on how long it takes to cook a meal:
+```css
+node[cooking-time] {
+    background-color: mapData(cooking-time, 1, 120, blue, red);
+}
+```
+
+**Change opacity and width of a line**, depending on how many connections (from 1 to 15) there are from one node to the other:
+```css
+edge[edgeCount] {
+    width: mapData(edgeCount, 1, 15, 0.5, 3);
+	line-opacity: mapData(edgeCount, 1, 15, 0.5, 0.9);
+}
+```
+
+**Display the context of a link**: This will display the sentences around where the link appears. This can be a bit messy!
+```css
+edge.inline {
+   label: data(context);
+   text-opacity: 0.8;
+   font-size: 2;
+   text-wrap: ellipsis;
+   text-max-width: 100px;
+}
+```
+
+![[Pasted image 20210414175943.png|500]]
+
+**Text in a box**: One styling I love is to have rectangle nodes that contain some text. This can be achieved (imperfectly!) using
+```css
+.tag-paper {
+    shape: rectangle;
+    width: 50px;
+    height: 45px;
+    font-size: 5;
+    text-valign: center;
+    text-max-width: 45px;
+    text-opacity: 1;
+}
+```
+
+![[Pasted image 20210414182140.png|400]]
+
 # Current limitations
 - CSS variables like `var(--background-primary)` will not be recognized. If this is something you need, please add a pull request.
-- `not()` does not seem to work
+- `not()` does not seem to work.
 
 
 --- 

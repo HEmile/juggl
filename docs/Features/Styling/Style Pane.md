@@ -4,7 +4,11 @@ aliases: [style group]
 
 ![[style_pane.gif|400]]
 
-The easiest way to [[Styling|style]] a group of nodes is the Style Pane. You can style nodes using a simple user interface that already provides a large amount of options. The style pane is a separate view which opens by default in the right sidebar of [[Obsidian]]. 
+The easiest way to [[Styling|style]] a group of nodes is the Style Pane. You can style nodes using a simple user interface that already provides a large amount of options. 
+
+The style pane is a separate view which opens by default in the right sidebar of [[Obsidian]]: 
+
+![[Screen Recording 2021-04-14 at 17.29.09.mp4]]
 
 A group of nodes is chosen using a [[Filtering|Filter]]. The styling options for each group of nodes are
 - Show or hide the group
