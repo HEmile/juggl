@@ -233,22 +233,45 @@ export default class JugglPlugin extends Plugin {
       // Adapted from https://github.com/liamcain/obsidian-calendar-plugin/blob/master/src/main.ts
       this.registerView(JUGGL_NODES_VIEW_TYPE, (leaf: WorkspaceLeaf) => new JugglNodesPane(leaf, plugin));
       this.registerView(JUGGL_STYLE_VIEW_TYPE, (leaf: WorkspaceLeaf) => new JugglStylePane(leaf, plugin));
-      const createPanes = async function() {
+      const createNodesPane = function() {
         if (plugin.app.workspace.getLeavesOfType(JUGGL_NODES_VIEW_TYPE).length === 0) {
           const leaf = plugin.app.workspace.getRightLeaf(false);
-          // const view = new JugglNodesPane(leaf, plugin);
-          // await leaf.open(view);
-          await leaf.setViewState({type: JUGGL_NODES_VIEW_TYPE});
+          leaf.setViewState({type: JUGGL_NODES_VIEW_TYPE});
         }//
+      };
+      const createStylePane = function() {
         if (plugin.app.workspace.getLeavesOfType(JUGGL_STYLE_VIEW_TYPE).length === 0) {
           const leaf = plugin.app.workspace.getRightLeaf(false);
-          // const view = new JugglStylePane(leaf, plugin);
-          // await leaf.open(view);
-          await leaf.setViewState({type: JUGGL_STYLE_VIEW_TYPE});
-        }// // this.app.workspace.createLeafInParent(this.app.workspace.rightSplit, 0 );
+          leaf.setViewState({type: JUGGL_STYLE_VIEW_TYPE});
+        }
       };
-      this.app.workspace.onLayoutReady(createPanes);
+      this.app.workspace.onLayoutReady(createNodesPane);
+      this.app.workspace.onLayoutReady(createStylePane);
 
+      this.addCommand({
+        id: 'show-nodes-pane',
+        name: 'Open Nodes Pane',
+        checkCallback: (checking: boolean) => {
+          if (checking) {
+            return (
+              this.app.workspace.getLeavesOfType(JUGGL_NODES_VIEW_TYPE).length === 0
+            );
+          }
+          createNodesPane();
+        },
+      });
+      this.addCommand({
+        id: 'show-style-pane',
+        name: 'Open Style Pane',
+        checkCallback: (checking: boolean) => {
+          if (checking) {
+            return (
+              this.app.workspace.getLeavesOfType(JUGGL_STYLE_VIEW_TYPE).length === 0
+            );
+          }
+          createStylePane();
+        },
+      });
       this.addRibbonIcon('ag-concentric', 'Juggl global graph', () => {
         this.openGlobalGraph();
       });
