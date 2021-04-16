@@ -1,4 +1,4 @@
-import {App, EventRef, View, WorkspaceLeaf} from 'obsidian';
+import {App, EventRef, ItemView, View, WorkspaceLeaf} from 'obsidian';
 import {JUGGL_NODES_VIEW_TYPE, JUGGL_STYLE_VIEW_TYPE, JUGGL_VIEW_TYPE} from '../constants';
 import type JugglPlugin from '../main';
 import type {Juggl} from '../viz/visualization';
@@ -6,7 +6,7 @@ import type {JugglView} from '../viz/juggl-view';
 import NodesPane from './NodesPane.svelte';
 import StylePane from './StylePane.svelte';
 
-export abstract class JugglPane extends View {
+export abstract class JugglPane extends ItemView {
     plugin: JugglPlugin;
     activeViz: Juggl = null;
     changeRef: EventRef = null;
@@ -57,7 +57,7 @@ export class JugglNodesPane extends JugglPane {
 
     onload() {
       super.onload();
-      this.pane = new NodesPane({target: this.containerEl});
+      this.pane = new NodesPane({target: this.contentEl});
     }
 
     getDisplayText(): string {
@@ -83,7 +83,7 @@ export class JugglStylePane extends JugglPane {
 
     onload() {
       super.onload();
-      this.pane = new StylePane({target: this.containerEl, props: {
+      this.pane = new StylePane({target: this.contentEl, props: {
         plugin: this.plugin,
       }});
     }
