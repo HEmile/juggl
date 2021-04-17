@@ -22,5 +22,5 @@ The code fence is in the familiar YAML syntax.
 The code fence requires one of currently two **modes**. You can use
 
 --- 
-#feature
+#feature 
 - author [[Emile van Krieken]]
