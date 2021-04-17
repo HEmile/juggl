@@ -56,19 +56,18 @@ export default class JugglPlugin extends Plugin {
     stores: IDataStore[] = [];
     workspaceManager: WorkspaceManager;
     watcher: FSWatcher;
+    ribbonIcon: HTMLElement;
 
     async onload(): Promise<void> {
       super.onload();
       console.log('Loading Juggl');
       navigator(cytoscape);
-      // cytoscape.use(coseBilkent);
       cytoscape.use(popper);
       cytoscape.use(cola);
       cytoscape.use(dagre);
       cytoscape.use(avsdf);
       cytoscape.use(d3Force);
       cytoscape.use(dblclick);
-      // @ts-ignore
       cytoscape.use(cxtmenu);
 
       addIcons();
@@ -93,7 +92,6 @@ export default class JugglPlugin extends Plugin {
       // this.statusBar.setText(STATUS_OFFLINE);
       // this.neo4jStream = new Neo4jStream(this);
       // this.addChild(this.neo4jStream);
-      this.addChild(new ImageServer(this));
 
       // this.registerView(NV_VIEW_TYPE, (leaf: WorkspaceLeaf) => this.neovisView=new NeoVisView(leaf, this.app.workspace.activeLeaf?.getDisplayText(), this))
 
@@ -272,9 +270,7 @@ export default class JugglPlugin extends Plugin {
           createStylePane();
         },
       });
-      this.addRibbonIcon('ag-concentric', 'Juggl global graph', () => {
-        this.openGlobalGraph();
-      });
+
 
       const sheetPath = STYLESHEET_PATH(this.vault);
       // @ts-ignore
@@ -287,8 +283,19 @@ export default class JugglPlugin extends Plugin {
           }
         }
       }));
+      this.setGlobalIcon();
+      this.addChild(new ImageServer(this));
     }
-
+    public setGlobalIcon() {
+      if (this.ribbonIcon) {
+        this.ribbonIcon.detach();
+      }
+      if (this.settings.globalGraphRibbon) {
+        this.ribbonIcon = this.addRibbonIcon('ag-concentric', 'Juggl global graph', () => {
+          this.openGlobalGraph();
+        });
+      }
+    }
     public async openFileFromNode(node: NodeSingular, newLeaf= false): Promise<TFile> {
       const id = VizId.fromNode(node);
       if (!(id.storeId === 'core')) {

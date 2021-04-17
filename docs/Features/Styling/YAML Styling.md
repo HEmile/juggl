@@ -7,7 +7,7 @@ image: files/img.png
 
 YAML frontmatter styling is used to selectively style individual nodes. A cool application is to assign images to nodes! 
 The following properties are supported out of the box, but you can use any property you like (read on!). 
-- `title`: Change the displayed label oon a node. Works very well with Zettlkasten workflows
+- `title`: Change the displayed label on a node. Works very well with Zettlkasten workflows
 - `color`: Change the color of a node. For example, you can do hexidecimals like `color: '#123456'` or with color names: `color: blue`.
 - `shape`: Change the shape of a node. You can use the same shapes as in the [[Style Pane]].
 - `width` and `height`: Change the width and height of a node.

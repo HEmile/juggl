@@ -308,10 +308,11 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
           .setName('Global Graph Icon')
           .setDesc('Show the Global Graph Icon on the left ribbon.')
           .addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.graphSettings.hoverEdges)
+            toggle.setValue(this.plugin.settings.globalGraphRibbon)
                 .onChange((new_value) => {
                   this.plugin.settings.globalGraphRibbon = new_value;
                   this.plugin.saveData(this.plugin.settings);
+                  this.plugin.setGlobalIcon();
                 });
           });
       // // Note: This isn't currently used anywhere, and the Neo4j stream plugin will likely not provide a backend.
