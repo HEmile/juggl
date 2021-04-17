@@ -200,7 +200,7 @@ export class Juggl extends Component {
         const id = VizId.fromNode(e.target);
         if (id.storeId === 'core') {
           const file = this.plugin.metadata.getFirstLinkpathDest(id.id, '');
-          if (file && file.extension === 'md') {
+          if (file && file.extension === 'md' && (e.originalEvent.metaKey || !this.settings.metaKeyHover)) {
             const content = await view.vault.cachedRead(file);
             this.hoverTimeout[e.target.id()] = setTimeout(async () =>
               await this.popover(content, file.path, e.target, 'advanced-graph-preview-node'),
@@ -218,7 +218,7 @@ export class Juggl extends Component {
               .connectedNodes()
               .addClass(CLASS_CONNECTED_HOVER);
         }
-        if ('context' in edge.data()) {// && e.originalEvent.metaKey) {
+        if ('context' in edge.data() && (e.originalEvent.metaKey || !this.settings.metaKeyHover)) {// && e.originalEvent.metaKey) {
           // TODO resolve SourcePath, can be done using the source file.
           this.hoverTimeout[e.target.id()] = setTimeout(async () =>
           // @ts-ignore

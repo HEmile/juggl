@@ -315,6 +315,18 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
                   this.plugin.setGlobalIcon();
                 });
           });
+      new Setting(containerEl)
+          .setName(`Require ⌘/ctrl for preview hovers`)
+          .setDesc('When set to true, you will need to hold down ⌘ (mac) or ctrl (windows) to show preview hovers of notes.')
+          .addToggle((toggle) => {
+            toggle.setValue(this.plugin.settings.graphSettings.metaKeyHover)
+                .onChange((new_value) => {
+                  this.plugin.settings.graphSettings.metaKeyHover = new_value;
+                  this.plugin.settings.globalGraphSettings.metaKeyHover = new_value;
+                  this.plugin.settings.embedSettings.metaKeyHover = new_value;
+                  this.plugin.saveData(this.plugin.settings);
+                });
+          });
       // // Note: This isn't currently used anywhere, and the Neo4j stream plugin will likely not provide a backend.
       // // Therefore this setting is disabled to prevent confusion.
       // new Setting(containerEl)
