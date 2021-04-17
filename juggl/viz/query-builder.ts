@@ -1,6 +1,6 @@
 import type {NodeCollection} from 'cytoscape';
 import searchQuery, {ISearchParserDictionary} from 'search-query-parser';
-import cytoscape from 'cytoscape';
+import cytoscape, {NodeSingular} from 'cytoscape';
 
 
 const _containsSelector = function(attribute: string, filters: string|string[], op='*='): string[] {
@@ -53,8 +53,14 @@ const literal = function(atomicQuery: ISearchParserDictionary, key: string): str
 
 
 const _parseAtomicQuery = function(query: string, nodes: NodeCollection): NodeCollection {
+  const keys:Set<string> = new Set();
+  nodes.forEach((node:NodeSingular) => {
+    Object.keys(node.data()).forEach((key) => keys.add(key));
+  });
+  const keywords = ['file', 'tag', 'raw', 'match-case', 'ignore-case', 'class'];
+  keywords.push(...keys);
   const options = {
-    keywords: ['file', 'name', 'content', 'tag', 'path', 'raw', 'match-case', 'ignore-case', 'class'],
+    keywords: keywords,
     tokenize: true,
     offsets: false,
   };
