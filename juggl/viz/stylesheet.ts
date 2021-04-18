@@ -1,9 +1,10 @@
-import type JugglPlugin from '../main';
+import JugglPlugin from '../main';
 import type {FileSystemAdapter} from 'obsidian';
 import {promises as fs} from 'fs';
 import type {Juggl} from './visualization';
 import {MAX_FONT_SIZE, MAX_NODE_SIZE, MAX_TEXT_WIDTH, MIN_FONT_SIZE, MIN_NODE_SIZE, MIN_TEXT_WIDTH} from '../constants';
 import type {Vault} from 'obsidian';
+import type {IJugglPlugin, StyleGroup} from 'juggl-api';
 
 export const STYLESHEET_PATH = function(vault: Vault) {
   return `${vault.configDir}/plugins/juggl/graph.css`;
@@ -26,21 +27,6 @@ export const SHAPES = ['ellipse',
   'round-tag',
 
 ];
-export type Shape = typeof SHAPES[number];
-export class Icon {
-    path: string;
-    name: string;
-    color: string = '#000000';
-}
-export class StyleGroup {
-  filter: string;
-  color: string;
-  shape: Shape;
-  icon: Icon;
-  showInPane: boolean;
-  show: boolean;
-  size: number;
-}
 
 export const DEFAULT_USER_SHEET = `
 /* For a full overview of styling options, see https://js.cytoscape.org/#style */
@@ -79,8 +65,8 @@ defaultSheet comes before graph.css, yamlModifySheet comes after.
 export class GraphStyleSheet {
     defaultSheet: string;
     yamlModifySheet: string;
-    plugin: JugglPlugin;
-    constructor(plugin: JugglPlugin) {
+    plugin: IJugglPlugin;
+    constructor(plugin: IJugglPlugin) {
       this.defaultSheet = this.getDefaultStylesheet();
       this.yamlModifySheet = YAML_MODIFY_SHEET;
       this.plugin = plugin;
@@ -106,7 +92,11 @@ export class GraphStyleSheet {
         console.log(e);
       }
       // TODO: Ordering: If people specify some new YAML property to take into account, style groups will override this!
-      const globalGroups = this.styleGroupsToSheet(this.plugin.settings.globalStyleGroups, 'global');
+
+      const globalGroups = '';
+      if (this.plugin instanceof JugglPlugin) {
+        this.styleGroupsToSheet(this.plugin.settings.globalStyleGroups, 'global');
+      }
       const localGroups = this.styleGroupsToSheet(viz.settings.styleGroups, 'local');
       return this.defaultSheet + globalGroups + customSheet + localGroups + this.yamlModifySheet;
     }

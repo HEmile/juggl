@@ -2,6 +2,8 @@
 aliases: [API]
 ---
 
+The first release of the Juggl API is now available from https://github.com/HEmile/juggl-api . 
+
 ![[Roadmap#^82c7c4]]
 
 ## Requirements

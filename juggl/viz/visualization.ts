@@ -1,4 +1,3 @@
-import type {IJugglSettings} from '../settings';
 import {
   Component, debounce,
   EventRef,
@@ -8,23 +7,31 @@ import {
   Vault,
   Workspace,
 } from 'obsidian';
-import type JugglPlugin from '../main';
+import JugglPlugin from '../main';
 import cytoscape, {
-  Collection,
   Core,
   EdgeDefinition,
   EdgeSingular,
-  ElementDefinition, EventObject, LayoutOptions, Layouts,
+  ElementDefinition, EventObject, Layouts,
   NodeCollection,
   NodeDefinition,
   NodeSingular, Singular,
 } from 'cytoscape';
-import type {IAGMode, IDataStore, IJugglStores, IMergedToGraph} from '../interfaces';
-import {GraphStyleSheet, StyleGroup} from './stylesheet';
+import type {
+  IAGMode,
+  IJugglStores,
+  IMergedToGraph,
+  IJuggl,
+  IJugglSettings,
+  IJugglPlugin,
+  LayoutSettings,
+  StyleGroup,
+} from 'juggl-api';
+import {GraphStyleSheet} from './stylesheet';
 import Timeout = NodeJS.Timeout;
 
 import {WorkspaceMode} from './workspaces/workspace-mode';
-import {VizId} from '../interfaces';
+import {VizId} from 'juggl-api';
 import {
   CLASS_ACTIVE_NODE,
   CLASS_CONNECTED_HOVER,
@@ -35,7 +42,6 @@ import {
   VIEWPORT_ANIMATION_TIME,
 } from '../constants';
 import {LocalMode} from './local-mode';
-import type {LayoutSettings} from './layout-settings';
 import {parseLayoutSettings} from './layout-settings';
 import {filter} from './query-builder';
 
@@ -43,13 +49,13 @@ export const MD_VIEW_TYPE = 'markdown';
 
 let VIEW_COUNTER = 0;
 
-export class Juggl extends Component {
+export class Juggl extends Component implements IJuggl {
     element: Element;
     workspace: Workspace;
     settings: IJugglSettings;
     initialNodes: string[];
     vault: Vault;
-    plugin: JugglPlugin;
+    plugin: IJugglPlugin;
     viz: Core;
     rebuildRelations = true;
     selectName: string = undefined;
@@ -62,7 +68,7 @@ export class Juggl extends Component {
     destroyHover: () => void = null;
     debouncedRestartLayout: () => void;
 
-    constructor(element: Element, plugin: JugglPlugin, dataStores: IJugglStores, settings: IJugglSettings, initialNodes?: string[]) {
+    constructor(element: Element, plugin: IJugglPlugin, dataStores: IJugglStores, settings: IJugglSettings, initialNodes?: string[]) {
       super();
       this.element = element;
       this.settings = settings;
@@ -406,15 +412,6 @@ export class Juggl extends Component {
     onunload(): void {
     }
 
-    // updateWithCypher(cypher: string) {
-    //   if (this.settings.debug) {
-    //     console.log(cypher);
-    //   }
-    //   // this.viz.updateWithCypher(cypher);
-    //   this.rebuildRelations = true;
-    // }
-
-
     removeNodes(nodes: NodeCollection): NodeCollection {
       // Only call this method if the node is forcefully removed from the graph, not when the node no longer exists
       // on the back-end. This is because of how it handles expanded.
@@ -516,7 +513,9 @@ export class Juggl extends Component {
         }
       };
       _assignGroups(this.settings.styleGroups, 'local');
-      _assignGroups(this.plugin.settings.globalStyleGroups, 'global');
+      if (this.plugin instanceof JugglPlugin) {
+        _assignGroups(this.plugin.settings.globalStyleGroups, 'global');
+      }
     }
 
     onGraphChanged(batch:boolean=true, debounceLayout=false) {
@@ -579,14 +578,6 @@ export class Juggl extends Component {
       return this.viz.nodes(`.${CLASS_PROTECTED}`);
     }
 
-    on(name:'stylesheet', callback: (sheet: GraphStyleSheet) => any): EventRef;
-    on(name: 'expand', callback: (elements: NodeCollection) => any): EventRef;
-    on(name: 'hide', callback: (elements: NodeCollection) => any): EventRef;
-    on(name: 'pin', callback: (elements: NodeCollection) => any): EventRef;
-    on(name: 'unpin', callback: (elements: NodeCollection) => any): EventRef;
-    on(name: 'selectChange', callback: () => any): EventRef;
-    on(name: 'elementsChange', callback: () => any): EventRef;
-    on(name: 'vizReady', callback: (viz: Core) => any): EventRef;
     on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
       return this.events.on(name, callback, ctx);
     }

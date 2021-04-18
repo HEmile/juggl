@@ -6,8 +6,6 @@ export class DataStoreEvents extends Events {
   trigger(name: 'modifyNode', param: string): void;
   trigger(name: 'createNode', param: string): void;
   trigger(name: string, ...data: any[]): void {
-    console.log('on trigger');
-    console.log(name, data);
     super.trigger(name, ...data);
   }
 

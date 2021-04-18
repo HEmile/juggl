@@ -1,5 +1,6 @@
 <script lang="ts">
-    import {Icon, SHAPES, StyleGroup} from "../viz/stylesheet";
+    import {SHAPES} from "../viz/stylesheet";
+    import type {StyleGroup, Icon} from "juggl-api";
     import {IconModal} from "./icon-modal";
     import JugglPlugin from "../main";
     import {emptyStyleGroup} from "../settings";

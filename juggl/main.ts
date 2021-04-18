@@ -11,7 +11,15 @@ import {
 } from './settings';
 import {Juggl, MD_VIEW_TYPE} from './viz/visualization';
 import {ImageServer} from './image-server';
-import type {ICoreDataStore, IDataStore, IFuseFile, IJugglStores, ITypedLink, ITypedLinkProperties} from './interfaces';
+import type {
+  ICoreDataStore,
+  IDataStore,
+  IJugglStores,
+  ITypedLink,
+  ITypedLinkProperties,
+  IJugglPlugin,
+  IJuggl,
+} from 'juggl-api';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
 import cytoscape, {NodeSingular} from 'cytoscape';
 // import coseBilkent from 'cytoscape-cose-bilkent';
@@ -29,7 +37,7 @@ import {JugglView} from './viz/juggl-view';
 import {JugglNodesPane, JugglPane, JugglStylePane} from './pane/view';
 import {JUGGL_NODES_VIEW_TYPE, JUGGL_STYLE_VIEW_TYPE, JUGGL_VIEW_TYPE} from './constants';
 import {WorkspaceManager} from './viz/workspaces/workspace-manager';
-import {VizId} from './interfaces';
+import {VizId} from 'juggl-api';
 import type {FSWatcher} from 'fs';
 import {GlobalWarningModal} from './ui/settings/global-graph-modal';
 
@@ -39,7 +47,7 @@ import {GlobalWarningModal} from './ui/settings/global-graph-modal';
 // const STATUS_OFFLINE = 'Neo4j stream offline';
 
 
-export default class JugglPlugin extends Plugin {
+export default class JugglPlugin extends Plugin implements IJugglPlugin {
     // Match around [[ and ]], and ensure content isn't a wikilnk closure
 // This doesn't explicitly parse aliases.
     static wikilinkRegex = '\\[\\[([^\\]\\r\\n]+?)\\]\\]';//
@@ -443,13 +451,20 @@ export default class JugglPlugin extends Plugin {
       const regex = new RegExp(
           `^${this.regexEscape(this.settings.typedLinkPrefix)} (${JugglPlugin.nameRegex}) (${JugglPlugin.wikilinkRegex},? *)+$`);
       const match = regex.exec(line);
+      const splitLink = link.original.split('|');
+      let alias = null;
+      if (splitLink.length > 1) {
+        alias = splitLink.slice(1).join().slice(0, -2);
+      }
       if (!(match === null)) {
         return {
           class: `type-${match[1]}`,
           isInline: false,
           properties: {
+            alias: alias,
+            context: '',
             type: match[1],
-          },
+          } as ITypedLinkProperties,
         } as ITypedLink;
       }
       return null;
@@ -482,11 +497,11 @@ export default class JugglPlugin extends Plugin {
     //   }
     // }
 
-    public activeGraphs(): Juggl[] {
+    public activeGraphs(): IJuggl[] {
       // TODO: This is not a great method, no way to find back the inline graphs!
       return this.app.workspace
           .getLeavesOfType(JUGGL_VIEW_TYPE)
-          .map((l) => (l.view as JugglView).juggl);
+          .map((l) => (l.view as JugglView).juggl) as IJuggl[];
     }
 
     async onunload() {

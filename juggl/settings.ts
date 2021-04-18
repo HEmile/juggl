@@ -3,7 +3,6 @@ import {App, PluginSettingTab, Setting, SplitDirection, TagCache} from 'obsidian
 import type JugglPlugin from './main';
 import {OBSIDIAN_STORE_NAME} from './obsidian-store';
 import AppearanceSettings from './ui/settings/AppearanceSettings.svelte';
-import type {LayoutOptions} from 'cytoscape';
 
 export const LAYOUTS = ['force-directed', 'circle', 'grid', 'hierarchy', 'cola'];
 export type FDGDLayouts = 'cola'| 'd3-force';
@@ -12,7 +11,7 @@ export type CytoscapeLayouts = FDGDLayouts | 'concentric' | 'grid' | 'dagre';
 export type JugglMode = 'local' | 'workspace';
 export type AllLayouts = CytoscapeLayouts | JugglLayouts;
 import KoFi from './ui/KoFi.svelte';
-import type {StyleGroup} from './viz/stylesheet';
+import type {IJugglSettings, StyleGroup} from 'juggl-api';
 
 export const emptyStyleGroup: StyleGroup = {filter: '',
   color: 'black',
@@ -110,28 +109,6 @@ export const genStyleGroups = function(plugin: JugglPlugin): StyleGroup[] {
   }
   return genSheet;
 };
-export interface IJugglSettings {
-    autoAddNodes: boolean;
-    autoExpand: boolean;
-    autoZoom: boolean;
-    coreStore: string;
-    expandInitial: boolean;
-    fdgdLayout: FDGDLayouts ;
-    filter: string;
-    height: string | number;
-    hoverEdges: boolean;
-    layout: JugglLayouts | LayoutOptions;
-    limit: number;
-    mergeEdges: boolean;
-    metaKeyHover: boolean;
-    mode: JugglMode;
-    navigator: boolean;
-    openWithShift: boolean;
-    styleGroups: StyleGroup[];
-    toolbar: boolean;
-    width: string | number;
-    zoomSpeed: number;
-}
 
 
 export interface IJugglPluginSettings {
