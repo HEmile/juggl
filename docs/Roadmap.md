@@ -19,6 +19,12 @@ Add better support for creating and maintaining link types. Also provide new syn
 
 ### [[Style Pane]] for edges
 Makes it easier to style typed links.
+### Outline in compound nodes
+The outline of a note is essentially a tree. As it is completely hierarchical wrt the node representing the note, it can be nicely rendered and collapsed using compound nodes, like in
+
+![](https://cdn.discordapp.com/attachments/794501737062203422/798921299404652574/JfMR9BuCHr.gif)__
+
+This will likely be used in the Style Pane for edges.
 
 ### [[Juggl API]]
 It is easy using [[Cytoscape.js]] to create an API for other plugin developers to use, to interact with [[Juggl]]. This could allow extending the graph view with eg automatically adding data from external sources, such as citation graphs, or with a different syntax for creating graphs. ^82c7c4
@@ -29,10 +35,6 @@ It is easy using [[Cytoscape.js]] to create an API for other plugin developers t
 - Size individual notes using YAML metadata
 
 ## Ideas to discuss
-### Outline in compound nodes
-The outline of a note is essentially a tree. As it is completely hierarchical wrt the node representing the note, it can be nicely rendered and collapsed using compound nodes, like in
-
-![](https://cdn.discordapp.com/attachments/794501737062203422/798921299404652574/JfMR9BuCHr.gif)__
 
 ### Compound nodes to represent hierachies
 

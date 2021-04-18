@@ -16,7 +16,7 @@ This syntax has multiple issues:
 
 To solve these issues we will work on a new, more general syntax. Currently, the idea is the following: `This recipe requires 20 grams of [[Rice|rice|ingredient|quantity=20 grams]]`. This is an inline syntax of the form `[[Note name|alias|linkType|property1=value1|property2=value]]`. However, this does not yet solve issue 3!
 
-A similar idea which is used in [Semantic Mediawiki](https://www.semantic-mediawiki.org/wiki/Semantic_MediaWiki) and which is going to be used in [Keypoints](keypoints.app), is `This recipe requires 20 grams of [[quantity=20 grams::ingredient::Rice|rice]]`. This puts the link type in the beginning, which can be more natural to read. It also helps standardize this syntax.  
+A similar idea which is used in [Semantic Mediawiki](https://www.semantic-mediawiki.org/wiki/Semantic_MediaWiki) and which is going to be used in [Keypoints](https://keypoints.app), is `This recipe requires 20 grams of [[quantity=20 grams::ingredient::Rice|rice]]`. This puts the link type in the beginning, which can be more natural to read. It also helps standardize this syntax.  
 
 Input for this syntax and ease of use is highly appreciated. We welcome you to join the discussion at [[Discord]]. 
 

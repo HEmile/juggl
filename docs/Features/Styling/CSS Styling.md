@@ -47,7 +47,7 @@ There are also several classes to target nodes with a certain state:
 ## Attributes
 Attributes are values on nodes that you can use for styling. You can refer to these attributes using `data(attribute_name)`. You can also use them to create linear maps using `mapData(attribute_name, in_min, in_max, out_min, out_max);`. Attributes can also be used to select elements, see [this page](https://js.cytoscape.org/#selectors/data) for all options.
 
-
+### Nodes
 - Any [[YAML Styling|YAML]] property can be referenced by name. For example, if you have `cooking_time: 34` in your YAML frontmatter, you can use 
 	```css
 	node[cooking_time] {
@@ -70,6 +70,10 @@ Attributes are values on nodes that you can use for styling. You can refer to th
 	}
 	``` 
 	This means: Select all notes that contain 'juggl', case insensitive.
+	
+### Edges
+- `context`: The sentences around the link, giving some context about where the link is used. This is used in the edge hover preview.
+- `alias`: The alias used on the link. Only present if an alias is used. 
 - `degree`: The amount of edges connected to the node.
 - `edgeCount`: When edges are merged (default), this is the total amount of edges of a certain type that are merged together. This is used by default to make lines thicker for merged edges that represent more links.
 # Properties

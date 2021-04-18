@@ -23,6 +23,10 @@ Possible hooks:
 ### Manipulate styling of the graph
 Allow plugins to further manipulate styling of the graph. 
 
+## Development
+- All interfaces
+- Utility methods like tags parsing
+
 --- 
 #development 
 - hasTopic [[Juggl]]
