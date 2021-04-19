@@ -6,7 +6,7 @@ import {
   TFile,
   Vault,
 } from 'obsidian';
-import type {ICoreDataStore, IMergedToGraph} from './interfaces';
+import type {ICoreDataStore, IMergedToGraph, IJuggl} from 'juggl-api';
 import {DataStoreEvents} from './events';
 import type JugglPlugin from './main';
 import type {
@@ -16,9 +16,8 @@ import type {
   NodeCollection,
   EdgeDataDefinition, Collection,
 } from 'cytoscape';
-import type {Juggl} from './viz/visualization';
 import {CLASS_EXPANDED} from './constants';
-import {VizId} from './interfaces';
+import {VizId} from 'juggl-api';
 
 export const OBSIDIAN_STORE_NAME = 'Obsidian';
 
@@ -39,7 +38,7 @@ export class ObsidianStore extends Component implements ICoreDataStore {
       return this.events;
     }
 
-    async createEdges(srcFile: TFile, srcId: string, toNodes: NodeCollection, graph: Juggl): Promise<EdgeDefinition[]> {
+    async createEdges(srcFile: TFile, srcId: string, toNodes: NodeCollection, graph: IJuggl): Promise<EdgeDefinition[]> {
       if (!(srcFile.extension === 'md')) {
         return [];
       }
@@ -121,7 +120,7 @@ ${edge.data.context}`;
       return [].concat(...Object.values(edges));
     }
 
-    async connectNodes(allNodes: NodeCollection, newNodes: NodeCollection, graph: Juggl): Promise<EdgeDefinition[]> {
+    async connectNodes(allNodes: NodeCollection, newNodes: NodeCollection, graph: IJuggl): Promise<EdgeDefinition[]> {
       const edges: EdgeDefinition[] = [];
       // Find edges from newNodes to other nodes
       // @ts-ignore
@@ -199,7 +198,6 @@ ${edge.data.context}`;
       const cache = this.metadata.getFileCache(file);
       const name = file.extension === 'md' ? file.basename : file.name;
       const classes = this.plugin.getClasses(file).join(' ');
-
       const data = {
         id: VizId.toId(file.name, this.storeId()),
         name: name,
@@ -295,7 +293,7 @@ ${edge.data.context}`;
       return Promise.resolve(this.nodeFromFile(file));
     }
 
-    async refreshNode(view: Juggl, id: VizId) {
+    async refreshNode(view: IJuggl, id: VizId) {
       const idS = id.toId();
       let correctEdges: IMergedToGraph;
       let node = view.viz.$id(idS);

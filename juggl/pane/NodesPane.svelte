@@ -5,7 +5,7 @@
     import {CLASS_HARD_FILTERED} from "../constants";
     import NodesList from "./NodesList.svelte";
     import {Menu} from "obsidian";
-    import {VizId} from "../interfaces";
+    import {VizId} from "juggl-api";
     import {icons} from '../ui/icons';
 
     let viz: Juggl = null;

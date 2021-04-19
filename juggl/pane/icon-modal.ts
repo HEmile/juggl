@@ -1,6 +1,6 @@
 import {App, FuzzyMatch, FuzzySuggestModal} from 'obsidian';
 import * as mdiIcons from '@mdi/js';
-import type {Icon} from '../viz/stylesheet';
+import type {Icon} from 'juggl-api';
 import {pathToSvg} from '../ui/icons';
 
 export class IconModal extends FuzzySuggestModal<Icon> {

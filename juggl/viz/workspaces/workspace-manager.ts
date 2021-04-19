@@ -2,7 +2,7 @@ import {Component, DataAdapter} from 'obsidian';
 import type JugglPlugin from '../../main';
 import type {Juggl} from '../visualization';
 import {DATA_FOLDER} from '../../constants';
-import {VizId} from '../../interfaces';
+import {VizId} from 'juggl-api';
 
 export class WorkspaceManager extends Component {
     plugin: JugglPlugin;

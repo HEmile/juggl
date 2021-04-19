@@ -1,20 +1,20 @@
-import type {IAGMode} from '../interfaces';
+import type {IAGMode} from 'juggl-api';
 import type {EventNames, EventObject, NodeSingular} from 'cytoscape';
 import type {Juggl} from './visualization';
 import type {NodeCollection} from 'cytoscape';
 import type {Menu} from 'obsidian';
 import ToolbarLocal from '../ui/toolbar/ToolbarLocal.svelte';
 import {Component, TFile} from 'obsidian';
-import {ICoreDataStore, VizId} from '../interfaces';
+import {VizId} from 'juggl-api';
 import {
   CLASS_ACTIVE_NODE,
   CLASS_CONNECTED_ACTIVE_NODE,
-  CLASS_INACTIVE_NODE, CLASS_PINNED, CLASS_PROTECTED,
+  CLASS_INACTIVE_NODE,
 } from '../constants';
 import type {Core} from 'cytoscape';
 import type {SvelteComponent} from 'svelte';
 import {
-  DagreGlobalLayout, getLayoutSetting,
+  getLayoutSetting,
 } from './layout-settings';
 
 

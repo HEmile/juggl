@@ -1,13 +1,12 @@
-import type {IAGMode, ICoreDataStore} from '../../interfaces';
+import type {IAGMode} from 'juggl-api';
 import type {EventNames, EventObject, NodeSingular} from 'cytoscape';
 import type {Juggl} from '../visualization';
 import type {NodeCollection} from 'cytoscape';
 import type {Menu} from 'obsidian';
 import Toolbar from '../../ui/toolbar/Toolbar.svelte';
 import {Component} from 'obsidian';
-import {VizId} from '../../interfaces';
+import {VizId} from 'juggl-api';
 import {
-  JUGGL_VIEW_TYPE,
   CLASS_ACTIVE_NODE,
   CLASS_CONNECTED_ACTIVE_NODE, CLASS_EXPANDED, CLASS_HARD_FILTERED,
   CLASS_INACTIVE_NODE, CLASS_PINNED, CLASS_PROTECTED,
@@ -20,6 +19,7 @@ import {
 } from '../layout-settings';
 import {icons, pathToSvg} from '../../ui/icons';
 import {WorkspaceModal} from '../../ui/workspace-modal';
+import JugglPlugin from '../../main';
 
 
 class EventRec {
@@ -369,7 +369,9 @@ export class WorkspaceMode extends Component implements IAGMode {
           this.view.restartLayout();
         },
         saveClick: () => {
-          new WorkspaceModal(this.view.plugin.app, this.view.plugin.workspaceManager, this.view).open();
+          if (this.view.plugin instanceof JugglPlugin) {
+            new WorkspaceModal(this.view.plugin.app, this.view.plugin.workspaceManager, this.view).open();
+          }
         },
         workspace: this.view.plugin.app.workspace,
       },

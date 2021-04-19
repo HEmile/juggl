@@ -12,8 +12,9 @@ This vault is publicly available at https://github.com/HEmile/semantic-obsidian.
 If you do, please add - author \[\[\]\] links to your profile.
 
 ## Help develop Juggl and other plugins
-If you know some programming, help is definitely appreciated! See the [[Roadmap]] for possible features to help on, or submit a pull request to the github repo https://github.com/HEmile/obsidian-neo4j-graph-view .  
+If you know some programming, help is definitely appreciated! See the [[Roadmap]] for possible features to help on, or submit a pull request to the github repo https://github.com/HEmile/juggl .  
 
+[[Juggl code fence]]
 --- 
 #development
 - hasTopic [[Juggl]]
