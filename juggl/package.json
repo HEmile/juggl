@@ -34,7 +34,6 @@
     "hammerjs": "^2.0.8",
     "keycharm": "^0.2.0",
     "moment": "^2.29.1",
-    "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
     "rollup": "^2.32.1",
     "rollup-plugin-copy": "^3.3.0",
     "rollup-plugin-sourcemaps": "^0.6.3",
@@ -60,6 +59,7 @@
     "cytoscape-navigator": "^2.0.1",
     "cytoscape-popper": "^2.0.0",
     "juggl-api": "github:hemile/juggl-api",
+    "obsidian": "github:obsidianmd/obsidian-api",
     "search-query-parser": "^1.5.5"
   }
 }
