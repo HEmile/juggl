@@ -93,9 +93,9 @@ export class GraphStyleSheet {
       }
       // TODO: Ordering: If people specify some new YAML property to take into account, style groups will override this!
 
-      const globalGroups = '';
+      let globalGroups = '';
       if (this.plugin instanceof JugglPlugin) {
-        this.styleGroupsToSheet(this.plugin.settings.globalStyleGroups, 'global');
+        globalGroups = this.styleGroupsToSheet(this.plugin.settings.globalStyleGroups, 'global');
       }
       const localGroups = this.styleGroupsToSheet(viz.settings.styleGroups, 'local');
       return this.defaultSheet + globalGroups + customSheet + localGroups + this.yamlModifySheet;
