@@ -198,7 +198,6 @@ ${edge.data.context}`;
       const cache = this.metadata.getFileCache(file);
       const name = file.extension === 'md' ? file.basename : file.name;
       const classes = this.plugin.getClasses(file).join(' ');
-
       const data = {
         id: VizId.toId(file.name, this.storeId()),
         name: name,
