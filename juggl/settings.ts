@@ -141,7 +141,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     autoZoom: false,
     coreStore: OBSIDIAN_STORE_NAME,
     expandInitial: true,
-    fdgdLayout: 'cola',
+    fdgdLayout: 'd3-force',
     filter: '',
     height: '100%',
     hoverEdges: false,
