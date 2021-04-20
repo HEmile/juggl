@@ -9,20 +9,17 @@ import {
   DefaultJugglSettings, LAYOUTS,
   genStyleGroups, emptyStyleGroup,
 } from './settings';
-import {Juggl, MD_VIEW_TYPE} from './viz/visualization';
+import {Juggl} from './viz/visualization';
 import {ImageServer} from './image-server';
 import type {
   ICoreDataStore,
   IDataStore,
   IJugglStores,
-  ITypedLink,
-  ITypedLinkProperties,
   IJugglPlugin,
   IJuggl,
 } from 'juggl-api';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
 import cytoscape, {NodeSingular} from 'cytoscape';
-// import coseBilkent from 'cytoscape-cose-bilkent';
 import navigator from 'cytoscape-navigator';
 import popper from 'cytoscape-popper';
 import cola from 'cytoscape-cola';
@@ -50,9 +47,7 @@ import {GlobalWarningModal} from './ui/settings/global-graph-modal';
 export default class JugglPlugin extends Plugin implements IJugglPlugin {
     // Match around [[ and ]], and ensure content isn't a wikilnk closure
 // This doesn't explicitly parse aliases.
-    static wikilinkRegex = '\\[\\[([^\\]\\r\\n]+?)\\]\\]';//
     static CAT_DANGLING = 'dangling';
-    static nameRegex = '[^\\W\\d]\\w*';
 
     settings: IJugglPluginSettings;
     path: string;
@@ -294,6 +289,7 @@ export default class JugglPlugin extends Plugin implements IJugglPlugin {
       this.setGlobalIcon();
       this.addChild(new ImageServer(this));
     }
+
     public setGlobalIcon() {
       if (this.ribbonIcon) {
         this.ribbonIcon.detach();
@@ -304,6 +300,7 @@ export default class JugglPlugin extends Plugin implements IJugglPlugin {
         });
       }
     }
+
     public async openFileFromNode(node: NodeSingular, newLeaf= false): Promise<TFile> {
       const id = VizId.fromNode(node);
       if (!(id.storeId === 'core')) {
@@ -361,114 +358,6 @@ export default class JugglPlugin extends Plugin implements IJugglPlugin {
     //         '"}) OPTIONAL MATCH (n)-[r]-(m) RETURN n,r,m';
     // }
 
-    _parseTags(tags: string[]): string[] {
-      return [].concat(...tags
-          .map((tag) => {
-            tag = tag.slice(1);
-            const hSplit = tag.split('/');
-            const tags = [];
-            for (const i in hSplit) {
-              const hTag = hSplit.slice(0, parseInt(i) + 1).join('-');
-              tags.push(`tag-${hTag}`);
-            }
-            return tags;
-          }));
-    }
-
-    public getClasses(file: TFile): string[] {
-      if (file) {
-        const classes = [];
-        if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'tiff'].contains(file.extension)) {
-          classes.push('image');
-        } else if (['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac'].contains(file.extension)) {
-          classes.push('audio');
-        } else if (['mp4', 'webm', 'ogv'].contains(file.extension)) {
-          classes.push('video');
-        } else if (file.extension === 'pdf') {
-          classes.push('pdf');
-        }
-        // This is replaced by the 'path' data attribute.
-        // if (!(file.parent.name === '/' || file.parent.name === '')) {
-        //   classes.push(`folder-${file.parent.name
-        //       .replace(' ', '_')}`);
-        // } else {
-        //   classes.push('root');
-        // }
-        if (file.extension === 'md') {
-          classes.push('note');
-          const cache = this.app.metadataCache.getFileCache(file);
-          if (cache?.frontmatter) {
-            if ('image' in cache.frontmatter) {
-              classes.push('image');
-            }
-            if ('tags' in cache.frontmatter) {
-              const tags = parseFrontMatterTags(cache.frontmatter);
-              if (tags) {
-                classes.push(...this._parseTags(tags));
-              }
-            }
-            if ('cssclass' in cache.frontmatter) {
-              const clazzes = parseFrontMatterStringArray(cache.frontmatter, 'cssclass');
-              if (clazzes) {
-                classes.push(...clazzes);
-              }
-            }
-          }
-          if (cache?.tags) {
-            classes.push(...this._parseTags(cache.tags.map((t) => t.tag)));
-          }
-        } else {
-          classes.push('file');
-        }
-        return classes;
-      }
-      return [JugglPlugin.CAT_DANGLING];
-    }
-
-    regexEscape(str: string) {
-      return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    }
-
-    public parseTypedLink(link: ReferenceCache, line: string): ITypedLink {
-    // TODO: This is something specific I use, but shouldn't keep being in this repo.
-      const regexPublishedIn = new RegExp(
-          `^${this.regexEscape(this.settings.typedLinkPrefix)} (publishedIn) (\\d\\d\\d\\d) (${JugglPlugin.wikilinkRegex},? *)+$`);
-      const matchPI = regexPublishedIn.exec(line);
-      if (!(matchPI === null)) {
-        return {
-          class: 'type-publishedIn',
-          isInline: false,
-          properties: {
-            year: matchPI[2],
-            context: '',
-            type: 'publishedIn',
-          } as ITypedLinkProperties,
-        } as ITypedLink;
-      }
-
-      // Intuition: Start with the typed link prefix. Then a neo4j name (nameRegex).
-      // Then one or more of the wikilink group: wikilink regex separated by optional comma and multiple spaces
-      const regex = new RegExp(
-          `^${this.regexEscape(this.settings.typedLinkPrefix)} (${JugglPlugin.nameRegex}) (${JugglPlugin.wikilinkRegex},? *)+$`);
-      const match = regex.exec(line);
-      const splitLink = link.original.split('|');
-      let alias = null;
-      if (splitLink.length > 1) {
-        alias = splitLink.slice(1).join().slice(0, -2);
-      }
-      if (!(match === null)) {
-        return {
-          class: `type-${match[1]}`,
-          isInline: false,
-          properties: {
-            alias: alias,
-            context: '',
-            type: match[1],
-          } as ITypedLinkProperties,
-        } as ITypedLink;
-      }
-      return null;
-    }
 
     // executeQuery() {
     //   // Code taken from https://github.com/mrjackphil/obsidian-text-expand/blob/0.6.4/main.ts

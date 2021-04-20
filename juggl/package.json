@@ -58,7 +58,7 @@
     "cytoscape-dblclick": "^0.3.1",
     "cytoscape-navigator": "^2.0.1",
     "cytoscape-popper": "^2.0.0",
-    "juggl-api": "github:hemile/juggl-api",
+    "juggl-api": "github:HEmile/juggl-api",
     "obsidian": "github:obsidianmd/obsidian-api",
     "search-query-parser": "^1.5.5"
   }

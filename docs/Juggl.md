@@ -9,7 +9,6 @@ Juggl is the next generation of PKM-focused graph views!
 - **Code** is on Github: https://github.com/HEmile/juggl
 - **Support the development** of Juggl:
 	- Buy me a kofi: https://ko-fi.com/Emile
-	- Sponsor me on Github: https://github.com/sponsors/HEmile
 	- Paypal.me: https://paypal.me/EvanKrieken
 
 # Features
@@ -50,6 +49,8 @@ Note that Juggl is GPL3 **dual-**licensed. Contact me for details.
 
 # Neo4j Graph View
 If you came here looking for the documentation of the deprecated [[Neo4j Graph View Plugin]], please go [[Neo4j Graph View Plugin|here]].
+
+<iframe src="https://github.com/sponsors/HEmile/card" title="Sponsor HEmile" height="225" width="600" style="border: 0;"></iframe>
 
 --- 
 #plugin

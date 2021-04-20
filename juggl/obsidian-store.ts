@@ -12,12 +12,10 @@ import type JugglPlugin from './main';
 import type {
   NodeDefinition,
   EdgeDefinition,
-  NodeDataDefinition,
   NodeCollection,
-  EdgeDataDefinition, Collection,
 } from 'cytoscape';
 import {CLASS_EXPANDED} from './constants';
-import {VizId} from 'juggl-api';
+import {nodeDangling, nodeFromFile, parseRefCache, VizId} from 'juggl-api';
 
 export const OBSIDIAN_STORE_NAME = 'Obsidian';
 
@@ -54,31 +52,7 @@ export class ObsidianStore extends Component implements ICoreDataStore {
         if (toNodes.$id(otherId).length > 0) {
           const edgeId = `${srcId}->${otherId}`;
           const count = edgeId in edges ? edges[edgeId].length + 1 : 1;
-          const line = content[ref.position.start.line];
-          let data = {
-            id: `${edgeId}${count}`,
-            source: srcId,
-            target: otherId,
-            context: line,
-            edgeCount: 1,
-          } as EdgeDataDefinition;
-          const splitLink = ref.original.split('|');
-          if (splitLink.length > 1) {
-            data['alias'] = splitLink.slice(1).join().slice(0, -2);
-          }
-          let classes = '';
-          const typedLink = this.plugin.parseTypedLink(ref, line);
-          if (typedLink === null) {
-            classes = `${classes} inline`;
-          } else {
-            data = {...typedLink.properties, ...data};
-            classes = `${classes} ${typedLink.class}`;
-          }
-          const edge = {
-            group: 'edges',
-            data: data,
-            classes: classes,
-          } as EdgeDefinition;
+          const edge = parseRefCache(ref, content, `${edgeId}${count}`, srcId, otherId, this.plugin.settings.typedLinkPrefix);
           if (edgeId in edges) {
             edges[edgeId].push(edge);
           } else {
@@ -166,9 +140,9 @@ ${edge.data.context}`;
       const path = getLinkpath(link.link);
       const file = this.metadata.getFirstLinkpathDest(path, sourcePath);
       if (file) {
-        return await this.nodeFromFile(file);
+        return await nodeFromFile(file, this.plugin);
       } else {
-        return this.nodeDangling(path);
+        return nodeDangling(path);
       }
     }
 
@@ -187,61 +161,13 @@ ${edge.data.context}`;
             const file = this.vault.getAbstractFileByPath(otherPath) as TFile;
             const id = VizId.fromFile(file).toId();
             if (!(id in nodes)) {
-              nodes[id] = await this.nodeFromFile(file);
+              nodes[id] = await nodeFromFile(file, this.plugin);
             }
           }
         }
       }
     }
 
-    async nodeFromFile(file: TFile) : Promise<NodeDefinition> {
-      const cache = this.metadata.getFileCache(file);
-      const name = file.extension === 'md' ? file.basename : file.name;
-      const classes = this.plugin.getClasses(file).join(' ');
-      const data = {
-        id: VizId.toId(file.name, this.storeId()),
-        name: name,
-        path: file.path,
-        resource_url: `http://localhost:${this.plugin.settings.imgServerPort}/${encodeURI(file.path)}`,
-      } as NodeDataDefinition;
-      data['content'] = await this.vault.cachedRead(file);
-      const frontmatter = cache?.frontmatter;
-      if (frontmatter) {
-        Object.keys(frontmatter).forEach((k) => {
-          if (!(k === 'position')) {
-            if (k === 'image') {
-              const imageField = frontmatter[k];
-              try {
-                // Check if url. throws error otherwise
-                new URL(imageField);
-                data[k] = imageField;
-              } catch {
-                data[k] = `http://localhost:${this.plugin.settings.imgServerPort}/${encodeURI(imageField)}`;
-              }
-            } else {
-              data[k] = frontmatter[k];
-            }
-          }
-        });
-      }
-
-      return {
-        group: 'nodes',
-        data: data,
-        classes: classes,
-      };
-    }
-
-    nodeDangling(path: string): NodeDefinition {
-      return {
-        group: 'nodes',
-        data: {
-          id: VizId.toId(path, this.storeId()),
-          name: path,
-        },
-        classes: 'dangling',
-      };
-    }
 
     async getNeighbourhood(nodeIds: VizId[]): Promise<NodeDefinition[]> {
       const nodes: Record<string, NodeDefinition> = {};
@@ -256,7 +182,7 @@ ${edge.data.context}`;
             continue;
           }
           if (!(nodeId.toId() in nodes)) {
-            nodes[nodeId.toId()] = await this.nodeFromFile(file);
+            nodes[nodeId.toId()] = await nodeFromFile(file, this.plugin);
           }
           const promiseNodes: Record<string, Promise<NodeDefinition>> = {};
           iterateCacheRefs(cache, (ref) => {
@@ -290,7 +216,7 @@ ${edge.data.context}`;
         console.log('returning empty cache', nodeId);
         return null;
       }
-      return Promise.resolve(this.nodeFromFile(file));
+      return Promise.resolve(nodeFromFile(file, this.plugin));
     }
 
     async refreshNode(view: IJuggl, id: VizId) {
