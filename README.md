@@ -46,3 +46,5 @@ You can also open the help vault with this button in Juggl:
 ![](https://raw.githubusercontent.com/HEmile/juggl/main/juggl/resources/juggl_help.gif)
 
 
+## Extending Juggl
+Juggl is completely open source and has an API available for creating Obsidian plugins that extend or use Juggl. See https://github.com/HEmile/juggl-api . You will have complete control over the internals of [Cytoscape.js](https://js.cytoscape.org), which is an extremely powerful graph visualization library! 
