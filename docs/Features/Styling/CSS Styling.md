@@ -1,13 +1,14 @@
 ---
 aliases: [CSS]
+image: "files/CypherQuerying.png"
 ---
 
 For complete control over [[Styling]], you can use CSS. This has a somewhat higher learning curve, but is extremely powerful! It allows you to create rule-based styling so you can visually represent concepts or attributes in your vault. 
 
-To use the CSS functionality, edit `.obsidian/juggl/style.css`. Edits in this file should automatically change the style of currently open graphs. 
+To use the CSS functionality, edit `.obsidian/plugins/juggl/graph.css`. Edits in this file should automatically change the style of currently open graphs. 
 You can also open this file from the Juggl settings:
 
-![[Pasted image 20210410161051.png]]
+![[Pasted image 20210422092407.png]]
 
 This document acts as an overview of common and useful options for Juggl. For documentation on everything that's possible (_a lot!_), see the [Cytoscape.js styling documentation](https://js.cytoscape.org/#style).
 
@@ -72,7 +73,7 @@ Attributes are values on nodes that you can use for styling. You can refer to th
 	This means: Select all notes that contain 'juggl', case insensitive.
 	
 ### Edges
-- `context`: The sentences around the link, giving some context about where the link is used. This is used in the edge hover preview.
+- `context`: The line the link is in. This gives some context about where the link is used and is used in the edge hover preview. Can be used to filter for certain lines with the same structure.
 - `alias`: The alias used on the link. Only present if an alias is used. 
 - `degree`: The amount of edges connected to the node.
 - `edgeCount`: When edges are merged (default), this is the total amount of edges of a certain type that are merged together. This is used by default to make lines thicker for merged edges that represent more links.
@@ -138,6 +139,14 @@ edge.inline {
 
 ![[Pasted image 20210414175943.png|500]]
 
+You can also only show this whenever you are hovering over the edge. You have to activate 'Hover on edges' in the Juggl settings for this feature:
+```css
+edge.inline.hover {
+   label: data(context);
+   ...
+}
+```
+
 **Text in a box**: One styling I love is to have rectangle nodes that contain some text. This can be achieved (imperfectly!) using
 ```css
 .tag-paper {
@@ -153,6 +162,26 @@ edge.inline {
 
 ![[Pasted image 20210414182140.png|400]]
 
+**Text wrapping for non-Latin script**: The text in a box will not work for languages using different script, like Japanese. For these, you could try the following snippet by Kazdon:
+```css
+.note {  
+   shape: rectangle;  
+   width: 40px;  
+   height: 20px;  
+   text-valign: center;  
+   text-max-width: 35px;  
+   text-overflow-wrap: anywhere;  
+}
+```
+And similar for inline context on edges:
+```css
+edge.inline {
+   label:data(context);  
+   text-wrap: wrap;  
+   text-max-width: 250px;  
+   text-overflow-wrap: anywhere;
+}
+```
 # Current limitations
 - CSS variables like `var(--background-primary)` will not be recognized. If this is something you need, please add a pull request.
 - `not()` does not seem to work.

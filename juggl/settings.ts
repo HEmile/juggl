@@ -12,6 +12,7 @@ export type JugglMode = 'local' | 'workspace';
 export type AllLayouts = CytoscapeLayouts | JugglLayouts;
 import KoFi from './ui/KoFi.svelte';
 import type {IJugglSettings, StyleGroup} from 'juggl-api';
+import {getGraphColor} from './viz/stylesheet';
 
 export const emptyStyleGroup: StyleGroup = {filter: '',
   color: 'black',
@@ -97,7 +98,22 @@ export const genStyleGroups = function(plugin: JugglPlugin): StyleGroup[] {
     }
   }
 
-  const genSheet: StyleGroup[] = [];
+  const genSheet: StyleGroup[] = [
+    {filter: `class:dangling`,
+      color: getGraphColor('color-fill-unresolved'),
+      shape: 'ellipse',
+      icon: {name: 'No icon', path: '', color: 'white'},
+      showInPane: true,
+      show: true,
+      size: 1.0},
+    {filter: `class:file -class:image`,
+      color: getGraphColor('color-fill'),
+      shape: 'ellipse',
+      icon: {name: 'No icon', path: '', color: 'white'},
+      showInPane: true,
+      show: true,
+      size: 1.0},
+  ];
   for (const tag of Object.keys(tagColorMap)) {
     genSheet.push({filter: `tag:#${tag}`,
       color: tagColorMap[tag],

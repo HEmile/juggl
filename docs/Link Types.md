@@ -6,7 +6,13 @@ You can created Typed Links using the following list-based syntax:
 
 For example, if you have a \[\[Rembrant\]\] note and you want to link it to  \[\[The Night Watch\]\], you would add `- painted [[The Night Watch]]` to your Rembrant note. 
 
-This vault contains many examples of such links at the bottom of the page. These will be visualized by [[Juggl]] as text on edges.
+This vault contains many examples of such links at the bottom of the page. These will be visualized by [[Juggl]] as text on edges. For example, the typed links at the bottom of this page will be displayed as follows:
+
+![[Pasted image 20210421133609.png|500]]
+
+Additionally, you can apply different styling using [[CSS Styling|CSS]] based on the type of the links to make these more distinct. This will [[Roadmap|in the future]] be possible using the [[Style Pane]]:
+
+![[Pasted image 20210421133938.png|500]]
 
 ## Development
 This syntax has multiple issues:
@@ -25,3 +31,4 @@ Input for this syntax and ease of use is highly appreciated. We welcome you to j
 #topic
 - subset [[Semantic Obsidian]] 
 - author [[Emile van Krieken]]
+- hasTopic [[Juggl]]
