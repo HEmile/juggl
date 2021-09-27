@@ -41,8 +41,10 @@ Juggl has many features unique to its graph view compared to the Obsidian graph 
 You can open Juggl from the 'more options' menu on files:
 ![](https://raw.githubusercontent.com/HEmile/juggl/main/juggl/resources/open_juggl.gif)
 
-You can interact with the graph with many of the same options as in Obsidian. For further documentation, check out [juggl.io](juggl.io), where you can find information on for example [styling](https://juggl.io/Features/Styling/Styling) or the syntax of the [code fence](https://juggl.io/Features/Juggl+code+fence). 
+You can interact with the graph with many of the same options as in Obsidian. For further documentation, check out [juggl.io](https://juggl.io/), where you can find information on for example [styling](https://juggl.io/Features/Styling/Styling) or the syntax of the [code fence](https://juggl.io/Features/Juggl+code+fence). 
 You can also open the help vault with this button in Juggl:
 ![](https://raw.githubusercontent.com/HEmile/juggl/main/juggl/resources/juggl_help.gif)
 
 
+## Extending Juggl
+Juggl is completely open source and has an API available for creating Obsidian plugins that extend or use Juggl. See https://github.com/HEmile/juggl-api . You will have complete control over the internals of [Cytoscape.js](https://js.cytoscape.org), which is an extremely powerful graph visualization library! 
