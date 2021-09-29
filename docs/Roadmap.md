@@ -6,9 +6,8 @@ aliases: []
 # Juggl
 ## Planned
 ### [[Neo4j Stream]]
-A new plugin that will upload your vault to [[Neo4j Desktop]]. This feature was present in [[Neo4j Graph View Plugin]], but not in [[Juggl]]. It'll be a separate plugin to ensure non-advanced users will not have to deal with installing Neo4j, and that this is completely optional for advanced users.
+Allow for [[Cypher]] querying in [[Juggl]] ^2d1fd7
 
-This plugin will not require installing Python, and will allow for [[Cypher]] querying in [[Juggl]]. 
 
 ### [[Link Types]]
 Add better support for creating and maintaining link types. Also provide new syntax for inline link types and properties on links. A discussion on syntax is in [[Link Types]].
@@ -19,6 +18,7 @@ Add better support for creating and maintaining link types. Also provide new syn
 
 ### [[Style Pane]] for edges
 Makes it easier to style typed links.
+
 ### Outline in compound nodes
 The outline of a note is essentially a tree. As it is completely hierarchical wrt the node representing the note, it can be nicely rendered and collapsed using compound nodes, like in
 

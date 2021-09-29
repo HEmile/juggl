@@ -1,0 +1,102 @@
+{
+  "main": {
+    "id": "d13b041b8342f362",
+    "type": "split",
+    "children": [
+      {
+        "id": "f115cb69bdb5c6c8",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "docs/Neo4j Stream/Install Neo4j Stream Plugin.md",
+            "mode": "source"
+          }
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "93bfacddf0364031",
+    "type": "split",
+    "children": [
+      {
+        "id": "5b4877b1c8bd0811",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "2e5f52a1b8eb32e4",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "e4fcc2a575d3634d",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "7f3a0fb38d3bb8d3",
+    "type": "split",
+    "children": [
+      {
+        "id": "2bff59fdb21c113b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8f597588ddd527d6",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "docs/Neo4j Stream/Install Neo4j Stream Plugin.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "f115cb69bdb5c6c8",
+  "lastOpenFiles": [
+    "docs/Neo4j Stream/Install Neo4j Stream Plugin.md",
+    "docs/Neo4j Stream/Neo4j graph visualizations.md",
+    "docs/Neo4j Stream/Neo4j Stream Plugin.md",
+    "docs/Neo4j Stream/Installation of Neo4j Stream Plugin.md",
+    "docs/files/Pasted image 20201231181103.png",
+    "docs/files/Pasted image 20201231180930.png",
+    "Obsidian.md",
+    "Neo4j Graph View settings.md",
+    "docs/files/Pasted image 20201231175530.png",
+    "docs/Archieved/Installation of Neo4j Graph View Plugin.md"
+  ]
+}
