@@ -183,9 +183,10 @@ edge.inline {
 }
 ```
 # Current limitations
-- CSS variables like `var(--background-primary)` will not be recognized. If this is something you need, please add a pull request.
-- `not()` does not seem to work.
 
+- CSS variables like `var(--background-primary)` will not be recognized. If this is something you need, please add a pull request.
+
+- `not()` does not seem to work.
 
 --- 
 #feature
