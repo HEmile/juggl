@@ -59,6 +59,18 @@ node[image] {
   background-image: data(image);
 }
 `;
+
+export const getGraphColor = function(clazz: string): string {
+  // Hacky way to get style properties set for Obsidians graph view
+  const graphDiv = document.createElement('div');
+  graphDiv.addClass('graph-view', clazz);
+  document.body.appendChild(graphDiv);
+  const computedColor = getComputedStyle(graphDiv).getPropertyValue('color');
+  graphDiv.detach();
+  return computedColor;
+};
+
+
 /*
 defaultSheet comes before graph.css, yamlModifySheet comes after.
  */
@@ -125,15 +137,6 @@ export class GraphStyleSheet {
       return `rgb(${rgba[0]}, ${rgba[1]}, ${rgba[2]})`;
     }
 
-    getGraphColor(clazz: string): string {
-      // Hacky way to get style properties set for Obsidians graph view
-      const graphDiv = document.createElement('div');
-      graphDiv.addClass('graph-view', clazz);
-      document.body.appendChild(graphDiv);
-      const computedColor = getComputedStyle(graphDiv).getPropertyValue('color');
-      graphDiv.detach();
-      return computedColor;
-    }
 
     styleGroupsToSheet(groups: StyleGroup[], groupPrefix: string): string {
       let sheet = '';
@@ -179,13 +182,13 @@ node.${groupPrefix}-${index} {
       const style = getComputedStyle(document.body);
       let font = style.getPropertyValue('--text');
       font = font.replace('BlinkMacSystemFont,', ''); // This crashes electron for some reason.
-      const fillColor = this.getGraphColor('color-fill');
-      const fillHighlightColor = this.getGraphColor('color-fill-highlight');
-      const accentBorderColor = this.getGraphColor('color-circle');
-      const lineColor = this.getGraphColor('color-line');
-      const lineHighlightColor = this.getGraphColor('color-line-highlight');
-      const textColor = this.getGraphColor('color-text');
-      const danglingColor = this.getGraphColor('color-fill-unresolved');
+      const fillColor = getGraphColor('color-fill');
+      const fillHighlightColor = getGraphColor('color-fill-highlight');
+      const accentBorderColor = getGraphColor('color-circle');
+      const lineColor = getGraphColor('color-line');
+      const lineHighlightColor = getGraphColor('color-line-highlight');
+      const textColor = getGraphColor('color-text');
+      const danglingColor = getGraphColor('color-fill-unresolved');
       return `
 node {
   background-color: ${fillColor};
