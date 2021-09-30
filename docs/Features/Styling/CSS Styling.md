@@ -153,6 +153,11 @@ edge.inline {
 
 ![[Pasted image 20210414182140.png|400]]
 
+# Current limitations
+
+- CSS variables like `var(--background-primary)` will not be recognized. If this is something you need, please add a pull request.
+
+- `not()` does not seem to work.
 
 --- 
 #feature
