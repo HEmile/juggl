@@ -6,7 +6,8 @@ aliases: []
 # Juggl
 ## Planned
 ### [[Neo4j Stream]]
-Allow for [[Cypher]] querying in [[Juggl]] ^2d1fd7
+Export your vault to [[Neo4j]]. 
+Later on, this will allow for [[Cypher]] querying in [[Juggl]] ^2d1fd7
 
 
 ### [[Link Types]]
