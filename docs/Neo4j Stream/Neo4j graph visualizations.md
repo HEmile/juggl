@@ -2,7 +2,7 @@
 aliases: []
 ---
 
-Another use case for the [[Neo4j Stream Plugin]] is to use your Obsidian vault in one of the many apps in the [[Neo4j Desktop]]
+The main use case for the [[Neo4j Stream Plugin]] is to use your Obsidian vault in one of the many apps in the [[Neo4j Desktop]]
 Graph Apps Store. Using with this plugin active will automatically connect it to your vault. Here are some suggestions:
 
 ### Neo4j Bloom

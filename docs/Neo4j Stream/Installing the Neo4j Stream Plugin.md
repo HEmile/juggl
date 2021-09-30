@@ -42,7 +42,7 @@ Every now and then, the Graph database fails to start.
 ## 3. Installing the Obsidian plugin
 Time to install the plugin! Since Neo4j Stream is unfinished, you will have to download and install it manually. 
 
-1. Download the plugin from [this link](https://github.com/HEmile/obsidian-neo4j-graph-view/releases/tag/0.2.5). 
+1. Download the plugin from [this link](https://github.com/HEmile/obsidian-neo4j-stream/releases). 
 1. Open the Obsidian settings, and go to Third-party plugins. Disable the "Safe mode" toggle, then click "Turn off safe mode" to confirm this. 
 2. Now, more options appear. Click on the "open plugin folders" icon
 3. In the resulting folder, create a new directory called `neo4j-stream`
