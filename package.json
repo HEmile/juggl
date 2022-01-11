@@ -1,6 +1,6 @@
 {
   "name": "juggl",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Adds a completely interactive, stylable and expandable graph view to Obsidian.",
   "main": "main.js",
   "repository": {
@@ -11,6 +11,9 @@
     "dev": "node_modules/.bin/rollup --config rollup.config.js -w",
     "build": "node_modules/.bin/rollup --config rollup.config.js",
     "release": "node_modules/.bin/standard-version"
+  },
+  "standard-version": {
+    "t": ""
   },
   "keywords": [],
   "author": "",
