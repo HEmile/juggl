@@ -46,7 +46,7 @@ const literal = function(atomicQuery: ISearchParserDictionary, key: string): str
     case 'name': return _containsSelector('name', atomicQuery[key], '@*=');
     case 'tag': return _tagSelector(atomicQuery[key]);
     case 'class': return _classSelector(atomicQuery[key]);
-    case 'raw': return atomicQuery[key];
+    case 'raw': return [atomicQuery[key]];
     default: return _containsSelector(key, atomicQuery[key]);
   }
 };
