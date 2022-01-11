@@ -130,3 +130,7 @@ dmypy.json
 out.cypher
 /docs/.obsidian/
 /docs/Development/
+
+# build
+*.js.map
+node_modules
