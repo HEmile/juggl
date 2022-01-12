@@ -15,7 +15,7 @@ The syntax of this simulates [the search syntax in Obsidian](https://help.obsidi
 # Search Operators
 - `file:`, `path:`, `content:` and `tag:` all work as documented in the [Obsidian help vault](https://help.obsidian.md/Plugins/Search)
 - `class:`: Search based on [[CSS Styling#Classes|CSS class]].
-- `raw:`: Search using a [[CSS Styling#Selectors|CSS selector]].
+- `raw:`: Search using a [[CSS Styling#Selectors|CSS selector]]. For example, if you have a YAML attribute like `year`, you can get all nodes after 2000 using `raw:[year>2000]`
 - Any attribute you use in your YAML frontmatter can be used for querying, for instance `aliases:`, `color:` and `title:`. 
 
 ## Tips

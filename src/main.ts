@@ -15,7 +15,7 @@ import type {
   IDataStore,
   IJugglStores,
   IJugglPlugin,
-  IJuggl,
+  IJuggl, IJugglSettings,
 } from 'juggl-api';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
 import cytoscape, {NodeSingular} from 'cytoscape';
@@ -345,45 +345,6 @@ export default class JugglPlugin extends Plugin implements IJugglPlugin {
         await leaf.open(neovisView);
       }
     }
-    // nodeCypher(label: string): string {
-    //   return 'MATCH (n) WHERE n.name="' + label +
-    //         '" AND n.' + PROP_VAULT + '="' + this.app.vault.getName() +
-    //         '" RETURN n';
-    // }
-    //
-    // localNeighborhoodCypher(label:string): string {
-    //   return 'MATCH (n {name: "' + label +
-    //         '", ' + PROP_VAULT + ':"' + this.app.vault.getName() +
-    //         '"}) OPTIONAL MATCH (n)-[r]-(m) RETURN n,r,m';
-    // }
-
-
-    // executeQuery() {
-    //   // Code taken from https://github.com/mrjackphil/obsidian-text-expand/blob/0.6.4/main.ts
-    //   const currentView = this.app.workspace.activeLeaf.view;
-    //
-    //   if (!(currentView instanceof MarkdownView)) {
-    //     return;
-    //   }
-    //
-    //   const cmDoc = currentView.sourceMode.cmEditor;
-    //   const curNum = cmDoc.getCursor().line;
-    //   const query = this.getContentBetweenLines(curNum, '```cypher', '```', cmDoc);
-    //   if (query.length > 0) {
-    //     const leaf = this.app.workspace.splitActiveLeaf(this.settings.splitDirection);
-    //     try {
-    //       // TODO: Pass query.
-    //       // const neovisView = new NeoVisView((leaf, this, name, [new ObsidianStore(this)]);
-    //       // leaf.open(neovisView);
-    //     } catch (e) {
-    //       if (e instanceof Neo4jError) {
-    //         new Notice('Invalid cypher query. Check console for more info.');
-    //       } else {
-    //         throw e;
-    //       }
-    //     }
-    //   }
-    // }
 
     public activeGraphs(): IJuggl[] {
       // TODO: This is not a great method, no way to find back the inline graphs!
@@ -411,5 +372,22 @@ export default class JugglPlugin extends Plugin implements IJugglPlugin {
         throw new Error('Can only register IDataStores as core if their storeId is core');
       }
       this.coreStores[name] = store;
+    }
+
+    public createJuggl(el: HTMLElement, settings?: IJugglSettings, datastores?: IJugglStores, initialNodes?: string[]): IJuggl {
+      // Public constructor for Juggl instances. Used for the API.
+      if (!settings) {
+        settings = Object.assign({}, DefaultJugglSettings.embedSettings);
+        if (initialNodes) {
+          settings.expandInitial = false;
+        }
+      }
+      if (!datastores) {
+        datastores = {
+          dataStores: [this.coreStores[settings.coreStore] as IDataStore].concat(this.stores),
+          coreStore: this.coreStores[settings.coreStore],
+        };
+      }
+      return new Juggl(el, this, datastores, settings, initialNodes);
     }
 }
