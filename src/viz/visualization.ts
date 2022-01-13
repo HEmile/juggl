@@ -108,7 +108,7 @@ export class Juggl extends Component implements IJuggl {
       let nodes: NodeDefinition[];
       let idsInitial: VizId[] = null;
       if (this.initialNodes) {
-        idsInitial = this.initialNodes.map((s) => new VizId(s, 'core'));
+        idsInitial = this.initialNodes.map((s) => new VizId(s, this.datastores.coreStore.storeId()));
         if (this.settings.expandInitial) {
           nodes = await this.neighbourhood(idsInitial);
         } else {

@@ -182,6 +182,9 @@ node.${groupPrefix}-${index} {
       const style = getComputedStyle(document.body);
       let font = style.getPropertyValue('--text');
       font = font.replace('BlinkMacSystemFont,', ''); // This crashes electron for some reason.
+      if (font.length === 0) {
+        font = 'Helvetica Neue';
+      }
       const fillColor = getGraphColor('color-fill');
       const fillHighlightColor = getGraphColor('color-fill-highlight');
       const accentBorderColor = getGraphColor('color-circle');
@@ -246,17 +249,24 @@ edge {
   line-color: ${lineColor};
   loop-sweep: -50deg;
   loop-direction: -45deg;
-  width: mapData(edgeCount, 1, 50, 0.55, 3);
+  width: 0.70;
+   
   target-arrow-shape: vee;
   target-arrow-fill: filled;
   target-arrow-color: ${lineColor};
-  arrow-scale: mapData(edgeCount, 1, 50, 0.35, 1.5);
+  
+  arrow-scale: 0.55;
+
   font-size: 6;
   font-family: ${font};
   color: ${textColor};
-  curve-style: unbundled-bezier;
-  control-point-distance: 23;
-  control-point-weight: 0.6;
+  curve-style: haystack;
+
+}
+
+edge[edgeCount] {
+  width: mapData(edgeCount, 1, 50, 0.55, 3);
+  arrow-scale: mapData(edgeCount, 1, 50, 0.35, 1.5);
 }
 
 edge:selected {

@@ -383,11 +383,15 @@ export default class JugglPlugin extends Plugin implements IJugglPlugin {
         }
       }
       if (!datastores) {
-        datastores = {
-          dataStores: [this.coreStores[settings.coreStore] as IDataStore].concat(this.stores),
-          coreStore: this.coreStores[settings.coreStore],
-        };
+        datastores = this.defaultStores();
       }
       return new Juggl(el, this, datastores, settings, initialNodes);
+    }
+
+    public defaultStores(): IJugglStores {
+      return {
+        dataStores: [this.coreStores[OBSIDIAN_STORE_NAME] as IDataStore].concat(this.stores),
+        coreStore: this.coreStores[OBSIDIAN_STORE_NAME],
+      };
     }
 }
