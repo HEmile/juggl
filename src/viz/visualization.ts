@@ -114,6 +114,8 @@ export class Juggl extends Component implements IJuggl {
         } else {
           nodes = await Promise.all(idsInitial.map( (id) => this.datastores.coreStore.get(id)));
         }
+        // Filter nulls
+        nodes = nodes.filter((n) => n);
         this.viz = cytoscape({
           container: div,
           elements: nodes,

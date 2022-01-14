@@ -260,7 +260,7 @@ edge {
   font-size: 6;
   font-family: ${font};
   color: ${textColor};
-  curve-style: haystack;
+  curve-style: straight;
 
 }
 
