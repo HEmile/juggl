@@ -1,6 +1,9 @@
 ---
 aliases: [installation, install]
 ---
+
+
+
 The general steps to install the plugin are as follows:
 1. Make sure you have [[Neo4j Desktop]] installed. See [[Install Neo4j Stream Plugin#Install Neo4j Desktop]].
 3. Create a new database in Neo4j desktop and start it. See [[Install Neo4j Stream Plugin#Creating a Neo4j database]].

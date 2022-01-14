@@ -2,9 +2,9 @@
 aliases: []
 ---
 
-Welcome to the documentation of Juggl, now available on the [[Obsidian]] community plugins store.
+Welcome to the documentation of Juggl.
 
-Juggl is the next generation of PKM-focused graph views! 
+Juggl is the next generation of PKM-focused graph views! It is completely customizable and extendable, with many advanced features out of the box. 
 
 - **Code** is on Github: https://github.com/HEmile/juggl
 - **Support the development** of Juggl:
@@ -12,7 +12,6 @@ Juggl is the next generation of PKM-focused graph views!
 	- Paypal.me: https://paypal.me/EvanKrieken
 
 # Features
-Juggl is a new graph view with many more features than the original [[Obsidian]] graph view. 
 ![[juggl trailer.gif]]
 ## Styling
 With Juggl you have completely control over the [[Styling|Style]] of your graph. You can use a special [[Style Pane]] that is very easy to use. For more advanced styling, you can use [[CSS Styling|CSS]] and [[YAML Styling|YAML]].
@@ -32,8 +31,11 @@ You can choose from **four [[Layouts|layout]] options**:
 3. Grid
 4. Hierarchical
 
-### Code fence
-You can use "[[Juggl code fence|code fence]]s" to embed graphs within your Obsidian note! You can even use the graph you saved in the [[Workspace mode]]. 
+### Code block
+You can use "[[Juggl code block|code block]]s" to embed graphs within your Obsidian note! You can even use the graph you saved in the [[Workspace mode]]. 
+
+### [[Breadcrumbs]] support
+The popular Obsidian plugin for maintaining hierarchies '[Breadcrumbs](https://github.com/SkepticMystic/breadcrumbs)' has support for rendering its graphs in Juggl with [[Breadcrumbs code blocks]]! This one of the most useful graphs Juggl can produce. 
 
 ### More!
 - **Mobile ready!** While still buggy, the graph works on mobile
@@ -47,8 +49,6 @@ Juggl currently only has an implementation for [[Obsidian]]. However, the meat o
 
 Note that Juggl is GPL3 **dual-**licensed. Contact me for details. 
 
-# Neo4j Graph View
-If you came here looking for the documentation of the deprecated [[Neo4j Graph View Plugin]], please go [[Neo4j Graph View Plugin|here]].
 
 <iframe src="https://github.com/sponsors/HEmile/card" title="Sponsor HEmile" height="225" width="600" style="border: 0;"></iframe>
 

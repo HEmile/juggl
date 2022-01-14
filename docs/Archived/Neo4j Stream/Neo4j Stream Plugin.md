@@ -1,6 +1,7 @@
 This plugin helps by streaming your vault to a [Neo4j](https://neo4j.com/)  database. This is a separate plugin to ensure non-advanced users of [[Juggl]] will not have to deal with installing Neo4j, and is completely optional for advanced users.
 
-⚠ Note: This is an unfinshed pluggin. Absolutely no guarantees are given that this works.    
+⚠ Note: This is an unfinshed pluggin. Absolutely no guarantees are given that this works. 
+⚠ Note: Development on this project has stopped out of lack of personal interest for the use case. Anyone interested in further developing this can contact me. 
 
 Please refer to [[Install Neo4j Stream Plugin]] and [[Neo4j graph visualizations]] for more information
 

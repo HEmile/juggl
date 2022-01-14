@@ -11,7 +11,7 @@ Current goals of the server:
 	- Discussing advanced use
 		- [[Styling]] of the graph, in particular [[CSS Styling|CSS]] and [[YAML Styling|YAML]].
 		- [[Workspace mode]]
-		- Usage of the [[Juggl code fence|code fence]]
+		- Usage of the [[Juggl code block|code fence]]
 	- Feature requests and discussion
 - Discuss ideas related to [[Semantic Obsidian]]
 	- [[Obsidian]] plugin ideas
