@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.2](https://github.com/HEmile/juggl/compare/1.2.1...1.2.2) (2022-01-14)
+
+
+### Bug Fixes
+
+* Edge arrows missing ([c6cf885](https://github.com/HEmile/juggl/commit/c6cf885ef03858d4a00122a8a4902d44c50c988a))
+
 ### [1.2.1](https://github.com/HEmile/juggl/compare/1.2.0...1.2.1) (2022-01-13)
 
 ## [1.2.0](https://github.com/HEmile/juggl/compare/1.1.5...1.2.0) (2022-01-12)
