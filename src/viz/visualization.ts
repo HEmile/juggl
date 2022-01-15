@@ -133,6 +133,7 @@ export class Juggl extends Component implements IJuggl {
         });
       }
 
+
       this.viz.dblclick();
 
       if (this.settings.navigator) {
@@ -174,7 +175,6 @@ export class Juggl extends Component implements IJuggl {
         this.restartLayout();
       }
 
-      console.log('Visualization ready');
 
       const view = this;
       this.viz.on('tap boxselect', async (e) => {
@@ -305,6 +305,7 @@ export class Juggl extends Component implements IJuggl {
       }, DEBOUNCE_FOLLOW, true));
       this.vizReady = true;
       this.trigger('vizReady', this.viz);
+      console.log('Visualization ready');
     }
 
     async popover(mdContent: string, sourcePath: string, target: Singular, styleClass: string) {

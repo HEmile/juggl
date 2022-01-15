@@ -277,7 +277,9 @@ export class WorkspaceMode extends Component implements IAGMode {
     if (this.toolbar) {
       this.toolbar.$destroy();
     }
-    this.menu.destroy();
+    if (this.menu) {
+      this.menu.destroy();
+    }
   }
 
   getName(): string {
