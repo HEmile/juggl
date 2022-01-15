@@ -110,7 +110,7 @@ button.juggl-button {
     height: 27px;
     text-align: center;
     background-color: var(--background-secondary);
-    padding: 0;
+    padding: 0 !important;
     margin: 1px;
 }
 
