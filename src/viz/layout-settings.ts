@@ -30,8 +30,8 @@ export class ColaGlobalLayout implements LayoutSettings {
     nodeSpacing: 10, // extra spacing around nodes
   };
   options: LayoutOptions;
-  constructor(options?: LayoutOptions) {
-    this.options = Object.assign({}, ColaGlobalLayout.DEFAULT, options);
+  constructor(options?: LayoutOptions, animate?: boolean) {
+    this.options = Object.assign({}, ColaGlobalLayout.DEFAULT, options, {animate: animate ? 'end' : false});
   }
 
   startLayout(view: IJuggl): Layouts {
@@ -41,8 +41,9 @@ export class ColaGlobalLayout implements LayoutSettings {
 
 export class D3GlobalLayout implements LayoutSettings {
     options: LayoutOptions;
-    constructor(options?: LayoutOptions) {
-      this.options = Object.assign({}, D3GlobalLayout.DEFAULT, options);
+    constructor(options?: LayoutOptions, animate?: boolean) {
+      this.options = Object.assign({}, D3GlobalLayout.DEFAULT, options, {animate: animate ? 'end' : false});
+      console.log({options: this.options, animate});
     }
     startLayout(view: IJuggl): Layouts {
       return view.viz.layout(Object.assign(this.options, {linkId: function id(d: any) {
@@ -198,16 +199,16 @@ export const getLayoutSetting = function(layoutType: AllLayouts, settings?: IJug
     case 'circle':
     case 'concentric': return new ConcentricLayout(options);
     case 'force-directed': if (settings && settings.fdgdLayout === 'd3-force') {
-      return new D3GlobalLayout(options);
+      return new D3GlobalLayout(options, settings.animateLayout);
     } else {
-      return new ColaGlobalLayout(options);
+      return new ColaGlobalLayout(options, settings.animateLayout);
     }
     case 'hierarchy':
     case 'dagre':
       return new DagreGlobalLayout(options);
     case 'grid': return new GridGlobalLayout(options);
-    case 'cola': return new ColaGlobalLayout(options);
-    case 'd3-force': return new D3GlobalLayout(options);
+    case 'cola': return new ColaGlobalLayout(options, settings.animateLayout);
+    case 'd3-force': return new D3GlobalLayout(options, settings.animateLayout);
   }
 };
 

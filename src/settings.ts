@@ -152,6 +152,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
   globalGraphRibbon: true,
   graphSettings: {
     // TODO: Not currently used anywhere
+    animateLayout: true,
     autoAddNodes: true,
     autoExpand: false,
     autoZoom: false,
@@ -175,6 +176,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     zoomSpeed: 1,
   },
   embedSettings: {
+    animateLayout: true,
     autoAddNodes: false,
     autoExpand: false,
     autoZoom: false,
@@ -198,6 +200,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     zoomSpeed: 1,
   },
   globalGraphSettings: {
+    animateLayout: true,
     autoAddNodes: true,
     autoExpand: false,
     autoZoom: false,
