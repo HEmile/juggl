@@ -274,7 +274,9 @@ export class WorkspaceMode extends Component implements IAGMode {
     }
     this.events = [];
     document.off('keydown', '.cy-content', this.windowEvent, true);
-    this.toolbar.$destroy();
+    if (this.toolbar) {
+      this.toolbar.$destroy();
+    }
     this.menu.destroy();
   }
 
