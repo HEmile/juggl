@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.4](https://github.com/HEmile/juggl/compare/1.2.3...1.2.4) (2022-01-15)
+
 ### [1.2.3](https://github.com/HEmile/juggl/compare/1.2.2...1.2.3) (2022-01-15)
 
 
