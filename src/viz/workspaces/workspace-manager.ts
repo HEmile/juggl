@@ -60,7 +60,7 @@ export class WorkspaceManager extends Component {
 
           for (const store of viz.datastores.dataStores) {
             if (store.storeId() === vId.storeId) {
-              await store.refreshNode(viz, vId);
+              await store.refreshNode(vId, viz);
               break;
             }
           }

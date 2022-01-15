@@ -32,11 +32,11 @@ export class ObsidianStore extends Component implements ICoreDataStore {
       this.vault = plugin.app.vault;
     }
 
-    getEvents(): DataStoreEvents {
+    getEvents(view: IJuggl): DataStoreEvents {
       return this.events;
     }
 
-    async createEdges(srcFile: TFile, srcId: string, toNodes: NodeCollection, graph: IJuggl): Promise<EdgeDefinition[]> {
+    async createEdges(srcFile: TFile, srcId: string, toNodes: NodeCollection, view: IJuggl): Promise<EdgeDefinition[]> {
       if (!(srcFile.extension === 'md')) {
         return [];
       }
@@ -60,7 +60,7 @@ export class ObsidianStore extends Component implements ICoreDataStore {
           }
         }
       });
-      if (graph.settings.mergeEdges) {
+      if (view.settings.mergeEdges) {
         // Merges inline edges.
         const returnEdges: EdgeDefinition[] = [];
         for (const edgeId of Object.keys(edges)) {
@@ -94,7 +94,7 @@ ${edge.data.context}`;
       return [].concat(...Object.values(edges));
     }
 
-    async connectNodes(allNodes: NodeCollection, newNodes: NodeCollection, graph: IJuggl): Promise<EdgeDefinition[]> {
+    async connectNodes(allNodes: NodeCollection, newNodes: NodeCollection, view: IJuggl): Promise<EdgeDefinition[]> {
       const edges: EdgeDefinition[] = [];
       // Find edges from newNodes to other nodes
       // @ts-ignore
@@ -105,7 +105,7 @@ ${edge.data.context}`;
           if (file) {
             const srcId = id.toId();
 
-            edges.push(...await this.createEdges(file, srcId, allNodes, graph));
+            edges.push(...await this.createEdges(file, srcId, allNodes, view));
           }
         }
       }
@@ -119,7 +119,7 @@ ${edge.data.context}`;
             const srcId = id.toId();
 
             // Connect only to newNodes!
-            edges.push(...await this.createEdges(file, srcId, newNodes, graph));
+            edges.push(...await this.createEdges(file, srcId, newNodes, view));
           }
         }
       }
@@ -136,11 +136,11 @@ ${edge.data.context}`;
       }
     }
 
-    async getNodeFromLink(link: ReferenceCache, sourcePath: string) : Promise<NodeDefinition> {
+    async getNodeFromLink(link: ReferenceCache, sourcePath: string, graph: IJuggl) : Promise<NodeDefinition> {
       const path = getLinkpath(link.link);
       const file = this.metadata.getFirstLinkpathDest(path, sourcePath);
       if (file) {
-        return await nodeFromFile(file, this.plugin);
+        return await nodeFromFile(file, this.plugin, graph.settings);
       } else {
         return nodeDangling(path);
       }
@@ -150,7 +150,7 @@ ${edge.data.context}`;
       return this.metadata.getFirstLinkpathDest(nodeId.id, '');
     }
 
-    async fillWithBacklinks(nodes: Record<string, NodeDefinition>, nodeId: VizId) {
+    async fillWithBacklinks(nodes: Record<string, NodeDefinition>, nodeId: VizId, graph: IJuggl) {
       // Could be an expensive operation... No cached backlinks implementation is available in the Obsidian API though.
       if (nodeId.storeId === 'core') {
         const path = this.getFile(nodeId).path;
@@ -161,7 +161,7 @@ ${edge.data.context}`;
             const file = this.vault.getAbstractFileByPath(otherPath) as TFile;
             const id = VizId.fromFile(file).toId();
             if (!(id in nodes)) {
-              nodes[id] = await nodeFromFile(file, this.plugin);
+              nodes[id] = await nodeFromFile(file, this.plugin, graph.settings);
             }
           }
         }
@@ -169,7 +169,7 @@ ${edge.data.context}`;
     }
 
 
-    async getNeighbourhood(nodeIds: VizId[]): Promise<NodeDefinition[]> {
+    async getNeighbourhood(nodeIds: VizId[], viz: IJuggl): Promise<NodeDefinition[]> {
       const nodes: Record<string, NodeDefinition> = {};
       for (const nodeId of nodeIds) {
         if (nodeId.storeId === this.storeId()) {
@@ -182,13 +182,13 @@ ${edge.data.context}`;
             continue;
           }
           if (!(nodeId.toId() in nodes)) {
-            nodes[nodeId.toId()] = await nodeFromFile(file, this.plugin);
+            nodes[nodeId.toId()] = await nodeFromFile(file, this.plugin, viz.settings);
           }
           const promiseNodes: Record<string, Promise<NodeDefinition>> = {};
           iterateCacheRefs(cache, (ref) => {
             const id = this.getOtherId(ref, file.path).toId();
             if (!(id in nodes)) {
-              promiseNodes[id] = this.getNodeFromLink(ref, file.path);
+              promiseNodes[id] = this.getNodeFromLink(ref, file.path, viz);
             }
           });
           for (const id of Object.keys(promiseNodes)) {
@@ -196,7 +196,7 @@ ${edge.data.context}`;
               nodes[id] = await promiseNodes[id];
             }
           }
-          await this.fillWithBacklinks(nodes, nodeId);
+          await this.fillWithBacklinks(nodes, nodeId, viz);
         }
       }
       return Object.values(nodes);
@@ -206,20 +206,20 @@ ${edge.data.context}`;
       return 'core';
     }
 
-    get(nodeId: VizId): Promise<NodeDefinition> {
+    get(nodeId: VizId, view: IJuggl): Promise<NodeDefinition> {
       const file = this.getFile(nodeId);
       if (file === null) {
         return null;
       }
       const cache = this.metadata.getFileCache(file);
       if (cache === null) {
-        console.log('returning empty cache', nodeId);
+        console.log('returning empty cache', nodeId, view);
         return null;
       }
-      return Promise.resolve(nodeFromFile(file, this.plugin));
+      return Promise.resolve(nodeFromFile(file, this.plugin, view.settings));
     }
 
-    async refreshNode(view: IJuggl, id: VizId) {
+    async refreshNode(id: VizId, view: IJuggl) {
       const idS = id.toId();
       let correctEdges: IMergedToGraph;
       let node = view.viz.$id(idS);
@@ -235,7 +235,7 @@ ${edge.data.context}`;
       if (node.length > 0 && node.hasClass(CLASS_EXPANDED)) {
         correctEdges = await view.expand(node, true, false);
       } else {
-        const nodeDef = await this.get(id);
+        const nodeDef = await this.get(id, view);
         view.mergeToGraph([nodeDef], true, false);
         node = view.viz.$id(idS);
         const edges = await view.buildEdges(node);
@@ -256,7 +256,7 @@ ${edge.data.context}`;
       this.registerEvent(
           this.metadata.on('changed', (file) => {
             store.plugin.activeGraphs().forEach(async (v) => {
-              await store.refreshNode(v, VizId.fromFile(file));
+              await store.refreshNode(VizId.fromFile(file), v);
             });
           }));
       this.registerEvent(
@@ -269,7 +269,7 @@ ${edge.data.context}`;
                   // Changing the ID of a node in Cytoscape is not allowed, so remove and then restore.
                   // Put in setTimeout because Obsidian doesn't immediately update the metadata on rename...
                   v.viz.$id(oldId.toId()).remove();
-                  await store.refreshNode(v, id);
+                  await store.refreshNode(id, v);
                 }, 500);
               });
             }

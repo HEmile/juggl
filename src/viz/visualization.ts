@@ -112,7 +112,7 @@ export class Juggl extends Component implements IJuggl {
         if (this.settings.expandInitial) {
           nodes = await this.neighbourhood(idsInitial);
         } else {
-          nodes = await Promise.all(idsInitial.map( (id) => this.datastores.coreStore.get(id)));
+          nodes = await Promise.all(idsInitial.map( (id) => this.datastores.coreStore.get(id, this)));
         }
         // Filter nulls
         nodes = nodes.filter((n) => n);
@@ -363,7 +363,7 @@ export class Juggl extends Component implements IJuggl {
     async neighbourhood(toExpand: VizId[]) : Promise<NodeDefinition[]> {
       const nodes: NodeDefinition[] = [];
       for (const store of this.datastores.dataStores) {
-        nodes.push(...await store.getNeighbourhood(toExpand));
+        nodes.push(...await store.getNeighbourhood(toExpand, this));
       }
       return nodes;
     }

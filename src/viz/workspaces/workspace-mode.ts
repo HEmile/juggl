@@ -183,7 +183,7 @@ export class WorkspaceMode extends Component implements IAGMode {
         const id = new VizId(name, 'core');
         let followImmediate = true;
         if (this.viz.$id(id.toId()).length === 0) {
-          const node = await this.view.datastores.coreStore.get(id);
+          const node = await this.view.datastores.coreStore.get(id, this.view);
           this.viz.startBatch();
           // Make sure it doesn't immediately get removed
           this.viz.add(node).addClass(CLASS_PROTECTED);
