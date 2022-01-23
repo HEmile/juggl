@@ -43,7 +43,6 @@ export class D3GlobalLayout implements LayoutSettings {
     options: LayoutOptions;
     constructor(options?: LayoutOptions, animate?: boolean) {
       this.options = Object.assign({}, D3GlobalLayout.DEFAULT, options, {animate: animate ? 'end' : false});
-      console.log({options: this.options, animate});
     }
     startLayout(view: IJuggl): Layouts {
       return view.viz.layout(Object.assign(this.options, {linkId: function id(d: any) {

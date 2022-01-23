@@ -182,6 +182,16 @@ edge.inline {
    text-overflow-wrap: anywhere;
 }
 ```
+**Only show icons, not shapes**: If you only want to show the icon of a node and not the shape around it, you can use
+```css
+node {
+	background-opacity: 0;
+	border: 0;
+	shape: rectangle;
+}
+```
+![[Pasted image 20220121103800.png]]
+
 # Current limitations
 
 - CSS variables like `var(--background-primary)` will not be recognized. If this is something you need, please add a pull request.

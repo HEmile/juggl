@@ -89,7 +89,7 @@ export class Juggl extends Component implements IJuggl {
     async onload() {
       this.element.addClass('cy-content');
       // Ensure the canvas fits the whole container
-      this.element.setAttr('style', 'padding: 0');
+      // this.element.setAttr('style', 'padding: 0');
       this.element.setAttr('tabindex', 0);
 
       if (this.settings.toolbar) {
@@ -364,7 +364,8 @@ export class Juggl extends Component implements IJuggl {
     async neighbourhood(toExpand: VizId[]) : Promise<NodeDefinition[]> {
       const nodes: NodeDefinition[] = [];
       for (const store of this.datastores.dataStores) {
-        nodes.push(...await store.getNeighbourhood(toExpand, this));
+        const storeNodes = await store.getNeighbourhood(toExpand, this);
+        nodes.push(...storeNodes);
       }
       return nodes;
     }
