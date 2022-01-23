@@ -269,6 +269,7 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
           .addToggle((toggle) => {
             toggle.setValue(this.plugin.settings.graphSettings.navigator)
                 .onChange((newValue) => {
+                  this.plugin.settings.globalGraphSettings.navigator = newValue;
                   this.plugin.settings.graphSettings.navigator = newValue;
                   this.plugin.saveData(this.plugin.settings);
                 });
