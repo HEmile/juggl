@@ -87,225 +87,228 @@ export class Juggl extends Component implements IJuggl {
     }
 
     async onload() {
-      this.element.addClass('cy-content');
-      // Ensure the canvas fits the whole container
-      // this.element.setAttr('style', 'padding: 0');
-      this.element.setAttr('tabindex', 0);
+      try {
+        this.element.addClass('cy-content');
+        // Ensure the canvas fits the whole container
+        // this.element.setAttr('style', 'padding: 0');
+        this.element.setAttr('tabindex', 0);
 
-      if (this.settings.toolbar) {
-        const toolbarDiv = document.createElement('div');
-        toolbarDiv.addClass('cy-toolbar');
-        this.element.appendChild(toolbarDiv);
-        this.mode.createToolbar(toolbarDiv);
-      }
-
-      const div = document.createElement('div');
-      div.id = 'cy' + VIEW_COUNTER;
-      this.element.appendChild(div);
-      div.setAttr('style', `height: ${this.settings.height}; width:${this.settings.width}`);
-      div.setAttr('tabindex', '0');
-
-      let nodes: NodeDefinition[];
-      let idsInitial: VizId[] = null;
-      if (this.initialNodes) {
-        idsInitial = this.initialNodes.map((s) => new VizId(s, this.datastores.coreStore.storeId()));
-        if (this.settings.expandInitial) {
-          nodes = await this.neighbourhood(idsInitial);
-        } else {
-          nodes = await Promise.all(idsInitial.map( (id) => this.datastores.coreStore.get(id, this)));
+        if (this.settings.toolbar) {
+          const toolbarDiv = document.createElement('div');
+          toolbarDiv.addClass('cy-toolbar');
+          this.element.appendChild(toolbarDiv);
+          this.mode.createToolbar(toolbarDiv);
         }
-        // Filter nulls
-        nodes = nodes.filter((n) => n);
-        this.viz = cytoscape({
-          container: div,
-          elements: nodes,
-          minZoom: 0.3,
-          maxZoom: 10,
-          wheelSensitivity: this.settings.zoomSpeed,
-        });
-      } else {
-        this.viz = cytoscape({
-          container: div,
-          elements: [{data: {id: 'a'}}, {data: {id: 'b'}}],
-          minZoom: 0.3,
-          maxZoom: 10,
-          wheelSensitivity: this.settings.zoomSpeed,
-        });
-      }
 
+        const div = document.createElement('div');
+        div.id = 'cy' + VIEW_COUNTER;
+        this.element.appendChild(div);
+        div.setAttr('style', `height: ${this.settings.height}; width:${this.settings.width}`);
+        div.setAttr('tabindex', '0');
 
-      this.viz.dblclick();
-
-      if (this.settings.navigator) {
-        const navDiv = document.createElement('div');
-        navDiv.id = 'cynav' + VIEW_COUNTER;
-        div.children[0].appendChild(navDiv);
-        navDiv.addClass('cy-navigator');
-        // @ts-ignore
-        this.viz.navigator({//
-          container: '#cynav' + VIEW_COUNTER,
-          viewLiveFramerate: 0, // set false to update graph pan only on drag end; set 0 to do it instantly; set a number (frames per second) to update not more than N times per second
-          thumbnailEventFramerate: 10, // max thumbnail's updates per second triggered by graph updates
-          thumbnailLiveFramerate: false, // max thumbnail's updates per second. Set false to disable
-          dblClickDelay: 200, // milliseconds
-          removeCustomContainer: true, // destroy the container specified by user on plugin destroy
-          rerenderDelay: 100, // ms to throttle rerender updates to the panzoom for performance
-        });
-      }
-      VIEW_COUNTER += 1;
-
-      if (idsInitial ) {
-        for (const id of idsInitial) {
-          const initialNode = this.viz.$id(id.toId());
+        let nodes: NodeDefinition[];
+        let idsInitial: VizId[] = null;
+        if (this.initialNodes) {
+          idsInitial = this.initialNodes.map((s) => new VizId(s, this.datastores.coreStore.storeId()));
           if (this.settings.expandInitial) {
-            initialNode.addClass(CLASS_EXPANDED);
+            nodes = await this.neighbourhood(idsInitial);
+          } else {
+            nodes = await Promise.all(idsInitial.map((id) => this.datastores.coreStore.get(id, this)));
           }
-          initialNode.addClass(CLASS_PROTECTED);
+          // Filter nulls
+          nodes = nodes.filter((n) => n);
+          this.viz = cytoscape({
+            container: div,
+            elements: nodes,
+            minZoom: 0.3,
+            maxZoom: 10,
+            wheelSensitivity: this.settings.zoomSpeed,
+          });
+        } else {
+          this.viz = cytoscape({
+            container: div,
+            elements: [{data: {id: 'a'}}, {data: {id: 'b'}}],
+            minZoom: 0.3,
+            maxZoom: 10,
+            wheelSensitivity: this.settings.zoomSpeed,
+          });
         }
-        const nodez = this.viz.nodes();
-        const edges = await this.buildEdges(nodez);
-        this.viz.add(edges);
-        this.onGraphChanged(true);
-      }
-      await this.updateStylesheet();
+        this.viz.dblclick();
 
-      // Shouldn'' this just call restartLayout?
-
-      if (idsInitial) {
-        this.restartLayout();
-      }
-
-
-      const view = this;
-      this.viz.on('tap boxselect', async (e) => {
-        // @ts-ignore
-        this.element.focus();
-      });
-
-      this.viz.on('tap', 'node', async (e) => {
-        const id = VizId.fromNode(e.target);
-        if (!(id.storeId === 'core')) {
-          return;
+        if (this.settings.navigator) {
+          const navDiv = document.createElement('div');
+          navDiv.id = 'cynav' + VIEW_COUNTER;
+          div.children[0].appendChild(navDiv);
+          navDiv.addClass('cy-navigator');
+          // @ts-ignore
+          this.viz.navigator({//
+            container: '#cynav' + VIEW_COUNTER,
+            viewLiveFramerate: 0, // set false to update graph pan only on drag end; set 0 to do it instantly; set a number (frames per second) to update not more than N times per second
+            thumbnailEventFramerate: 10, // max thumbnail's updates per second triggered by graph updates
+            thumbnailLiveFramerate: false, // max thumbnail's updates per second. Set false to disable
+            dblClickDelay: 200, // milliseconds
+            removeCustomContainer: true, // destroy the container specified by user on plugin destroy
+            rerenderDelay: 100, // ms to throttle rerender updates to the panzoom for performance
+          });
         }
-        // TODO THIS SHOULD BE MOVED TO LOCAL MODE!
-      });
-      this.viz.on('tap', 'edge', async (e) => {
-        // todo: move to correct spot in the file.
-      });
-      this.viz.on('mouseover', 'node', async (e) => {
-        e.target.unlock();
-        const node = e.target as NodeSingular;
-        e.cy.elements()
-            .difference(node.closedNeighborhood())
-            .addClass(CLASS_UNHOVER);
-        node.addClass(CLASS_HOVER)
-            .connectedEdges()
-            .addClass(CLASS_CONNECTED_HOVER)
-            .connectedNodes()
-            .addClass(CLASS_CONNECTED_HOVER);
+        VIEW_COUNTER += 1;
 
-        const id = VizId.fromNode(e.target);
-        if (id.storeId === 'core') {
-          const file = this.plugin.metadata.getFirstLinkpathDest(id.id, '');
-          if (file && file.extension === 'md' && (e.originalEvent.metaKey || !this.settings.metaKeyHover)) {
-            const content = await view.vault.cachedRead(file);
-            this.hoverTimeout[e.target.id()] = setTimeout(async () =>
-              await this.popover(content, file.path, e.target, 'advanced-graph-preview-node'),
-            400);
+        if (idsInitial) {
+          for (const id of idsInitial) {
+            const initialNode = this.viz.$id(id.toId());
+            if (this.settings.expandInitial) {
+              initialNode.addClass(CLASS_EXPANDED);
+            }
+            initialNode.addClass(CLASS_PROTECTED);
           }
+          const nodez = this.viz.nodes();
+          const edges = await this.buildEdges(nodez);
+          this.viz.add(edges);
+          this.onGraphChanged(true);
         }
-      });
-      this.viz.on('mouseover', 'edge', async (e) => {
-        const edge = e.target as EdgeSingular;
-        if (this.settings.hoverEdges) {
+        await this.updateStylesheet();
+
+        // Shouldn'' this just call restartLayout?
+        if (idsInitial) {
+          this.restartLayout();
+        }
+
+
+        const view = this;
+        this.viz.on('tap boxselect', async (e) => {
+          // @ts-ignore
+          this.element.focus();
+        });
+
+        this.viz.on('tap', 'node', async (e) => {
+          const id = VizId.fromNode(e.target);
+          if (!(id.storeId === 'core')) {
+            return;
+          }
+          // TODO THIS SHOULD BE MOVED TO LOCAL MODE!
+        });
+        this.viz.on('tap', 'edge', async (e) => {
+          // todo: move to correct spot in the file.
+        });
+        this.viz.on('mouseover', 'node', async (e) => {
+          e.target.unlock();
+          const node = e.target as NodeSingular;
           e.cy.elements()
-              .difference(edge.connectedNodes().union(edge))
+              .difference(node.closedNeighborhood())
               .addClass(CLASS_UNHOVER);
-          edge.addClass('hover')
+          node.addClass(CLASS_HOVER)
+              .connectedEdges()
+              .addClass(CLASS_CONNECTED_HOVER)
               .connectedNodes()
               .addClass(CLASS_CONNECTED_HOVER);
-        }
-        if ('context' in edge.data() && (e.originalEvent.metaKey || !this.settings.metaKeyHover)) {// && e.originalEvent.metaKey) {
-          // TODO resolve SourcePath, can be done using the source file.
-          this.hoverTimeout[e.target.id()] = setTimeout(async () =>
-          // @ts-ignore
-            await this.popover(edge.data()['context'], '', edge, 'juggl-preview-edge'),
-          800);
-        }
-      });
-      this.viz.on('mouseout', (e) => {
-        if (e.target === e.cy) {
-          return;
-        }
-        const id = e.target.id();
-        if (id in this.hoverTimeout) {
-          clearTimeout(this.hoverTimeout[id]);
-          this.hoverTimeout[id] = undefined;
-        }
-        e.cy.elements().removeClass([CLASS_HOVER, CLASS_UNHOVER, CLASS_CONNECTED_HOVER]);
-        if (e.target.hasClass(CLASS_PINNED)) {
-          e.target.lock();
-        }
-      });
-      this.viz.on('grab', (e) => {
-        if (this.activeLayout) {
-          this.activeLayout.stop();
-        }
-      });
-      this.viz.on('dragfree', (e) => {
-        if (this.activeLayout) {
-          this.activeLayout.stop();
-        }
-        // this.activeLayout = this.viz.layout(this.colaLayout()).start();
-        this.activeLayout.start();
-        const node = e.target;
-        node.lock();
-        this.activeLayout.one('layoutstop', (e)=> {
-          if (!node.hasClass(CLASS_PINNED)) {
-            node.unlock();
-          }
-        });
-      });
-      this.viz.on('cxttap', (e) =>{
-        // Thanks Liam for sharing how to do context menus
-        const fileMenu = new Menu(this.plugin.app); // Creates empty file menu
-        if (!(e.target === this.viz) && e.target.group() === 'nodes') {
+
           const id = VizId.fromNode(e.target);
-          e.target.select();
           if (id.storeId === 'core') {
-            const file = this.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
-            if (!(file === undefined)) {
-            // hook for plugins to populate menu with "file-aware" menu items
-              this.plugin.app.workspace.trigger('file-menu', fileMenu, file, 'my-context-menu', null);
+            const file = this.plugin.metadata.getFirstLinkpathDest(id.id, '');
+            if (file && file.extension === 'md' && (e.originalEvent.metaKey || !this.settings.metaKeyHover)) {
+              const content = await view.vault.cachedRead(file);
+              this.hoverTimeout[e.target.id()] = setTimeout(async () =>
+                await this.popover(content, file.path, e.target, 'advanced-graph-preview-node'),
+              400);
             }
           }
-        }
-        this.mode.fillMenu(fileMenu, this.viz.nodes(':selected'));
-        fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
-      });
-      this.viz.on('layoutstop', debounce((e: EventObject) => {
-        if (!this.settings.autoZoom) {
-          return;
-        }
-        let fitNodes: NodeCollection;
-        const activeFile = this.viz.nodes(`.${CLASS_ACTIVE_NODE}`);
-        if (activeFile.length > 0) {
-          fitNodes = activeFile.closedNeighborhood();
-        } else {
-          fitNodes = this.viz.nodes();
-        }
-        e.cy.animate({
-          fit: {
-            eles: fitNodes,
-            padding: 0,
-          },
-          duration: VIEWPORT_ANIMATION_TIME,
-          queue: false,
         });
-      }, DEBOUNCE_FOLLOW, true));
-      this.vizReady = true;
-      this.trigger('vizReady', this.viz);
-      console.log('Visualization ready');
+        this.viz.on('mouseover', 'edge', async (e) => {
+          const edge = e.target as EdgeSingular;
+          if (this.settings.hoverEdges) {
+            e.cy.elements()
+                .difference(edge.connectedNodes().union(edge))
+                .addClass(CLASS_UNHOVER);
+            edge.addClass('hover')
+                .connectedNodes()
+                .addClass(CLASS_CONNECTED_HOVER);
+          }
+          if ('context' in edge.data() && (e.originalEvent.metaKey || !this.settings.metaKeyHover)) {// && e.originalEvent.metaKey) {
+            // TODO resolve SourcePath, can be done using the source file.
+            this.hoverTimeout[e.target.id()] = setTimeout(async () =>
+            // @ts-ignore
+              await this.popover(edge.data()['context'], '', edge, 'juggl-preview-edge'),
+            800);
+          }
+        });
+        this.viz.on('mouseout', (e) => {
+          if (e.target === e.cy) {
+            return;
+          }
+          const id = e.target.id();
+          if (id in this.hoverTimeout) {
+            clearTimeout(this.hoverTimeout[id]);
+            this.hoverTimeout[id] = undefined;
+          }
+          e.cy.elements().removeClass([CLASS_HOVER, CLASS_UNHOVER, CLASS_CONNECTED_HOVER]);
+          if (e.target.hasClass(CLASS_PINNED)) {
+            e.target.lock();
+          }
+        });
+        this.viz.on('grab', (e) => {
+          if (this.activeLayout) {
+            this.activeLayout.stop();
+          }
+        });
+        this.viz.on('dragfree', (e) => {
+          if (this.activeLayout) {
+            this.activeLayout.stop();
+          }
+          // this.activeLayout = this.viz.layout(this.colaLayout()).start();
+          this.activeLayout.start();
+          const node = e.target;
+          node.lock();
+          this.activeLayout.one('layoutstop', (e) => {
+            if (!node.hasClass(CLASS_PINNED)) {
+              node.unlock();
+            }
+          });
+        });
+        this.viz.on('cxttap', (e) => {
+          // Thanks Liam for sharing how to do context menus
+          const fileMenu = new Menu(this.plugin.app); // Creates empty file menu
+          if (!(e.target === this.viz) && e.target.group() === 'nodes') {
+            const id = VizId.fromNode(e.target);
+            e.target.select();
+            if (id.storeId === 'core') {
+              const file = this.plugin.app.metadataCache.getFirstLinkpathDest(id.id, '');
+              if (!(file === undefined)) {
+                // hook for plugins to populate menu with "file-aware" menu items
+                this.plugin.app.workspace.trigger('file-menu', fileMenu, file, 'my-context-menu', null);
+              }
+            }
+          }
+          this.mode.fillMenu(fileMenu, this.viz.nodes(':selected'));
+          fileMenu.showAtPosition({x: e.originalEvent.x, y: e.originalEvent.y});
+        });
+        this.viz.on('layoutstop', debounce((e: EventObject) => {
+          if (!this.settings.autoZoom) {
+            return;
+          }
+          let fitNodes: NodeCollection;
+          const activeFile = this.viz.nodes(`.${CLASS_ACTIVE_NODE}`);
+          if (activeFile.length > 0) {
+            fitNodes = activeFile.closedNeighborhood();
+          } else {
+            fitNodes = this.viz.nodes();
+          }
+          e.cy.animate({
+            fit: {
+              eles: fitNodes,
+              padding: 0,
+            },
+            duration: VIEWPORT_ANIMATION_TIME,
+            queue: false,
+          });
+        }, DEBOUNCE_FOLLOW, true));
+        this.vizReady = true;
+        this.trigger('vizReady', this.viz);
+        console.log('Visualization ready');
+      } catch (e) {
+        // Needed to ensure errors are thrown in console.
+        console.log(e);
+        throw e;
+      }
     }
 
     async popover(mdContent: string, sourcePath: string, target: Singular, styleClass: string) {
@@ -460,7 +463,11 @@ export class Juggl extends Component implements IJuggl {
         this.activeLayout.stop();
       }
       const layoutSettings = parseLayoutSettings(this.settings);
-      this.activeLayout = layoutSettings.startLayout(this);
+      try {
+        this.activeLayout = layoutSettings.startLayout(this);
+      } catch (e) {
+        console.log(e);
+      }
     }
 
     setLayout(settings: LayoutSettings) {
