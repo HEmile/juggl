@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.8](https://github.com/HEmile/juggl/compare/1.2.7...1.2.8) (2022-01-24)
+
+
+### Bug Fixes
+
+* Better error handling ([fccb2ea](https://github.com/HEmile/juggl/commit/fccb2ead8cfac168e5f4b81a22720ef186150e26))
+
 ### [1.2.7](https://github.com/HEmile/juggl/compare/1.2.6...1.2.7) (2022-01-23)
 
 ### [1.2.6](https://github.com/HEmile/juggl/compare/1.2.5...1.2.6) (2022-01-23)
