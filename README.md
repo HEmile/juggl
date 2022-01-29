@@ -33,7 +33,7 @@ Juggl has many features unique to its graph view compared to the Obsidian graph 
 - 4 different [layouts](https://juggl.io/Features/Layouts) to get unique insights
 - A [code fence](https://juggl.io/Features/Juggl+code+fence) that displays the graph within Obsidian notes
 - Link type support to label edges
-- No need to install Python or Neo4j, unlike Neo4j Graph View
+- [Tight integration](https://juggl.io/Features/Breadcrumbs+integration) with the very useful [Breadcrumbs plugin](https://github.com/SkepticMystic/breadcrumbs)
 - Extendable through other plugins
 - Works on mobile!
 
