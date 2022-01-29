@@ -31,11 +31,13 @@ You can choose from **four [[Layouts|layout]] options**:
 3. Grid
 4. Hierarchical
 
+### Breadcrumbs integration
+The popular Obsidian plugin for maintaining hierarchies '[Breadcrumbs](https://github.com/SkepticMystic/breadcrumbs)' is [[Breadcrumbs integration|tightly integrated]] with Juggl! You can render hierachies using Juggl or create custom [[Breadcrumbs code blocks]]! This one of the most useful applications of Juggl. 
+
+![[Pasted image 20220127142536.png]]
+
 ### Code block
 You can use "[[Juggl code block|code block]]s" to embed graphs within your Obsidian note! You can even use the graph you saved in the [[Workspace mode]]. 
-
-### [[Breadcrumbs]] support
-The popular Obsidian plugin for maintaining hierarchies '[Breadcrumbs](https://github.com/SkepticMystic/breadcrumbs)' has support for rendering its graphs in Juggl with [[Breadcrumbs code blocks]]! This one of the most useful graphs Juggl can produce. 
 
 ### More!
 - **Mobile ready!** While still buggy, the graph works on mobile
@@ -55,6 +57,3 @@ Note that Juggl is GPL3 **dual-**licensed. Contact me for details.
 --- 
 #plugin
 - author [[Emile van Krieken]]
-
-
-%%%%We, as passionate note writers, create a lot of data. I like to say I write notes to be able to search my brain.  Juggl is a 

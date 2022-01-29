@@ -128,11 +128,10 @@ export const genStyleGroups = function(plugin: JugglPlugin): StyleGroup[] {
 
 
 export interface IJugglPluginSettings {
-    // indexContent: boolean; // neo4j
-    password: string; // neo4j
     typedLinkPrefix: string;
     splitDirection: SplitDirection; // 'horizontal';
     globalGraphRibbon: boolean;
+    useImgServer: boolean;
     imgServerPort: number;
     debug: boolean;
     graphSettings: IJugglSettings;
@@ -143,9 +142,9 @@ export interface IJugglPluginSettings {
 
 
 export const DefaultJugglSettings: IJugglPluginSettings = {
-  password: '',
   splitDirection: 'vertical',
   typedLinkPrefix: '-',
+  useImgServer: false,
   imgServerPort: 3837,
   debug: false,
   globalStyleGroups: [],
@@ -447,6 +446,17 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
                 });
           });
 
+      new Setting(containerEl)
+          .setName('Render images in graph')
+          .setDesc('This will show image attachments in your vault as images in the graph. Requires reloading Juggl. ' +
+              'WARNING: On Windows this will trigger your firewall!')
+          .addToggle((toggle) => {
+            toggle.setValue(this.plugin.settings.useImgServer)
+                .onChange((new_value) => {
+                  this.plugin.settings.useImgServer = new_value;
+                  this.plugin.saveData(this.plugin.settings);
+                });
+          });
       new Setting(containerEl)
           .setName('Image server port')
           .setDesc('Set the port of the image server. If you use multiple vaults, these need to be set differently. Default 3837.')

@@ -313,6 +313,10 @@ export default class JugglPlugin extends Plugin implements IJugglPlugin {
       this.stores.push(store);
     }
 
+    public removeStore(store: IDataStore): void {
+      this.stores.remove(store);
+    }
+
     public registerCoreStore(store: ICoreDataStore, name: string) {
       if (!(store.storeId() === 'core')) {
         throw new Error('Can only register IDataStores as core if their storeId is core');

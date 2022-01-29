@@ -536,6 +536,10 @@ export class Juggl extends Component implements IJuggl {
       this.viz.nodes().forEach((node) => {
         node.data('degree', node.degree(false));
         node.data('nameLength', node.data('name').length);
+        node.addClass([...new Set(node.incomers('edge')
+            .map((edge) => 'has-incoming-' + (edge.data('type') ? edge.data('type') : 'inline')))]);
+        node.addClass([...new Set(node.outgoers('edge')
+            .map((edge) => 'has-outgoing-' + (edge.data('type') ? edge.data('type') : 'inline')))]);
       });
       if (batch) {
         this.viz.endBatch();

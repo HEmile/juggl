@@ -1,5 +1,5 @@
 import type {IncomingMessage, Server, ServerResponse} from 'http';
-import {Component, FileSystemAdapter, Notice, TFile} from 'obsidian';
+import {Component, FileSystemAdapter, Notice, Platform, TFile} from 'obsidian';
 import type {IJugglPluginSettings} from './settings';
 import type JugglPlugin from './main';
 
@@ -17,6 +17,9 @@ export class ImageServer extends Component {
 
     public async onload() {
       super.onload();
+      if (Platform.isMobile || !this.settings.useImgServer) {
+        return;
+      }
       const path = require('path');
       const http = require('http');
       const fs = require('fs');
@@ -26,6 +29,7 @@ export class ImageServer extends Component {
         dir = path.join(this.plugin.path);
       } catch (e) {
         console.log('Couldn\'t start image server. This is likely because we\'re on mobile!');
+        console.log('Alternatively, windows might block it using the firewall');
         console.log(e);
         return;
       }
@@ -80,7 +84,7 @@ export class ImageServer extends Component {
         });
       } catch (e) {
         console.log(e);
-        new Notice('Neo4j: Couldn\'t start image server, see console');
+        new Notice('Juggl: Couldn\'t start image server, see console');
       }
     }
 
