@@ -1,6 +1,6 @@
 {
   "name": "juggl",
-  "version": "1.2.9",
+  "version": "1.3.0",
   "description": "Adds a completely interactive, stylable and expandable graph view to Obsidian.",
   "main": "main.js",
   "repository": {

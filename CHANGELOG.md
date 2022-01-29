@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/HEmile/juggl/compare/1.2.9...1.3.0) (2022-01-29)
+
+
+### Features
+
+* Now adds has-incoming-type and has-outgoing-type classes ([cac9fdc](https://github.com/HEmile/juggl/commit/cac9fdce9cbb5901b6320e5266a4dc7ed11c9bdd))
+
 ### [1.2.9](https://github.com/HEmile/juggl/compare/1.2.8...1.2.9) (2022-01-24)
 
 ### [1.2.8](https://github.com/HEmile/juggl/compare/1.2.7...1.2.8) (2022-01-24)
