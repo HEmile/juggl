@@ -90,7 +90,9 @@ export class ImageServer extends Component {
 
     public async onunload() {
       super.onunload();
-      this.imgServer.close();
-      this.imgServer = null;
+      if (this.imgServer) {
+        this.imgServer.close();
+        this.imgServer = null;
+      }
     }
 }

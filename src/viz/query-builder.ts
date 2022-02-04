@@ -13,14 +13,16 @@ const _containsSelector = function(attribute: string, filters: string|string[], 
 const _tagSelector = function(tag: string|string[]): string[] {
   if (typeof(tag) === 'string' || tag instanceof String) {
     if (tag.length > 0 && tag[0] === '#') {
+      const t = tag.slice(1);
       // @ts-ignore
-      return [`.tag-${tag.slice(1).replace('/', '-')}`];
+      return [`.tag-${tag.slice(1).replaceAll('/', '-')}`];
     }
     return [];
   }
   return tag.map((t) => {
     if (t.length > 0 && t[0] === '#') {
-      return `.tag-${t.slice(1).replace('/', '-')}`;
+      // @ts-ignore
+      return `.tag-${t.slice(1).replaceAll('/', '-')}`;
     }
     return '';
   });

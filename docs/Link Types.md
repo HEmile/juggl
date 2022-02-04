@@ -1,8 +1,8 @@
 ---
-aliases: []
+aliases: [type]
 ---
 You can created Typed Links using the following list-based syntax:
-`- linkType [[note 1]], [[note 2|alias]]`
+`- linkType [[note 1]], [[note 2|alias]]`. If you have [[Breadcrumbs integration|Breadcrumbs]] installed, its typed links such as `linkType:: [[note 1]]` are also added. 
 
 For example, if you have a \[\[Rembrant\]\] note and you want to link it to  \[\[The Night Watch\]\], you would add `- painted [[The Night Watch]]` to your Rembrant note. 
 
@@ -16,7 +16,7 @@ Additionally, you can apply different styling using [[CSS Styling|CSS]] based on
 
 Note: The `linkType` can only be a single word! This means `- has painted [[The Night Watch]]` will not be parsed as a typed link `has painted`.
 
-This vault contains many examples of such links at the bottom of the page. These will be visualized by [[Juggl]] as text on edges.
+Furthermore, if you have the Breadcrumbs plugin installed, then with the [[Breadcrumbs integration]],  it will also add all typed edges from that plugin. This includes those created with the Dataview inline attributes syntax `hasPainted:: [[The Night Watch]]`. 
 
 ## Development
 This syntax has multiple issues. In this section we discuss ways to improve it that are not currently implemented:

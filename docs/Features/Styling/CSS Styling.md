@@ -24,6 +24,8 @@ If you need more help, feel free to join the [[Discord]] where help is provided 
 Classes can be selected using `.class`. Available classes that are useful to style different nodes in Juggl are:
 - `.tag-tagname`: Targets all nodes with the tag #tagname
 - `.type-typename`: Targets all edges with the [[Link Types|type]] 'typename'
+- `.has-incoming-typename`: Targets all nodes that have an edge with [[type]] 'typename' coming into it. 
+- `.has-outgoing-typename`: Targets all nodes that have an edge with [[type]] 'typename' going out of it. 
 - Any class in the `cssclass` property in your [[YAML Styling|YAML]] frontmatter is also available on that node.
 - `.dangling`: Targets dangling nodes (nodes that aren't created as a file)
 - `.image`: Targets all nodes that are rendered as images. This is image files, but also notes that are styled with the `image` [[YAML Styling|YAML]] property. Similar for `.audio`, `.video` and `.pdf`.
