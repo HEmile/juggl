@@ -20,7 +20,7 @@ Juggl is a completely interactive, stylable and expandable graph view for [Obsid
 
 For example, you can select what parts of the graph to expand, to make sure there is never too much information on the screen. You will have complete control over the style of your graph using the powerful [Cytoscape.js library](https://js.cytoscape.org): Juggl has a useful styling pane nodes colors, shapes, sizes, and icons. This helps you get an immediate overview over what the content of each node is.
 
-![](https://raw.githubusercontent.com/HEmile/juggl/main/juggl/resources/juggl_trailer.gif)
+![](https://raw.githubusercontent.com/HEmile/juggl/main/src/resources/juggl_trailer.gif)
 
 ## Features
 Juggl has many features unique to its graph view compared to the Obsidian graph view:
@@ -33,7 +33,7 @@ Juggl has many features unique to its graph view compared to the Obsidian graph 
 - 4 different [layouts](https://juggl.io/Features/Layouts) to get unique insights
 - A [code fence](https://juggl.io/Features/Juggl+code+fence) that displays the graph within Obsidian notes
 - Link type support to label edges
-- No need to install Python or Neo4j, unlike Neo4j Graph View
+- [Tight integration](https://juggl.io/Features/Breadcrumbs+integration) with the very useful [Breadcrumbs plugin](https://github.com/SkepticMystic/breadcrumbs)
 - Extendable through other plugins
 - Works on mobile!
 
