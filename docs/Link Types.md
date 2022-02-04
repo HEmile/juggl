@@ -18,6 +18,8 @@ Note: The `linkType` can only be a single word! This means `- has painted [[The 
 
 Furthermore, if you have the Breadcrumbs plugin installed, then with the [[Breadcrumbs integration]],  it will also add all typed edges from that plugin. This includes those created with the Dataview inline attributes syntax `hasPainted:: [[The Night Watch]]`. 
 
+(The `- linkType` syntax has an advantage: since it requires to be used in a separate line, it's easier to have multiple arguments, e.g. `- linkType [[link1]], [[link2]] [[link3]]`. The Dataview's syntax is meant to use inline, e.g. `Here is a sentence with linkType::[[asdf]] and more text`, it is bad for future-proof.) 
+
 ## Development
 This syntax has multiple issues. In this section we discuss ways to improve it that are not currently implemented:
 1. It is metadata, and not inline. Most of the links people write in Obsidian are 'inline': They are part of the text, instead of seperate lines.
