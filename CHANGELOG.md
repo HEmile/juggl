@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.1](https://github.com/HEmile/juggl/compare/1.3.0...1.3.1) (2022-02-04)
+
+
+### Bug Fixes
+
+* Nested tags filtering doesnt work for depth 3+ ([9609d93](https://github.com/HEmile/juggl/commit/9609d93c63bf1a7d9bb66a53932eb51bfbede48a))
+
 ## [1.3.0](https://github.com/HEmile/juggl/compare/1.2.9...1.3.0) (2022-01-29)
 
 
