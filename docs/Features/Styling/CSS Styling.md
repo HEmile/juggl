@@ -18,6 +18,8 @@ If you prefer to start off with examples, I'd recommend immediately jumping to [
 
 If you need more help, feel free to join the [[Discord]] where help is provided for all your styling questions!
 
+Note: you must include the semicolon at the end of each declaration, even though there is just one in a block.
+
 # Selectors
 [Selectors](https://www.w3schools.com/cssref/css_selectors.asp) are used to filter what objects to style. The two main 'elements' that can be targeted are `node` and `edge`.	
 ## Classes
