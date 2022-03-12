@@ -3,7 +3,7 @@ import {
   EventRef,
   Events,
   MarkdownRenderer,
-  Menu,
+  Menu, TFile,
   Vault,
   Workspace,
 } from 'obsidian';
@@ -206,10 +206,10 @@ export class Juggl extends Component implements IJuggl {
           if (id.storeId === 'core') {
             const file = this.plugin.metadata.getFirstLinkpathDest(id.id, '');
             if (file && file.extension === 'md' && (e.originalEvent.metaKey || !this.settings.metaKeyHover)) {
-              const content = await view.vault.cachedRead(file);
+              // const content = await view.vault.cachedRead(file);
               this.hoverTimeout[e.target.id()] = setTimeout(async () =>
-                await this.popover(content, file.path, e.target, 'advanced-graph-preview-node'),
-              400);
+                this.plugin.app.workspace.trigger('link-hover', this.element, null, file.path, ''),
+              300 );
             }
           }
         });

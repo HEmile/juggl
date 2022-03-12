@@ -58,8 +58,9 @@ div.juggl-error {
     height: 100%;
 }
 
-.juggl-hover {
+.juggl-hover.is-loaded.hover-popover.popover {
     opacity: 0.9;
+    height: max-content;
 }
 
 .juggl-preview-edge {
