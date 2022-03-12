@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.3](https://github.com/HEmile/juggl/compare/1.3.2...1.3.3) (2022-03-12)
+
+
+### Features
+
+* Use default hover functionality for nodes ([7a6e135](https://github.com/HEmile/juggl/commit/7a6e135c9927d341addfca669d264e6365a71bfb))
+
 ### [1.3.2](https://github.com/HEmile/juggl/compare/1.3.1...1.3.2) (2022-02-15)
 
 ### [1.3.1](https://github.com/HEmile/juggl/compare/1.3.0...1.3.1) (2022-02-04)
