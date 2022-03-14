@@ -1,7 +1,7 @@
 import {
   Component, debounce,
   EventRef,
-  Events,
+  Events, Loc,
   MarkdownRenderer,
   Menu, TFile,
   Vault,
@@ -225,9 +225,32 @@ export class Juggl extends Component implements IJuggl {
           }
           if ('context' in edge.data() && (e.originalEvent.metaKey || !this.settings.metaKeyHover)) {// && e.originalEvent.metaKey) {
             // TODO resolve SourcePath, can be done using the source file.
-            this.hoverTimeout[e.target.id()] = setTimeout(async () =>
-            // @ts-ignore
-              await this.popover(edge.data()['context'], '', edge, 'juggl-preview-edge'),
+            this.hoverTimeout[e.target.id()] = setTimeout(async () => {
+              const id = VizId.fromNode(edge.source());
+              const file = this.plugin.metadata.getFirstLinkpathDest(id.id, '');
+              // @ts-ignore
+              if (file && file.extension === 'md' && 'obsidian-hover-editor' in this.plugin.app.plugins.plugins) {
+                const line = edge.data().line;
+                const passState = {
+                  scroll: line,
+                  line: line,
+                  startLoc: {
+                    line: line,
+                    col: edge.data().start,
+                    offset: 0,
+                  } as Loc,
+                  endLoc: {
+                    line: line,
+                    col: edge.data().end,
+                    offset: 0,
+                  },
+                };
+                this.plugin.app.workspace.trigger('link-hover', this.element, null, file.path, '', passState);
+              } else {
+              // @ts-ignore
+                await this.popover(edge.data()['context'], '', edge, 'juggl-preview-edge');
+              }
+            },
             800);
           }
         });
