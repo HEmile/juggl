@@ -37,6 +37,7 @@ export class ImageServer extends Component {
       const mime = {
         gif: 'image/gif',
         jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
         png: 'image/png',
         svg: 'image/svg+xml',
       };
