@@ -31,7 +31,7 @@ Juggl has many features unique to its graph view compared to the Obsidian graph 
   - Write new ideas and see your graph evolve
   - Save your graph and continue working on it later
 - 4 different [layouts](https://juggl.io/Features/Layouts) to get unique insights
-- A [code fence](https://juggl.io/Features/Juggl+code+fence) that displays the graph within Obsidian notes
+- A [code block](https://juggl.io/Features/Juggl+code+block) that displays the graph within Obsidian notes
 - Link type support to label edges
 - [Tight integration](https://juggl.io/Features/Breadcrumbs+integration) with the very useful [Breadcrumbs plugin](https://github.com/SkepticMystic/breadcrumbs)
 - Extendable through other plugins
@@ -41,7 +41,7 @@ Juggl has many features unique to its graph view compared to the Obsidian graph 
 You can open Juggl from the 'more options' menu on files:
 ![](https://raw.githubusercontent.com/HEmile/juggl/main/juggl/resources/open_juggl.gif)
 
-You can interact with the graph with many of the same options as in Obsidian. For further documentation, check out [juggl.io](https://juggl.io/), where you can find information on for example [styling](https://juggl.io/Features/Styling/Styling) or the syntax of the [code fence](https://juggl.io/Features/Juggl+code+fence). 
+You can interact with the graph with many of the same options as in Obsidian. For further documentation, check out [juggl.io](https://juggl.io/), where you can find information on for example [styling](https://juggl.io/Features/Styling/Styling) or the syntax of the [code block](https://juggl.io/Features/Juggl+code+block). 
 You can also open the help vault with this button in Juggl:
 ![](https://raw.githubusercontent.com/HEmile/juggl/main/juggl/resources/juggl_help.gif)
 
