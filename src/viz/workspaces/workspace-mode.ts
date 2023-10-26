@@ -55,7 +55,7 @@ export class WorkspaceMode extends Component implements IAGMode {
 
     const mode = this;
     const view = this.view;
-    const style = getComputedStyle(document.body);
+    const style = getComputedStyle(activeDocument.body);
     const selectColor = style.getPropertyValue('--text-selection');
     const backgroundColor = style.getPropertyValue('--background-secondary');
     const textColor = style.getPropertyValue('--text-normal');
@@ -225,7 +225,7 @@ export class WorkspaceMode extends Component implements IAGMode {
     }));
 
     this.windowEvent = async (evt: KeyboardEvent) => {
-      if (!(document.activeElement === this.view.element)) {
+      if (!(activeDocument.activeElement === this.view.element)) {
         return;
       }
       if (evt.key === 'e') {
@@ -252,7 +252,7 @@ export class WorkspaceMode extends Component implements IAGMode {
     };
     // // Register keypress event
     // Note: Registered on window because it wouldn't fire on the div...
-    document.on('keydown', '.cy-content', this.windowEvent, true);
+    activeDocument.on('keydown', '.cy-content', this.windowEvent, true);
   }
 
   registerCyEvent(name: EventNames, selector: string, callback: any) {
@@ -273,7 +273,7 @@ export class WorkspaceMode extends Component implements IAGMode {
       }
     }
     this.events = [];
-    document.off('keydown', '.cy-content', this.windowEvent, true);
+    activeDocument.off('keydown', '.cy-content', this.windowEvent, true);
     if (this.toolbar) {
       this.toolbar.$destroy();
     }

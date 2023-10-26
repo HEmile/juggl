@@ -167,7 +167,7 @@ export default class JugglPlugin extends Plugin implements IJugglPlugin {
             }
           } catch (error) {
             // taken from https://github.com/jplattel/obsidian-query-language/blob/main/src/renderer.ts
-            const errorElement = document.createElement('div');
+            const errorElement = activeDocument.createElement('div');
             errorElement.addClass('juggl-error');
             errorElement.innerText = error.message;
             el.appendChild(errorElement);

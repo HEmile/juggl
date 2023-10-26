@@ -1,6 +1,6 @@
 {
   "name": "juggl",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Adds a completely interactive, stylable and expandable graph view to Obsidian.",
   "main": "main.js",
   "repository": {
@@ -39,7 +39,7 @@
     "hammerjs": "^2.0.8",
     "keycharm": "^0.2.0",
     "moment": "^2.29.1",
-    "obsidian": "^0.13.11",
+    "obsidian": "^0.15.1",
     "rollup": "^2.32.1",
     "rollup-plugin-copy": "^3.3.0",
     "rollup-plugin-ignore": "^1.0.10",

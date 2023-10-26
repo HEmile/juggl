@@ -61,9 +61,9 @@ node[image] {
 
 export const getGraphColor = function(clazz: string): string {
   // Hacky way to get style properties set for Obsidians graph view
-  const graphDiv = document.createElement('div');
+  const graphDiv = activeDocument.createElement('div');
   graphDiv.addClass('graph-view', clazz);
-  document.body.appendChild(graphDiv);
+  activeDocument.body.appendChild(graphDiv);
   const computedColor = getComputedStyle(graphDiv).getPropertyValue('color');
   graphDiv.detach();
   return computedColor;
@@ -115,7 +115,7 @@ export class GraphStyleSheet {
 
 
     colorToRGBA(col: string): string {
-      const canvas = document.createElement('canvas');
+      const canvas = activeDocument.createElement('canvas');
       canvas.width = canvas.height = 1;
       const ctx = canvas.getContext('2d');
 
@@ -179,7 +179,7 @@ node.${groupPrefix}-${index} {
     }
 
     getDefaultStylesheet(): string {
-      const style = getComputedStyle(document.body);
+      const style = getComputedStyle(activeDocument.body);
       let font = style.getPropertyValue('--text');
       font = font.replace('BlinkMacSystemFont,', ''); // This crashes electron for some reason.
       if (font.length === 0) {

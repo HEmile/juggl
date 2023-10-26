@@ -5,7 +5,7 @@ export class JugglHelpView extends ItemView {
     frame: HTMLElement = null;
 
     async onOpen() {
-      this.frame = document.createElement('iframe');
+      this.frame = activeDocument.createElement('iframe');
       this.frame.addClass(`juggl-site`);
       this.frame.setAttr('style', 'height: 100%; width:100%');
       this.frame.setAttr('src', 'https://juggl.io');

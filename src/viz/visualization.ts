@@ -94,13 +94,13 @@ export class Juggl extends Component implements IJuggl {
         this.element.setAttr('tabindex', 0);
 
         if (this.settings.toolbar) {
-          const toolbarDiv = document.createElement('div');
+          const toolbarDiv = activeDocument.createElement('div');
           toolbarDiv.addClass('cy-toolbar');
           this.element.appendChild(toolbarDiv);
           this.mode.createToolbar(toolbarDiv);
         }
 
-        const div = document.createElement('div');
+        const div = activeDocument.createElement('div');
         div.id = 'cy' + VIEW_COUNTER;
         this.element.appendChild(div);
         div.setAttr('style', `height: ${this.settings.height}; width:${this.settings.width}`);
@@ -136,7 +136,7 @@ export class Juggl extends Component implements IJuggl {
         this.viz.dblclick();
 
         if (this.settings.navigator) {
-          const navDiv = document.createElement('div');
+          const navDiv = activeDocument.createElement('div');
           navDiv.id = 'cynav' + VIEW_COUNTER;
           div.children[0].appendChild(navDiv);
           navDiv.addClass('cy-navigator');
@@ -335,25 +335,25 @@ export class Juggl extends Component implements IJuggl {
     }
 
     async popover(mdContent: string, sourcePath: string, target: Singular, styleClass: string) {
-      const newDiv = document.createElement('div');
+      const newDiv = activeDocument.createElement('div');
       newDiv.addClasses(['popover', 'hover-popover', 'is-loaded', 'juggl-hover']);
-      const mdEmbedDiv = document.createElement('div');
+      const mdEmbedDiv = activeDocument.createElement('div');
       mdEmbedDiv.addClasses(['markdown-embed', styleClass]);
       newDiv.appendChild(mdEmbedDiv);
-      const mdEmbedContentDiv = document.createElement('div');
+      const mdEmbedContentDiv = activeDocument.createElement('div');
       mdEmbedContentDiv.addClasses(['markdown-embed-content']);
       mdEmbedDiv.appendChild(mdEmbedContentDiv);
-      const mdPreviewView = document.createElement('div');
+      const mdPreviewView = activeDocument.createElement('div');
       mdPreviewView.addClasses(['markdown-preview-view']);
       mdEmbedContentDiv.appendChild(mdPreviewView);
-      const mdPreviewSection = document.createElement('div');
+      const mdPreviewSection = activeDocument.createElement('div');
       mdPreviewSection.addClasses(['markdown-preview-sizer', 'markdown-preview-section']);
       mdPreviewView.appendChild(mdPreviewSection);
 
 
       await MarkdownRenderer.renderMarkdown(mdContent, mdPreviewSection, sourcePath, null );
 
-      document.body.appendChild(newDiv);
+      activeDocument.body.appendChild(newDiv);
       // @ts-ignore
       const popper = target.popper({
         content: () => {

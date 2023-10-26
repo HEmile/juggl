@@ -241,17 +241,17 @@ export class JugglGraphSettingsTab extends PluginSettingTab {
 
       new KoFi({target: containerEl});
 
-      const doc_link = document.createElement('a');
+      const doc_link = activeDocument.createElement('a');
       doc_link.href = 'https://juggl.io';
       doc_link.target = '_blank';
       doc_link.innerHTML = 'the documentation';
 
-      const discord_link = document.createElement('a');
+      const discord_link = activeDocument.createElement('a');
       discord_link.href = 'https://discord.gg/sAmSGpaPgM';
       discord_link.target = '_blank';
       discord_link.innerHTML = 'the Discord server';
 
-      const introPar = document.createElement('p');
+      const introPar = activeDocument.createElement('p');
       introPar.innerHTML =
           'Check out ' + doc_link.outerHTML + ' for documentation on how to use the plugin. <br>' +
             'Join ' + discord_link.outerHTML + ' for help, nice discussion and insight into development.';
