@@ -80,7 +80,7 @@ export class ObsidianStore extends Component implements ICoreDataStore {
                       edgeCount: 1,
                       type
                   } as EdgeDataDefinition,
-                  classes: [type, "type-" + type]
+                  classes: [type, "type-" + type, "type-" + type.replaceAll(" ", "-")]
               } as EdgeDefinition;
               console.log(edge);
           }
