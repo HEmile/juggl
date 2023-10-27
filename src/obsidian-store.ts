@@ -64,7 +64,12 @@ export class ObsidianStore extends Component implements ICoreDataStore {
               // Add typed edges for the links appearing in the frontmatter
               // TODO: Probably worth including line number etc.
               const link = ref as FrontmatterLinkCache;
-              const type = link.key.split(".").slice(0, -1).join();
+              const split = link.key.split(".")
+              let type;
+              if (split.length > 1)
+                type = split.slice(0, -1).join();
+              else
+                type = link.key;
               edge = {
                   group: 'edges',
                   data: {
@@ -75,10 +80,10 @@ export class ObsidianStore extends Component implements ICoreDataStore {
                       edgeCount: 1,
                       type
                   } as EdgeDataDefinition,
-                  classes: type
+                  classes: [type, "type-" + type]
               } as EdgeDefinition;
+              console.log(edge);
           }
-          console.log(edge);
           if (edgeId in edges) {
             edges[edgeId].push(edge);
           } else {
@@ -165,7 +170,6 @@ ${edge.data.context}`;
     async getNodeFromLink(link: Reference, sourcePath: string, graph: IJuggl) : Promise<NodeDefinition> {
       const path = getLinkpath(link.link);
       const file = this.metadata.getFirstLinkpathDest(path, sourcePath);
-      console.log(file);
       if (file) {
         return await nodeFromFile(file, this.plugin, graph.settings);
       } else {
@@ -222,7 +226,6 @@ ${edge.data.context}`;
             nodes[nodeId.toId()] = await nodeFromFile(file, this.plugin, viz.settings);
           }
           const promiseNodes: Record<string, Promise<NodeDefinition>> = {};
-          console.log(cache);
           this.iterLinks(cache, (ref, _) => {
               const id = this.getOtherId(ref, file.path).toId();
               if (!(id in nodes)) {

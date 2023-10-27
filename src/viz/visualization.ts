@@ -434,6 +434,7 @@ export class Juggl extends Component implements IJuggl {
       const sheet = new GraphStyleSheet(this.plugin);
       this.trigger('stylesheet', sheet);
       const sSheet = await sheet.getStylesheet(this);
+      console.log(sSheet);
       this.viz.style(sSheet);
     }
 
