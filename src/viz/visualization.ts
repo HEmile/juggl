@@ -82,6 +82,7 @@ export class Juggl extends Component implements IJuggl {
         this.mode = new WorkspaceMode(this);
       }
       this.addChild(this.mode);
+      this.plugin.eventHandlers.map((handler) => handler.onJugglCreated(this));
       this.debouncedRestartLayout = debounce(this.restartLayout, DEBOUNCE_LAYOUT, true);
     }
 
@@ -325,6 +326,7 @@ export class Juggl extends Component implements IJuggl {
         }, DEBOUNCE_FOLLOW, true));
         this.vizReady = true;
         this.trigger('vizReady', this.viz);
+
         console.log('Visualization ready');
       } catch (e) {
         // Needed to ensure errors are thrown in console.
@@ -434,11 +436,11 @@ export class Juggl extends Component implements IJuggl {
       const sheet = new GraphStyleSheet(this.plugin);
       this.trigger('stylesheet', sheet);
       const sSheet = await sheet.getStylesheet(this);
-      console.log(sSheet);
       this.viz.style(sSheet);
     }
 
     onunload(): void {
+      this.plugin.eventHandlers.map(handler => handler.onJugglDestroyed(this));
     }
 
     removeNodes(nodes: NodeCollection): NodeCollection {
@@ -487,6 +489,7 @@ export class Juggl extends Component implements IJuggl {
       }
       const layoutSettings = parseLayoutSettings(this.settings);
       try {
+        this.trigger("layout", layoutSettings);
         this.activeLayout = layoutSettings.startLayout(this);
       } catch (e) {
         console.log(e);
@@ -633,6 +636,7 @@ export class Juggl extends Component implements IJuggl {
     trigger(name: 'selectChange'): void;
     trigger(name: 'elementsChange'): void;
     trigger(name: 'vizReady', viz: Core): void;
+    trigger(name: 'layout', layout: LayoutSettings): void;
     trigger(name: string, ...data: any[]): void {
       this.events.trigger(name, ...data);
     }

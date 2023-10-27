@@ -15,7 +15,7 @@ import type {
   IDataStore,
   IJugglStores,
   IJugglPlugin,
-  IJuggl, IJugglSettings,
+  IJuggl, IJugglSettings, IJugglEvents,
 } from 'juggl-api';
 import {OBSIDIAN_STORE_NAME, ObsidianStore} from './obsidian-store';
 import cytoscape, {NodeSingular} from 'cytoscape';
@@ -59,6 +59,7 @@ export default class JugglPlugin extends Plugin implements IJugglPlugin {
     workspaceManager: WorkspaceManager;
     watcher: FSWatcher;
     ribbonIcon: HTMLElement;
+    eventHandlers: IJugglEvents[] = [];
 
     async onload(): Promise<void> {
       super.onload();
@@ -344,4 +345,12 @@ export default class JugglPlugin extends Plugin implements IJugglPlugin {
         coreStore: this.coreStores[OBSIDIAN_STORE_NAME],
       };
     }
+
+  registerEvents(handler: IJugglEvents) {
+      this.eventHandlers.push(handler);
+  }
+
+  removeEvents(handler: IJugglEvents) {
+      this.eventHandlers.remove(handler);
+  }
 }
