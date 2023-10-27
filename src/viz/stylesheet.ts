@@ -1,5 +1,5 @@
 import type {FileSystemAdapter} from 'obsidian';
-import {promises as fs} from 'fs';
+// import {promises as fs} from 'fs';
 import type {Juggl} from './visualization';
 import {MAX_FONT_SIZE, MAX_NODE_SIZE, MAX_TEXT_WIDTH, MIN_FONT_SIZE, MIN_NODE_SIZE, MIN_TEXT_WIDTH} from '../constants';
 import type {Vault} from 'obsidian';
@@ -84,15 +84,16 @@ export class GraphStyleSheet {
     }
 
     async getStylesheet(viz: Juggl): Promise<string> {
-      const file = (this.plugin.vault.adapter as FileSystemAdapter).getFullPath(STYLESHEET_PATH(this.plugin.vault));
+      const adapter = this.plugin.vault.adapter as FileSystemAdapter;
+      const file = STYLESHEET_PATH(this.plugin.vault);
       // const customSheet = '';
       let customSheet = '';
       try {
-        customSheet = await fs.readFile(file, 'utf-8')
+        customSheet = await adapter.read(file)
             .catch(async (err) => {
               if (err.code === 'ENOENT') {
                 const cstmSheet = DEFAULT_USER_SHEET;
-                await fs.writeFile(file, cstmSheet);
+                await adapter.write(file, cstmSheet);
                 return cstmSheet;
               } else {
                 throw err;
