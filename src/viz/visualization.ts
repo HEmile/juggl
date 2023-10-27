@@ -27,7 +27,6 @@ import type {
   StyleGroup,
 } from 'juggl-api';
 import {GraphStyleSheet} from './stylesheet';
-import Timeout = NodeJS.Timeout;
 
 import {WorkspaceMode} from './workspaces/workspace-mode';
 import {VizId} from 'juggl-api';

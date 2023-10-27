@@ -146,7 +146,7 @@ ${edge.data.context}`;
       }
     }
 
-    getFile(nodeId: VizId): TFile {
+    getFile(nodeId: VizId): TFile | null {
       return this.metadata.getFirstLinkpathDest(nodeId.id, '');
     }
 

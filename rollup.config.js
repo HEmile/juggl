@@ -7,7 +7,7 @@ import autoPreprocess from 'svelte-preprocess';
 import ignore from 'rollup-plugin-ignore';
 import json from '@rollup/plugin-json';
 import {env} from 'process';
-import {terser} from "rollup-plugin-terser";
+import terser from "@rollup/plugin-terser";
 
 const plugins = [
   ignore(["path", "url"], { commonjsBugFix: true }),
@@ -21,7 +21,8 @@ const plugins = [
   }),
   typescript({sourceMap: false}),
   nodeResolve({browser: true,
-    dedupe: ['svelte']})]
+    dedupe: ['svelte'],
+  })]
 
 const DEV = env.npm_lifecycle_event === "dev";
 
