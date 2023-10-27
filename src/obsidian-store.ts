@@ -1,18 +1,19 @@
 import {
-  Component,
-  getLinkpath,
-  iterateCacheRefs,
-  MetadataCache, ReferenceCache,
-  TFile,
-  Vault,
+    CachedMetadata,
+    Component, FrontmatterLinkCache,
+    getLinkpath,
+    iterateCacheRefs,
+    MetadataCache, Reference, ReferenceCache,
+    TFile,
+    Vault,
 } from 'obsidian';
 import type {ICoreDataStore, IMergedToGraph, IJuggl} from 'juggl-api';
 import {DataStoreEvents} from './events';
 import type JugglPlugin from './main';
 import type {
-  NodeDefinition,
-  EdgeDefinition,
-  NodeCollection,
+    NodeDefinition,
+    EdgeDefinition,
+    NodeCollection, EdgeDataDefinition,
 } from 'cytoscape';
 import {CLASS_EXPANDED} from './constants';
 import {nodeDangling, nodeFromFile, parseRefCache, VizId} from 'juggl-api';
@@ -47,12 +48,37 @@ export class ObsidianStore extends Component implements ICoreDataStore {
 
       const edges: Record<string, EdgeDefinition[]> = {};
       const content = (await this.vault.cachedRead(srcFile)).split('\n');
-      iterateCacheRefs(cache, (ref) => {
+      this.iterLinks(cache, (ref, isRefCache) => {
+        // Iterate over all links (both in frontmatter and document)
         const otherId = this.getOtherId(ref, srcFile.path).toId();
         if (toNodes.$id(otherId).length > 0) {
           const edgeId = `${srcId}->${otherId}`;
           const count = edgeId in edges ? edges[edgeId].length + 1 : 1;
-          const edge = parseRefCache(ref, content, `${edgeId}${count}`, srcId, otherId, this.plugin.settings.typedLinkPrefix);
+          const id = `${edgeId}${count}`
+          let edge;
+          if (isRefCache) {
+              // Add edges for the links appearing in the document
+              edge = parseRefCache(ref as ReferenceCache, content, id, srcId, otherId, this.plugin.settings.typedLinkPrefix);
+          }
+          else {
+              // Add typed edges for the links appearing in the frontmatter
+              // TODO: Probably worth including line number etc.
+              const link = ref as FrontmatterLinkCache;
+              const type = link.key.split(".").slice(0, -1).join();
+              edge = {
+                  group: 'edges',
+                  data: {
+                      id,
+                      source: srcId,
+                      target: otherId,
+                      context: "",
+                      edgeCount: 1,
+                      type
+                  } as EdgeDataDefinition,
+                  classes: type
+              } as EdgeDefinition;
+          }
+          console.log(edge);
           if (edgeId in edges) {
             edges[edgeId].push(edge);
           } else {
@@ -126,7 +152,7 @@ ${edge.data.context}`;
       return edges;
     }
 
-    getOtherId(link: ReferenceCache, sourcePath: string) : VizId {
+    getOtherId(link: Reference, sourcePath: string) : VizId {
       const path = getLinkpath(link.link);
       const file = this.metadata.getFirstLinkpathDest(path, sourcePath);
       if (file) {
@@ -136,9 +162,10 @@ ${edge.data.context}`;
       }
     }
 
-    async getNodeFromLink(link: ReferenceCache, sourcePath: string, graph: IJuggl) : Promise<NodeDefinition> {
+    async getNodeFromLink(link: Reference, sourcePath: string, graph: IJuggl) : Promise<NodeDefinition> {
       const path = getLinkpath(link.link);
       const file = this.metadata.getFirstLinkpathDest(path, sourcePath);
+      console.log(file);
       if (file) {
         return await nodeFromFile(file, this.plugin, graph.settings);
       } else {
@@ -169,6 +196,16 @@ ${edge.data.context}`;
     }
 
 
+    iterLinks(cache: CachedMetadata, cb: (ref: Reference, refCache: boolean) => void): void {
+      iterateCacheRefs(cache, (ref_) => cb(ref_, true));
+      if (cache.frontmatterLinks) {
+          for (const link of cache.frontmatterLinks) {
+              cb(link, false);
+          }
+      }
+    }
+
+
     async getNeighbourhood(nodeIds: VizId[], viz: IJuggl): Promise<NodeDefinition[]> {
       const nodes: Record<string, NodeDefinition> = {};
       for (const nodeId of nodeIds) {
@@ -185,11 +222,12 @@ ${edge.data.context}`;
             nodes[nodeId.toId()] = await nodeFromFile(file, this.plugin, viz.settings);
           }
           const promiseNodes: Record<string, Promise<NodeDefinition>> = {};
-          iterateCacheRefs(cache, (ref) => {
-            const id = this.getOtherId(ref, file.path).toId();
-            if (!(id in nodes)) {
-              promiseNodes[id] = this.getNodeFromLink(ref, file.path, viz);
-            }
+          console.log(cache);
+          this.iterLinks(cache, (ref, _) => {
+              const id = this.getOtherId(ref, file.path).toId();
+              if (!(id in nodes)) {
+                promiseNodes[id] = this.getNodeFromLink(ref, file.path, viz);
+              }
           });
           for (const id of Object.keys(promiseNodes)) {
             if (!(id in nodes)) {
