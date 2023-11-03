@@ -1,7 +1,7 @@
 import {
   Component, debounce,
   EventRef,
-  Events, Loc,
+  Events, ItemView, Loc,
   MarkdownRenderer,
   Menu, TFile,
   Vault,
@@ -205,11 +205,14 @@ export class Juggl extends Component implements IJuggl {
           const id = VizId.fromNode(e.target);
           if (id.storeId === 'core') {
             const file = this.plugin.metadata.getFirstLinkpathDest(id.id, '');
-            if (file && file.extension === 'md' && (e.originalEvent.metaKey || !this.settings.metaKeyHover)) {
-              // const content = await view.vault.cachedRead(file);
-              this.hoverTimeout[e.target.id()] = setTimeout(async () =>
-                this.plugin.app.workspace.trigger('link-hover', this.element, null, file.path, ''),
-              300 );
+            if (file) {
+              this.plugin.app.workspace.trigger('hover-link', {
+                event: e.originalEvent,
+                source: "juggl-plugin",
+                hoverParent: this,
+                targetEl: this.element,
+                linktext: id.id,
+                sourcePath: file.path})
             }
           }
         });
@@ -226,30 +229,31 @@ export class Juggl extends Component implements IJuggl {
           if ('context' in edge.data() && (e.originalEvent.metaKey || !this.settings.metaKeyHover)) {// && e.originalEvent.metaKey) {
             // TODO resolve SourcePath, can be done using the source file.
             this.hoverTimeout[e.target.id()] = setTimeout(async () => {
-              const id = VizId.fromNode(edge.source());
-              const file = this.plugin.metadata.getFirstLinkpathDest(id.id, '');
+              // Emile: Removed the hover editor
+              // const id = VizId.fromNode(edge.source());
+              // const file = this.plugin.metadata.getFirstLinkpathDest(id.id, '');
               // @ts-ignore
-              if (file && file.extension === 'md' && 'obsidian-hover-editor' in this.plugin.app.plugins.plugins) {
-                const line = edge.data().line;
-                const passState = {
-                  scroll: line,
-                  line: line,
-                  startLoc: {
-                    line: line,
-                    col: edge.data().start,
-                    offset: 0,
-                  } as Loc,
-                  endLoc: {
-                    line: line,
-                    col: edge.data().end,
-                    offset: 0,
-                  },
-                };
-                this.plugin.app.workspace.trigger('link-hover', this.element, null, file.path, '', passState);
-              } else {
+              // if (file && file.extension === 'md' && 'obsidian-hover-editor' in this.plugin.app.plugins.plugins) {
+              //   const line = edge.data().line;
+              //   const passState = {
+              //     scroll: line,
+              //     line: line,
+              //     startLoc: {
+              //       line: line,
+              //       col: edge.data().start,
+              //       offset: 0,
+              //     } as Loc,
+              //     endLoc: {
+              //       line: line,
+              //       col: edge.data().end,
+              //       offset: 0,
+              //     },
+              //   };
+              //   this.plugin.app.workspace.trigger('link-hover', this.element, null, file.path, '', passState);
+              // } else {
               // @ts-ignore
-                await this.popover(edge.data()['context'], '', edge, 'juggl-preview-edge');
-              }
+              await this.popover(edge.data()['context'], '', edge, 'juggl-preview-edge');
+              // }
             },
             800);
           }

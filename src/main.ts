@@ -91,6 +91,8 @@ export default class JugglPlugin extends Plugin implements IJugglPlugin {
       this.settings.graphSettings = Object.assign({}, DefaultJugglSettings.graphSettings, this.settings.graphSettings);
       this.settings.embedSettings = Object.assign({}, DefaultJugglSettings.embedSettings, this.settings.embedSettings);
 
+      this.registerHoverLinkSource("juggl-plugin", {'display': "Juggl", defaultMod: true});
+
 
       this.addCommand({
         id: 'open-vis',
