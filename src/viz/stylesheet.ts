@@ -51,7 +51,7 @@ node[width] {
 }
 
 node[height] {
-  width: data(height);
+  height: data(height);
 }
 
 node[image] {
@@ -312,16 +312,19 @@ node.pinned {
     border-style: dotted;
     border-width: 2;
 }
-node.protected {
-    ghost: yes;
-    ghost-offset-x: 1px;
-    ghost-offset-y: 1px;
-    ghost-opacity: 0.5;
-}
+
 node.hard-filtered,
 node.filtered {
     display: none;
 }
 `;
+
+      // old
+      // node.protected {
+      //   ghost: yes;
+      //   ghost-offset-x: 1px;
+      //   ghost-offset-y: 1px;
+      //   ghost-opacity: 0.5;
+      // }
     }
 }

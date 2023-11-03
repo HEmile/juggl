@@ -438,8 +438,8 @@ export class Juggl extends Component implements IJuggl {
 
     async updateStylesheet(): Promise<void> {
       const sheet = new GraphStyleSheet(this.plugin);
-      this.trigger('stylesheet', sheet);
       const sSheet = await sheet.getStylesheet(this);
+      this.trigger('stylesheet', sheet, sSheet);
       this.viz.style(sSheet);
     }
 
@@ -632,7 +632,7 @@ export class Juggl extends Component implements IJuggl {
     offref(ref: EventRef): void {
       this.events.offref(ref);
     }
-    trigger(name: 'stylesheet', sheet: GraphStyleSheet): void;
+    trigger(name: 'stylesheet', sheet: GraphStyleSheet, sSheet: string): void;
     trigger(name: 'expand', elements: NodeCollection): void;
     trigger(name: 'hide', elements: NodeCollection): void;
     trigger(name: 'pin', elements: NodeCollection): void;
