@@ -184,7 +184,12 @@ ${edge.data.context}`;
     async fillWithBacklinks(nodes: Record<string, NodeDefinition>, nodeId: VizId, graph: IJuggl) {
       // Could be an expensive operation... No cached backlinks implementation is available in the Obsidian API though.
       if (nodeId.storeId === 'core') {
-        const path = this.getFile(nodeId).path;
+        const file = this.getFile(nodeId);
+        if (!file) {
+            console.log("Couldn't get file when filling with backlinks. This should not happen.");
+            return;
+        }
+        const path = file.path;
         // @ts-ignore
         const resolvedLinks = this.metadata.resolvedLinks;
         for (const otherPath of Object.keys(resolvedLinks)) {
@@ -247,15 +252,15 @@ ${edge.data.context}`;
       return 'core';
     }
 
-    get(nodeId: VizId, view: IJuggl): Promise<NodeDefinition> {
+    get(nodeId: VizId, view: IJuggl): Promise<NodeDefinition | null> {
       const file = this.getFile(nodeId);
       if (file === null) {
-        return null;
+        return Promise.resolve(null);
       }
       const cache = this.metadata.getFileCache(file);
       if (cache === null) {
         console.log('returning empty cache', nodeId, view);
-        return null;
+        return Promise.resolve(null);
       }
       return Promise.resolve(nodeFromFile(file, this.plugin, view.settings));
     }
@@ -277,6 +282,10 @@ ${edge.data.context}`;
         correctEdges = await view.expand(node, true, false);
       } else {
         const nodeDef = await this.get(id, view);
+        if (!nodeDef) {
+            console.log("Failed to get node definition on refresh. This should not happen!");
+            return;
+        }
         view.mergeToGraph([nodeDef], true, false);
         node = view.viz.$id(idS);
         const edges = await view.buildEdges(node);
