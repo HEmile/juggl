@@ -82,7 +82,6 @@ export class ObsidianStore extends Component implements ICoreDataStore {
                   } as EdgeDataDefinition,
                   classes: [type, "type-" + type, "type-" + type.replaceAll(" ", "-")]
               } as EdgeDefinition;
-              console.log(edge);
           }
           if (edgeId in edges) {
             edges[edgeId].push(edge);
@@ -190,7 +189,6 @@ ${edge.data.context}`;
             return;
         }
         const path = file.path;
-        // @ts-ignore
         const resolvedLinks = this.metadata.resolvedLinks;
         for (const otherPath of Object.keys(resolvedLinks)) {
           if (path in resolvedLinks[otherPath]) {
