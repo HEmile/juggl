@@ -31,9 +31,8 @@ import {addIcons} from './ui/icons';
 import {STYLESHEET_PATH} from './viz/stylesheet';
 import {JugglView} from './viz/juggl-view';
 import {JugglNodesPane, JugglPane, JugglStylePane} from './pane/view';
-import {JUGGL_NODES_VIEW_TYPE, JUGGL_STYLE_VIEW_TYPE, JUGGL_VIEW_TYPE} from './constants';
 import {WorkspaceManager} from './viz/workspaces/workspace-manager';
-import {VizId} from 'juggl-api';
+import {JUGGL_NODES_VIEW_TYPE, JUGGL_STYLE_VIEW_TYPE, JUGGL_VIEW_TYPE, VizId} from 'juggl-api';
 import type {FSWatcher} from 'fs';
 import {GlobalWarningModal} from './ui/settings/global-graph-modal';
 

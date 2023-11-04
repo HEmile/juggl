@@ -1,9 +1,9 @@
 import {ItemView, WorkspaceLeaf} from 'obsidian';
 import type JugglPlugin from '../main';
 import {Juggl} from './visualization';
-import {JUGGL_VIEW_TYPE} from '../constants';
 import type {IDataStore, IJugglStores} from 'juggl-api';
 import type {IJugglSettings} from 'juggl-api';
+import {JUGGL_VIEW_TYPE} from "juggl-api";
 
 export class JugglView extends ItemView {
      juggl: Juggl;

@@ -1,5 +1,5 @@
 import {ItemView} from 'obsidian';
-import {JUGGL_HELP_VIEW} from '../constants';
+import {JUGGL_HELP_VIEW} from "juggl-api";
 
 export class JugglHelpView extends ItemView {
     frame: HTMLElement = null;

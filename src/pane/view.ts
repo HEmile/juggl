@@ -1,10 +1,10 @@
 import {EventRef, ItemView, WorkspaceLeaf} from 'obsidian';
-import {JUGGL_NODES_VIEW_TYPE, JUGGL_STYLE_VIEW_TYPE, JUGGL_VIEW_TYPE} from '../constants';
 import type JugglPlugin from '../main';
 import type {Juggl} from '../viz/visualization';
 import type {JugglView} from '../viz/juggl-view';
 import NodesPane from './NodesPane.svelte';
 import StylePane from './StylePane.svelte';
+import {JUGGL_NODES_VIEW_TYPE, JUGGL_STYLE_VIEW_TYPE, JUGGL_VIEW_TYPE} from "juggl-api";
 
 export abstract class JugglPane extends ItemView {
     plugin: JugglPlugin;
