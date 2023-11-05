@@ -30,6 +30,9 @@ export class LocalMode extends Component implements IAGMode {
     events: EventRec[] = [];
     windowEvent: any;
     toolbar: SvelteComponent;
+    depth: number = 1;
+    maxDepthForCurrentFile: number = 1;
+
     constructor(view: Juggl) {
       super();
       this.view = view;
@@ -86,6 +89,11 @@ export class LocalMode extends Component implements IAGMode {
       this.viz.endBatch();
     }
 
+    changeDepth(depth: number) {
+        console.log(`changing depth to ${depth}`);
+
+    }
+
     registerCyEvent(name: EventNames, selector: string, callback: any) {
       this.events.push({eventName: name, selector: selector, event: callback});
       if (selector) {
@@ -132,14 +140,11 @@ export class LocalMode extends Component implements IAGMode {
             this.view.searchFilter(handler.target.value);
             this.view.restartLayout();
           },
+          onDepthChange: this.changeDepth,
           filterValue: this.view.settings.filter,
           workspace: this.view.plugin.app.workspace,
         },
       });
-      // this.view.on('vizReady', (viz) => {
-      //   tb.$set({viz: viz});
-      //   tb.onSelect.bind(tb)();
-      // });
     }
 
     updateActiveFile(node: NodeCollection) {
@@ -153,8 +158,5 @@ export class LocalMode extends Component implements IAGMode {
           .connectedNodes()
           .addClass(CLASS_CONNECTED_ACTIVE_NODE)
           .union(node);
-      // this.viz.one('tap', (e) => {
-      //   e.cy.elements().removeClass(['connected-active-file', 'active-file', 'inactive-file']);
-      // });
     }
 }

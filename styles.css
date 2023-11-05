@@ -208,3 +208,20 @@ button.juggl-icon-button {
     width: 50px;
     justify-content: center;
 }
+
+.juggl-inline-group {
+    max-width: 9rem;
+    display: flex;
+    align-items: center;
+    /*padding: .5rem;*/
+}
+
+.juggl-inline-group .form-control {
+    text-align: right;
+}
+
+.form-control[type="number"]::-webkit-inner-spin-button,
+.form-control[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

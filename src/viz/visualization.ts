@@ -8,6 +8,7 @@ import {
   Workspace,
 } from 'obsidian';
 import cytoscape, {
+  Collection,
   Core,
   EdgeDefinition,
   EdgeSingular,
@@ -409,9 +410,9 @@ export class Juggl extends Component implements IJuggl {
       return edges;
     }
 
-    async expand(toExpand: NodeCollection, batch=true, triggerGraphChanged=true): Promise<IMergedToGraph> {
+    async expand(toExpand: NodeCollection, batch=true, triggerGraphChanged=true): Promise<IMergedToGraph | null> {
       if (toExpand.length === 0) {
-        return null;
+        return Promise.resolve(null);
       }
       if (batch) {
         this.viz.startBatch();
@@ -439,8 +440,8 @@ export class Juggl extends Component implements IJuggl {
     async updateStylesheet(): Promise<void> {
       const sheet = new GraphStyleSheet(this.plugin);
       const sSheet = await sheet.getStylesheet(this);
-      this.trigger('stylesheet', sheet, sSheet);
       this.viz.style(sSheet);
+      this.trigger('stylesheet', sheet, sSheet);
     }
 
     onunload(): void {
@@ -493,8 +494,9 @@ export class Juggl extends Component implements IJuggl {
       }
       const layoutSettings = parseLayoutSettings(this.settings);
       try {
-        this.trigger("layout", layoutSettings);
-        this.activeLayout = layoutSettings.startLayout(this);
+        const triggerS = {'layout': layoutSettings, 'collection': this.viz.elements()};
+        this.trigger("layout", triggerS);
+        this.activeLayout = layoutSettings.startLayout(triggerS.collection);
       } catch (e) {
         console.log(e);
       }
@@ -640,7 +642,7 @@ export class Juggl extends Component implements IJuggl {
     trigger(name: 'selectChange'): void;
     trigger(name: 'elementsChange'): void;
     trigger(name: 'vizReady', viz: Core): void;
-    trigger(name: 'layout', layout: LayoutSettings): void;
+    trigger(name: 'layout', layout: {layout: LayoutSettings, collection: Collection}): void;
     trigger(name: string, ...data: any[]): void {
       this.events.trigger(name, ...data);
     }

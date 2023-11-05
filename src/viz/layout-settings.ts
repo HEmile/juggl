@@ -1,4 +1,4 @@
-import type {Layouts} from 'cytoscape';
+import type {Collection, Layouts} from 'cytoscape';
 import {
   CLASS_ACTIVE_NODE, CLASS_EXPANDED,
   DISCRETE_LAYOUT_ANIMATION_TIME,
@@ -34,8 +34,8 @@ export class ColaGlobalLayout implements LayoutSettings {
     this.options = Object.assign({}, ColaGlobalLayout.DEFAULT, options, {animate: animate ? 'end' : false});
   }
 
-  startLayout(view: IJuggl): Layouts {
-    return view.viz.layout(this.options).start();
+  startLayout(collection: Collection): Layouts {
+    return collection.layout(this.options).start();
   }
 }
 
@@ -44,8 +44,8 @@ export class D3GlobalLayout implements LayoutSettings {
     constructor(options?: LayoutOptions, animate?: boolean) {
       this.options = Object.assign({}, D3GlobalLayout.DEFAULT, options, {animate: animate ? 'end' : false});
     }
-    startLayout(view: IJuggl): Layouts {
-      return view.viz.layout(Object.assign(this.options, {linkId: function id(d: any) {
+    startLayout(collection: Collection): Layouts {
+      return collection.layout(Object.assign(this.options, {linkId: function id(d: any) {
         return d.id;
       }, // sets the node id accessor to the specified function
       })).start();
@@ -95,8 +95,8 @@ export class GridGlobalLayout implements LayoutSettings {
   constructor(options?: LayoutOptions) {
     this.options = Object.assign({}, GridGlobalLayout.DEFAULT, options);
   }
-  startLayout(view: IJuggl): Layouts {
-    return view.viz.layout(this.options).start();
+  startLayout(collection: Collection): Layouts {
+    return collection.layout(this.options).start();
   }
 
   options: LayoutOptions;
@@ -118,8 +118,8 @@ export class DagreGlobalLayout implements LayoutSettings {
   constructor(options?: LayoutOptions) {
     this.options = Object.assign({}, DagreGlobalLayout.DEFAULT, options);
   }
-  startLayout(view: IJuggl): Layouts {
-    return view.viz.layout(this.options).start();
+  startLayout(collection: Collection): Layouts {
+    return collection.layout(this.options).start();
   }
   options: cytoscape.LayoutOptions;
   static DEFAULT = {
@@ -141,8 +141,8 @@ export class AVSDFGlobalLayout implements LayoutSettings {
   constructor(options?: LayoutOptions) {
     this.options = Object.assign({}, AVSDFGlobalLayout.DEFAULT, options);
   }
-  startLayout(view: IJuggl): Layouts {
-    return view.viz.layout( this.options).start();
+  startLayout(collection: Collection): Layouts {
+    return collection.layout( this.options).start();
   }
   options: cytoscape.LayoutOptions;
     static DEFAULT: LayoutOptions = {
@@ -164,8 +164,8 @@ export class ConcentricLayout implements LayoutSettings {
   constructor(options?: LayoutOptions) {
     this.options = Object.assign({}, ConcentricLayout.DEFAULT, options);
   }
-  startLayout(view: IJuggl): Layouts {
-    return view.viz.layout(Object.assign(this.options, {concentric: (n: NodeSingular) =>{
+  startLayout(collection: Collection): Layouts {
+    return collection.layout(Object.assign(this.options, {concentric: (n: NodeSingular) =>{
       // @ts-ignore
       if (n.hasClass(CLASS_ACTIVE_NODE)) {
         return 1000;
