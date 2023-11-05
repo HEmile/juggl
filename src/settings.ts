@@ -164,7 +164,7 @@ export const DefaultJugglSettings: IJugglPluginSettings = {
     layout: 'force-directed',
     limit: 10000,
     mergeEdges: true,
-    mode: 'workspace',
+    mode: 'local',
     navigator: true,
     openWithShift: false,
     readContent: true,
