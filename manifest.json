@@ -1,10 +1,10 @@
 {
 	"id": "juggl",
 	"name": "Juggl",
-	"version": "1.4.0",
-	"minAppVersion": "0.11.5",
+	"version": "1.5.0",
+	"minAppVersion": "1.4.16",
 	"description": "Adds a completely interactive, stylable and expandable graph view to Obsidian.",
 	"author": "Emile",
-	"authorUrl": "https://twitter.com/emilevankrieken",
+	"authorUrl": "https://emilevankrieken.com",
 	"isDesktopOnly": false
 }

@@ -41,22 +41,22 @@
     <ToolbarButton icon={icons.ag_fit} onClick={fitClick} title="Fit view"/>
     <ToolbarButton icon={icons.ag_workspace} onClick={workspaceModeClick} title="Workspace mode"/>
 </div>
-<div class="cy-toolbar-section">
-    <div class="juggl-inline-group">
-        <div class="input-group-prepend">
-            <button class="btn-outline-secondary btn-minus" on:click={decrement}>
-                -
-            </button>
-        </div>
-        <input class="quantity form-control" id="depth" min="0" max="10" value={depth} type="number">
-        <div class="input-group-append">
-            <button class="btn-outline-secondary btn-plus" on:click={increment}>
-                +
-            </button>
-        </div>
-    </div>
-    <HelpButton {workspace}/>
-</div>
+<!--<div class="cy-toolbar-section">-->
+<!--    <div class="juggl-inline-group">-->
+<!--        <div class="input-group-prepend">-->
+<!--            <button class="btn-outline-secondary btn-minus" on:click={decrement}>-->
+<!--                - -->
+<!--            </button>-->
+<!--        </div>-->
+<!--        <input class="quantity form-control" id="depth" min="0" max="10" value={depth} type="number">-->
+<!--        <div class="input-group-append">-->
+<!--            <button class="btn-outline-secondary btn-plus" on:click={increment}>-->
+<!--                +-->
+<!--            </button>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    <HelpButton {workspace}/>-->
+<!--</div>-->
 
 
 <br /><input type="text" id="ag-filter" name="ag-filter" on:input={filterInput} value={filterValue}>
