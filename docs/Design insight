@@ -1,0 +1,18 @@
+# Personal motivations behind Juggl and its technology
+
+(This is originally [a conversation between Emile and Ooker in Discord](https://discord.com/channels/794500624163143720/794500624163143723/890921880654061599). It has been rewritten to serve the best reading experience for future visitors.) 
+
+The Obsidian team doesn't use a standard library to make their native graph. They have some internal optimization to make it work for larger graphs. However, from what I can tell it's quite hard to do something else with that graph. Especially for plugin developers, there is no way to easily hook into it. Otherwise I'd definitely have changed that graph. 
+
+There are many graph database and graph visualization software, but the reason I decided to write a graph view within Obsidian, rather than export data to another graph database and view the graph from there is because it gives a more integrated feel, closing and opening notes. I use it mostly to keep track of my thoughts and concepts in my notes, and I want to be able to do things like hoover previews, clicking on nodes to open them, etc. 
+
+Cytoscape.js was chosen for the technology of the plugin instead of other graph libraries because it has the nicest programming interface to work with. It's just a lot easier to quickly add features with Cytoscape.js. Cytoscape.js has a very nice backend, that allows easily querying, searching and styling. Eg, it has CSS styling right in the box, while in eg D3 I'd have to program that myself. D3.js and others can have such nice backend; it's just that they are just way more general, but low-level libraries. They can do much more different things, but at the cost of being harder to work with. That's a common tradeoff in many programming libraries: ease of use vs generality. That's why we have Word vs LaTeX, GUI vs CLI.
+
+The cost of this choice is performance. Juggl isn't designed for big graphs, Obsidian's own graph view is better suited for this. Obsidian doesn't use a standard library, they have some internal optimization to make it work for larger graphs. 
+
+(For context: Neo4j is a graph database, not visualization software. However, the platform offers several plugins to the database that offer visualization, such as Neo4j Bloom and Neo4j Desktop.) 
+
+One may argue that in the long run, the experience of lagging made by Cytoscape.js will overwhelm the benefit of the integrated feeling. So instead of making a graph visualization plugin for Obsidian, why didn't I make a plugin for Neo4j visualization software (e.g. Neo4j Bloom) to view node contain on hovering and switch back to Obsidian to edit the data? (In fact I do have the Neo4j Streamer to transfer data from Obsidian to Neo4j). I can still note in Obsidian, so basically I have the best of both worlds: a graph view that can handle large graphs, and the ability to edit notes in Obsidian. The problem is, that's a significant amount of work, and I wouldn't know how to, or if it's even possible to create plugins for the data viz software in Neo4j. And Neo4j's graph viz software isn't quite the end all either, in my experience. Bloom looks great, but can be very finicky to work with once you need to do something specific, it's a pretty closed environment. I'm pretty sure it's not possible with most data viz on Neo4j. The only one for which it is possible, is also cytoscape.js based, soo...
+
+Tooling for graph visualization isn't that great yet unfortunately...
+
