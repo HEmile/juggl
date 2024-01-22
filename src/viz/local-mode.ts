@@ -52,10 +52,10 @@ export class LocalMode extends Component implements IAGMode {
     _onLoad() {
       this.viz = this.view.viz;
       this.registerCyEvent('tap', 'node', async (e: EventObject) => {
-        const file = await this.view.plugin.openFileFromNode(e.target, e.originalEvent.metaKey);
-        if (file) {
-          await this.onOpenFile(file);
+        if (!this.view.settings.openWithShift || e.originalEvent.shiftKey) {
+          await this.view.plugin.openFileFromNode(e.target, e.originalEvent.metaKey);
         }
+        await this.onMoveToNodeEvent(e.target);
       });
 
       // Register on file open event
@@ -65,7 +65,7 @@ export class LocalMode extends Component implements IAGMode {
         }
       }));
     }
-
+    
     async onOpenFile(file: TFile) {
       if (!this.view.settings.autoAddNodes) {
         return;
@@ -79,6 +79,20 @@ export class LocalMode extends Component implements IAGMode {
       } else {
         node = this.viz.$id(id.toId());
       }
+      this.moveToNode(node);
+      this.viz.endBatch();
+    }
+
+    async onMoveToNodeEvent(node: NodeSingular) {
+      if (!this.view.settings.autoAddNodes) {
+        return;
+      }
+      this.viz.startBatch();
+      this.moveToNode(node);
+      this.viz.endBatch();
+    }
+
+    async moveToNode(node: NodeSingular) {
       await this.view.expand(node, false);
       node.addClass(CLASS_ACTIVE_NODE);
       this.viz.nodes()
@@ -86,7 +100,6 @@ export class LocalMode extends Component implements IAGMode {
           .remove();
       this.view.onGraphChanged(false);
       this.updateActiveFile(node as NodeSingular);
-      this.viz.endBatch();
     }
 
     changeDepth(depth: number) {
