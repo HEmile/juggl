@@ -15,7 +15,7 @@
             alt="chat on Discord" width="120"></a>
 </p>
 
-## Juggl 
+## Juggl
 Juggl is a completely interactive, stylable and expandable graph view for [Obsidian](https://obsidian.md). It is designed as an advanced 'local' graph view called the 'workspace', where you can juggle all your thoughts with ease: By navigating your vault through a beautiful graph!
 
 For example, you can select what parts of the graph to expand, to make sure there is never too much information on the screen. You will have complete control over the style of your graph using the powerful [Cytoscape.js library](https://js.cytoscape.org): Juggl has a useful styling pane nodes colors, shapes, sizes, and icons. This helps you get an immediate overview over what the content of each node is.
@@ -24,27 +24,27 @@ For example, you can select what parts of the graph to expand, to make sure ther
 
 ## Features
 Juggl has many features unique to its graph view compared to the Obsidian graph view:
-- Complete control over the style of your graph using [CSS](https://juggl.io/Features/Styling/CSS+Styling), [YAML](https://juggl.io/Features/Styling/YAML+Styling) and the [Style Pane](https://juggl.io/Features/Styling/Style+Pane) .
+- Complete control over the style of your graph using [CSS](https://juggl.io/features/styling/css-styling.html), [YAML](https://juggl.io/features/styling/yaml-styling.html) and the [Style Pane](https://juggl.io/features/styling/style-pane.html) .
   - Include images!
 - A [Workspace mode](https://juggl.io/Features/Workspace+mode/Workspace+mode) that lets you build your graph with all nodes that are relevant to your current project
   - Selectively browse and hide nodes, and pin their location so you never lose them
   - Write new ideas and see your graph evolve
   - Save your graph and continue working on it later
-- 4 different [layouts](https://juggl.io/Features/Layouts) to get unique insights
-- A [code block](https://juggl.io/Features/Juggl+code+block) that displays the graph within Obsidian notes
+- 4 different [layouts](https://juggl.io/features/layouts.html) to get unique insights
+- A [code block](https://juggl.io/features/juggl-code-block.html) that displays the graph within Obsidian notes
 - Link type support to label edges
-- [Tight integration](https://juggl.io/Features/Breadcrumbs+integration) with the very useful [Breadcrumbs plugin](https://github.com/SkepticMystic/breadcrumbs)
+- [Tight integration](https://juggl.io/features/breadcrumbs-integration.html) with the very useful [Breadcrumbs plugin](https://github.com/SkepticMystic/breadcrumbs)
 - Extendable through other plugins
 - Works on mobile!
 
-## Getting started 
+## Getting started
 You can open Juggl from the 'more options' menu on files:
 ![](https://raw.githubusercontent.com/HEmile/juggl/main/juggl/resources/open_juggl.gif)
 
-You can interact with the graph with many of the same options as in Obsidian. For further documentation, check out [juggl.io](https://juggl.io/), where you can find information on for example [styling](https://juggl.io/Features/Styling/Styling) or the syntax of the [code block](https://juggl.io/Features/Juggl+code+block). 
+You can interact with the graph with many of the same options as in Obsidian. For further documentation, check out [juggl.io](https://juggl.io/), where you can find information on for example [styling](https://juggl.io/features/styling/styling.html) or the syntax of the [code block](https://juggl.io/features/juggl-code-block.html).
 You can also open the help vault with this button in Juggl:
 ![](https://raw.githubusercontent.com/HEmile/juggl/main/juggl/resources/juggl_help.gif)
 
 
 ## Extending Juggl
-Juggl is completely open source and has an API available for creating Obsidian plugins that extend or use Juggl. See https://github.com/HEmile/juggl-api . You will have complete control over the internals of [Cytoscape.js](https://js.cytoscape.org), which is an extremely powerful graph visualization library! 
+Juggl is completely open source and has an API available for creating Obsidian plugins that extend or use Juggl. See https://github.com/HEmile/juggl-api . You will have complete control over the internals of [Cytoscape.js](https://js.cytoscape.org), which is an extremely powerful graph visualization library!
