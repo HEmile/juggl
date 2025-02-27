@@ -31,7 +31,7 @@
 </h3>
 <p>
     You can style the graph with css. This is done in the {stylesheetPath} file.
-    See <a href="https://publish.obsidian.md/semantic-obsidian/Node+styling">this page</a> for help with styling.
+    See <a href="https://juggl.io/features/styling/css-styling.html">this page</a> for help with styling.
 </p>
 
 <button on:click={openGraphCSS}>
